@@ -1,0 +1,263 @@
+/* 全体のリセットとベーススタイル */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+/* ヘッダー */
+.header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.header h1 {
+    font-size: 1.3rem;
+    color: #333;
+}
+
+/* メインコンテンツ */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* アクションボタンエリア */
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+#statusFilter {
+    max-width: 200px;
+    margin-left: 1rem;
+}
+
+/* プロジェクトカード */
+.project-card {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.project-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.project-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.project-actions {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+/* ボタンスタイル */
+.btn {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.btn-info {
+    background-color: #17a2b8;
+    color: #fff;
+}
+
+.btn-info:hover {
+    background-color: #138496;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: #fff;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-sm {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+}
+
+.add-sub-project {
+    min-width: 24px;
+    height: 24px;
+    line-height: 1;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ステータスバッジ */
+.status-badge {
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    margin-right: 0.3rem;
+}
+
+.status-未着手 { background-color: #f8f9fa; color: #6c757d; }
+.status-進行中 { background-color: #cce5ff; color: #004085; }
+.status-レビュー中 { background-color: #fff3cd; color: #856404; }
+.status-保留中 { background-color: #f8d7da; color: #721c24; }
+.status-完了 { background-color: #d4edda; color: #155724; }
+.status-中止 { background-color: #e2e3e5; color: #383d41; }
+
+/* 履歴表示 */
+.project-history {
+    margin-top: 0.5rem;
+}
+
+.history-item {
+    padding: 0.4rem 0.6rem;
+    border-left: 3px solid #007bff;
+    background-color: #f8f9fa;
+    margin-bottom: 0.3rem;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+}
+
+.author {
+    font-weight: bold;
+}
+
+.date {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.content {
+    font-size: 0.85rem;
+    margin-top: 0.2rem;
+    line-height: 1.4;
+}
+
+.status-change {
+    font-size: 0.85rem;
+    color: #0056b3;
+}
+
+/* モーダル */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: #fff;
+    margin: 5% auto;
+    padding: 1.2rem;
+    border-radius: 8px;
+    max-width: 500px;
+    position: relative;
+}
+
+/* フォーム */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.4rem;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* 履歴一覧モーダル */
+.history-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin: 1rem 0;
+}
+
+/* プロジェクトリスト */
+.project-list {
+    margin-top: 1rem;
+}
+
+/* 子プロジェクト関連のスタイル */
+.sub-projects {
+    margin-left: 2rem;
+    margin-top: 0.5rem;
+}
+
+.child-project {
+    border-left: 3px solid #007bff;
+    margin-bottom: 0.5rem;
+    background-color: #fafafa;
+}
