@@ -116,15 +116,11 @@ include 'includes/header.php';
             <?php if (isset($childProjects[$project['id']]) && !empty($childProjects[$project['id']])): ?>
                 <div class="sub-projects">
 <!-- 子プロジェクト表示部分のコード変更 -->
-<!-- 子プロジェクト表示部分のコード変更 -->
 <?php foreach ($childProjects[$project['id']] as $childProject): ?>
-    <div class="project-card child-project" data-status="<?= $childProject['status'] ?>">
+    <div class="project-card child-project">
         <div class="project-header">
             <h3 class="project-title">
                 <?= htmlspecialchars($childProject['name']) ?>
-                <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>">
-                    <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
-                </span>
             </h3>
             <div class="project-actions">
                 <span class="status-badge status-<?= $childProject['status'] ?>">
@@ -137,8 +133,15 @@ include 'includes/header.php';
             </div>
         </div>
 
-        <!-- 子プロジェクトの履歴表示 -->
+        <!-- 子プロジェクトの履歴表示 - 折りたたみ機能追加 -->
         <?php if (!empty($histories[$childProject['id']])): ?>
+            <div class="history-header-bar">
+                <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>"
+                      data-status="<?= $childProject['status'] ?>">
+                    <span class="toggle-icon"><?= ($childProject['status'] === '完了') ? '▶' : '▼' ?></span>
+                    <span>進捗履歴</span>
+                </span>
+            </div>
             <div id="history-content-<?= $childProject['id'] ?>" 
                  class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>">
                 <?php foreach ($histories[$childProject['id']] as $hist): ?>

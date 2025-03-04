@@ -261,3 +261,36 @@ label {
     margin-bottom: 0.5rem;
     background-color: #fafafa;
 }
+
+/* 履歴折りたたみ機能のスタイル */
+.toggle-history {
+    display: inline-block;
+    margin-left: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #666;
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    text-align: center;
+    border-radius: 50%;
+    background-color: #f0f0f0;
+    transition: all 0.2s ease-in-out;
+    user-select: none;
+}
+
+.toggle-history:hover {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.project-history.history-is-collapsed {
+    display: none !important;
+}
+
+
+/* 完了したプロジェクトのスタイル */
+.child-project[data-status="完了"] {
+    border-left: 3px solid #28a745;
+    background-color: #f9f9f9;
+}

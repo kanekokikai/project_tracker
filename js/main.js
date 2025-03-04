@@ -209,3 +209,79 @@ document.getElementById('addSubProjectForm').addEventListener('submit', function
         alert('エラーが発生しました');
     });
 });
+
+// 履歴の折りたたみ機能
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("Script loaded - Setting up fold/unfold");
+    
+    // クリックイベントをページ全体に設定し、動的に追加される要素にも対応
+    document.body.addEventListener('click', function(e) {
+        // toggle-historyクラスを持つ要素がクリックされたかチェック
+        if (e.target.classList.contains('toggle-history') || e.target.closest('.toggle-history')) {
+            const toggleElement = e.target.classList.contains('toggle-history') ? 
+                                e.target : e.target.closest('.toggle-history');
+            const projectId = toggleElement.getAttribute('data-project-id');
+            
+            console.log("Toggle clicked for project:", projectId);
+            
+            if (projectId) {
+                const historyContent = document.getElementById(`history-content-${projectId}`);
+                if (historyContent) {
+                    // ログを追加
+                    console.log("History content element:", historyContent);
+                    
+                    historyContent.classList.toggle('collapsed');
+                    
+                    // 直接スタイルを適用
+                    if (historyContent.classList.contains('collapsed')) {
+                        historyContent.style.display = 'none';
+                        toggleElement.textContent = '▶';
+                    } else {
+                        historyContent.style.display = 'block';
+                        toggleElement.textContent = '▼';
+                    }
+                    
+                    console.log("Applied direct style:", historyContent.style.display);
+                    console.log("Toggle state changed:", 
+                        historyContent.classList.contains('collapsed') ? "collapsed" : "expanded");
+                }
+            }
+            
+            // イベントの伝播を停止
+            e.stopPropagation();
+        }
+    });
+    
+    // 初期状態を設定する関数
+    function initializeHistoryState() {
+        console.log("Initializing history states");
+        const childProjects = document.querySelectorAll('.child-project');
+        
+        childProjects.forEach(project => {
+            const status = project.getAttribute('data-status');
+            const toggle = project.querySelector('.toggle-history');
+            
+            if (toggle) {
+                const projectId = toggle.getAttribute('data-project-id');
+                const historyContent = document.getElementById(`history-content-${projectId}`);
+                
+                if (historyContent) {
+                    if (status === '完了') {
+                        historyContent.style.display = 'none';
+                        historyContent.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                        console.log("Set collapsed for completed project:", projectId);
+                    } else {
+                        historyContent.style.display = 'block';
+                        historyContent.classList.remove('collapsed');
+                        toggle.textContent = '▼';
+                        console.log("Set expanded for in-progress project:", projectId);
+                    }
+                }
+            }
+        });
+    }
+    
+    // 少し遅延させて初期化（DOMの読み込み完了を確実にするため）
+    setTimeout(initializeHistoryState, 300);
+});
