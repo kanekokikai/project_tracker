@@ -18,17 +18,10 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
-<<<<<<< HEAD
--- データベース: `project_tracker`
---
-CREATE DATABASE IF NOT EXISTS `project_tracker` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `project_tracker`;
-=======
 -- データベース: `xs765558_projecttracker`
 --
 CREATE DATABASE IF NOT EXISTS `xs765558_projecttracker` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE `xs765558_projecttracker`;
->>>>>>> 8048fd3 (サーバー上の最新コードを反映)
 
 -- --------------------------------------------------------
 
@@ -155,8 +148,4 @@ COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-<<<<<<< HEAD
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-=======
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */
->>>>>>> 8048fd3 (サーバー上の最新コードを反映)
