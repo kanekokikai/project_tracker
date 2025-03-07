@@ -43,100 +43,6 @@ function toggleHistory(projectId) {
     }
 }
 
-// プロジェクト追加
-document.getElementById('addProjectForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-
-    fetch('api/add_project.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('エラーが発生しました: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('エラーが発生しました');
-    });
-});
-
-// 進捗追加
-document.getElementById('addProgressForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-
-    fetch('api/add_progress.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('エラーが発生しました: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('エラーが発生しました');
-    });
-});
-
-// ステータス変更
-document.getElementById('changeStatusForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-
-    fetch('api/change_status.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('エラーが発生しました: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('エラーが発生しました');
-    });
-});
-
-// プロジェクト削除
-function confirmDelete(projectId) {
-    if (confirm('このプロジェクトを削除してもよろしいですか？')) {
-        fetch('api/delete_project.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ project_id: projectId })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('エラーが発生しました: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('エラーが発生しました');
-        });
-    }
-}
-
 // 履歴一覧モーダル関連
 function openHistoryModal(projectId) {
     document.getElementById('historyModal').style.display = 'block';
@@ -174,10 +80,28 @@ function closeHistoryModal() {
     document.getElementById('historyModal').style.display = 'none';
 }
 
-// モーダルの外側をクリックした時に閉じる
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
+// プロジェクト削除
+function confirmDelete(projectId) {
+    if (confirm('このプロジェクトを削除してもよろしいですか？')) {
+        fetch('api/delete_project.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ project_id: projectId })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('エラーが発生しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('エラーが発生しました');
+        });
     }
 }
 
@@ -205,43 +129,129 @@ function closeSubProjectModal() {
     document.getElementById('subProjectModal').style.display = 'none';
 }
 
-// 子プロジェクト追加のフォーム送信処理
-document.getElementById('addSubProjectForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const formData = new FormData(this);
-
-    fetch('api/add_sub_project.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('エラーが発生しました: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('エラーが発生しました');
-    });
-});
-
 // ページ読み込み完了時に実行
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM loaded - Initializing toggle functionality");
+    console.log("DOM loaded - Initializing functionality");
     
-    // 全てのトグルボタンに明示的にクリックイベントを追加
+    // モーダル要素の存在確認（デバッグ用）
+    console.log("Modal elements check:");
+    console.log("addProjectModal exists:", !!document.getElementById('addProjectModal'));
+    console.log("progressModal exists:", !!document.getElementById('progressModal'));
+    console.log("statusModal exists:", !!document.getElementById('statusModal'));
+    console.log("subProjectModal exists:", !!document.getElementById('subProjectModal'));
+    console.log("historyModal exists:", !!document.getElementById('historyModal'));
+    
+    // プロジェクト追加フォーム
+    const addProjectForm = document.getElementById('addProjectForm');
+    if (addProjectForm) {
+        addProjectForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('api/add_project.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        });
+    }
+    
+    // 進捗追加フォーム
+    const addProgressForm = document.getElementById('addProgressForm');
+    if (addProgressForm) {
+        addProgressForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('api/add_progress.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        });
+    }
+    
+    // ステータス変更フォーム
+    const changeStatusForm = document.getElementById('changeStatusForm');
+    if (changeStatusForm) {
+        changeStatusForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('api/change_status.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        });
+    }
+    
+    // 子プロジェクト追加フォーム
+    const addSubProjectForm = document.getElementById('addSubProjectForm');
+    if (addSubProjectForm) {
+        addSubProjectForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetch('api/add_sub_project.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        });
+    }
+    
+    // トグルボタンのイベント設定
     const toggleButtons = document.querySelectorAll('.toggle-history');
     console.log(`Found ${toggleButtons.length} toggle buttons`);
     
     toggleButtons.forEach(button => {
         const projectId = button.getAttribute('data-project-id');
         console.log(`Setting up toggle for project ${projectId}`);
-        
-        // 既存のイベントをクリア
-        button.removeEventListener('click', function(){});
         
         // 新しいイベントを追加
         button.addEventListener('click', function(e) {
@@ -268,4 +278,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+    
+    // モーダルの外側をクリックした時に閉じる
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    };
 });

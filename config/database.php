@@ -1,6 +1,6 @@
 <?php
 // 環境の切り替え
-$environment = 'xserver';  // 'local' または 'xserver'
+$environment = 'local';  // 'local' または 'xserver'
 
 // データベース接続情報
 if ($environment === 'local') {
@@ -11,7 +11,7 @@ if ($environment === 'local') {
     define('DB_NAME', 'project_tracker');
 } else {
     // エックスサーバー用の設定
-    define('DB_HOST', 'localhost');  // 変更済み
+    define('DB_HOST', 'localhost');
     define('DB_USER', 'xs765558_kaneko');
     define('DB_PASS', 'kaneko0911');
     define('DB_NAME', 'xs765558_projecttracker');
@@ -25,28 +25,18 @@ try {
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
         
-        // パフォーマンス最適化オプション
-        // 永続的接続はWeb環境では逆効果になる場合があるため無効化
+        // 永続的接続は共有ホスティングでは無効化（リソース消費を抑える）
         PDO::ATTR_PERSISTENT => false,
         
-        // プリペアドステートメントのキャッシュを有効化
-        PDO::ATTR_STATEMENT_CLASS => ['PDOStatement'],
+        // クエリのタイムアウト設定（秒）
+        PDO::ATTR_TIMEOUT => 3,
         
-        // バッファリングクエリを使用（大量のデータを扱わない場合に有効）
+        // バッファリングクエリの最適化
         PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
         
-        // コネクションプーリングのヒント（MySQLサーバー側の設定に依存）
-        PDO::MYSQL_ATTR_FOUND_ROWS => true,
-        
-        // メモリ使用量の削減
-        PDO::MYSQL_ATTR_DIRECT_QUERY => false,
+        // 結果セットのフェッチモードを最適化
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ];
-    
-    // エックスサーバー環境でのパフォーマンス対策
-    if ($environment === 'xserver') {
-        // コネクションタイムアウトを設定
-        $options[PDO::ATTR_TIMEOUT] = 5; // 5秒
-    }
     
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
     

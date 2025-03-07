@@ -11,18 +11,18 @@ $statusOptions = [
     "中止"
 ];
 
-// 親プロジェクトの取得（parent_idがNULLのもの）
-$stmt = $pdo->query("SELECT * FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
+// 親プロジェクトの取得（parent_idがNULLのもの）- 最適化: 必要なカラムだけを取得
+$stmt = $pdo->query("SELECT id, name, status, updated_at FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
 $parentProjects = $stmt->fetchAll();
 
 // 親プロジェクトのIDリストを作成
 $parentIds = array_column($parentProjects, 'id');
 
-// 一度に全ての子プロジェクトを取得（IN句を使用）
+// 子プロジェクトの取得 - 最適化: IN句を使用して一度に取得
 $childProjects = [];
 if (!empty($parentIds)) {
     $placeholders = str_repeat('?,', count($parentIds) - 1) . '?';
-    $stmt = $pdo->prepare("SELECT * FROM projects WHERE parent_id IN ($placeholders) ORDER BY parent_id, updated_at DESC");
+    $stmt = $pdo->prepare("SELECT id, parent_id, name, status, updated_at FROM projects WHERE parent_id IN ($placeholders) ORDER BY parent_id, updated_at DESC");
     $stmt->execute($parentIds);
     $allChildProjects = $stmt->fetchAll();
     
@@ -40,37 +40,21 @@ foreach ($childProjects as $children) {
     }
 }
 
-// 一度に全ての履歴を取得（プロジェクトごとに最新3件）
+// 履歴の取得 - 最適化: サブクエリの代わりにLIMITを使用したクエリ
 $histories = [];
 if (!empty($allProjectIds)) {
-    // この部分はMySQLの例です。他のDBでは異なる実装が必要な場合があります
-    $placeholders = str_repeat('?,', count($allProjectIds) - 1) . '?';
-    $stmt = $pdo->prepare("
-        SELECT h.* FROM project_history h
-        INNER JOIN (
-            SELECT project_id, created_at
+    // 各プロジェクトごとにクエリを実行するが、制限を付ける（最新3件のみ）
+    foreach ($allProjectIds as $projectId) {
+        $stmt = $pdo->prepare("
+            SELECT project_id, author, status, content, created_at
             FROM project_history
-            WHERE project_id IN ($placeholders)
-            ORDER BY project_id, created_at DESC
-        ) AS ranked 
-        ON h.project_id = ranked.project_id AND h.created_at = ranked.created_at
-        ORDER BY h.project_id, h.created_at DESC
-    ");
-    $stmt->execute($allProjectIds);
-    $allHistories = $stmt->fetchAll();
-    
-    // プロジェクトIDごとにグループ化し、最大3件のみ保持
-    $tempHistories = [];
-    foreach ($allHistories as $history) {
-        $projectId = $history['project_id'];
-        if (!isset($tempHistories[$projectId])) {
-            $tempHistories[$projectId] = [];
-        }
-        if (count($tempHistories[$projectId]) < 3) {
-            $tempHistories[$projectId][] = $history;
-        }
+            WHERE project_id = ?
+            ORDER BY created_at DESC
+            LIMIT 3
+        ");
+        $stmt->execute([$projectId]);
+        $histories[$projectId] = $stmt->fetchAll();
     }
-    $histories = $tempHistories;
 }
 
 include 'includes/header.php';
@@ -138,57 +122,55 @@ include 'includes/header.php';
             <!-- 子プロジェクト表示 -->
             <?php if (isset($childProjects[$project['id']]) && !empty($childProjects[$project['id']])): ?>
                 <div class="sub-projects">
-<!-- 子プロジェクト表示部分のコード修正 -->
-<?php foreach ($childProjects[$project['id']] as $childProject): ?>
-    <div class="project-card child-project" data-status="<?= htmlspecialchars($childProject['status']) ?>">
-        <div class="project-header">
-            <h3 class="project-title">
-                <?= htmlspecialchars($childProject['name']) ?>
-                <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>">
-                    <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
-                </span>
-            </h3>
-            <div class="project-actions">
-                <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
-                    <?= htmlspecialchars($childProject['status']) ?>
-                </span>
-                <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
-                <button class="btn btn-primary" onclick="openStatusModal(<?= $childProject['id'] ?>)">ステータス変更</button>
-                <button class="btn btn-info" onclick="openHistoryModal(<?= $childProject['id'] ?>)">すべての履歴</button>
-                <button class="btn btn-danger" onclick="confirmDelete(<?= $childProject['id'] ?>)">削除</button>
-            </div>
-        </div>
+                    <?php foreach ($childProjects[$project['id']] as $childProject): ?>
+                        <div class="project-card child-project" data-status="<?= htmlspecialchars($childProject['status']) ?>">
+                            <div class="project-header">
+                                <h3 class="project-title">
+                                    <?= htmlspecialchars($childProject['name']) ?>
+                                    <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>">
+                                        <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
+                                    </span>
+                                </h3>
+                                <div class="project-actions">
+                                    <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
+                                        <?= htmlspecialchars($childProject['status']) ?>
+                                    </span>
+                                    <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
+                                    <button class="btn btn-primary" onclick="openStatusModal(<?= $childProject['id'] ?>)">ステータス変更</button>
+                                    <button class="btn btn-info" onclick="openHistoryModal(<?= $childProject['id'] ?>)">すべての履歴</button>
+                                    <button class="btn btn-danger" onclick="confirmDelete(<?= $childProject['id'] ?>)">削除</button>
+                                </div>
+                            </div>
 
-        <!-- 子プロジェクトの履歴表示 -->
-        <?php if (!empty($histories[$childProject['id']])): ?>
-            <div id="history-content-<?= $childProject['id'] ?>" 
-                 class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
-                 style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
-                <?php foreach ($histories[$childProject['id']] as $hist): ?>
-                    <div class="history-item">
-                        <div class="history-header">
-                            <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
-                            <span class="date">
-                                <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
-                            </span>
+                            <!-- 子プロジェクトの履歴表示 -->
+                            <?php if (!empty($histories[$childProject['id']])): ?>
+                                <div id="history-content-<?= $childProject['id'] ?>" 
+                                    class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
+                                    style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
+                                    <?php foreach ($histories[$childProject['id']] as $hist): ?>
+                                        <div class="history-item">
+                                            <div class="history-header">
+                                                <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
+                                                <span class="date">
+                                                    <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
+                                                </span>
+                                            </div>
+                                            <?php if (!empty($hist['status'])): ?>
+                                                <div class="status-change">
+                                                    ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
+                                                </div>
+                                            <?php endif; ?>
+                                            <?php if (!empty($hist['content'])): ?>
+                                                <div class="content">
+                                                    <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <?php if (!empty($hist['status'])): ?>
-                            <div class="status-change">
-                                ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
-                            </div>
-                        <?php endif; ?>
-                        <?php if (!empty($hist['content'])): ?>
-                            <div class="content">
-                                <?= nl2br(htmlspecialchars($hist['content'])) ?>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        <?php endif; ?>
-    </div>
-<?php endforeach; ?>
-
+                    <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>
@@ -196,6 +178,11 @@ include 'includes/header.php';
 </div>
 
 <!-- モーダル部分は変更なし -->
+<!-- ... -->
+
+<?php include 'includes/footer.php'; ?>
+
+<!-- モーダル部分 -->
 <!-- 新規プロジェクト追加モーダル -->
 <div id="addProjectModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -289,36 +276,3 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
-
-<script>
-// 履歴の表示・非表示を切り替える関数
-function toggleHistory(projectId) {
-    const historyContent = document.getElementById(`history-content-${projectId}`);
-    const toggleButton = document.querySelector(`.toggle-history[data-project-id="${projectId}"]`);
-    
-    if (historyContent) {
-        if (historyContent.classList.contains('collapsed')) {
-            historyContent.classList.remove('collapsed');
-            toggleButton.textContent = '▼';
-        } else {
-            historyContent.classList.add('collapsed');
-            toggleButton.textContent = '▶';
-        }
-    }
-}
-
-// ステータスでフィルタリングする関数
-function filterByStatus(status) {
-    const childProjects = document.querySelectorAll('.child-project');
-    
-    childProjects.forEach(project => {
-        if (status === 'all' || project.dataset.status === status) {
-            project.style.display = 'block';
-        } else {
-            project.style.display = 'none';
-        }
-    });
-}
-</script>
-
-<?php include 'includes/footer.php'; ?>
