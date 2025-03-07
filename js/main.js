@@ -25,6 +25,24 @@ function closeStatusModal() {
     document.getElementById('statusModal').style.display = 'none';
 }
 
+// 履歴の折りたたみ機能（簡素化版）
+function toggleHistory(projectId) {
+    const historyContent = document.getElementById(`history-content-${projectId}`);
+    const toggleButton = document.querySelector(`.toggle-history[data-project-id="${projectId}"]`);
+    
+    if (historyContent) {
+        if (historyContent.classList.contains('collapsed')) {
+            historyContent.classList.remove('collapsed');
+            toggleButton.textContent = '▼';
+            historyContent.style.display = 'block';
+        } else {
+            historyContent.classList.add('collapsed');
+            toggleButton.textContent = '▶';
+            historyContent.style.display = 'none';
+        }
+    }
+}
+
 // プロジェクト追加
 document.getElementById('addProjectForm').addEventListener('submit', function(e) {
     e.preventDefault();
@@ -210,78 +228,44 @@ document.getElementById('addSubProjectForm').addEventListener('submit', function
     });
 });
 
-// 履歴の折りたたみ機能
+// ページ読み込み完了時に実行
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("Script loaded - Setting up fold/unfold");
+    console.log("DOM loaded - Initializing toggle functionality");
     
-    // クリックイベントをページ全体に設定し、動的に追加される要素にも対応
-    document.body.addEventListener('click', function(e) {
-        // toggle-historyクラスを持つ要素がクリックされたかチェック
-        if (e.target.classList.contains('toggle-history') || e.target.closest('.toggle-history')) {
-            const toggleElement = e.target.classList.contains('toggle-history') ? 
-                                e.target : e.target.closest('.toggle-history');
-            const projectId = toggleElement.getAttribute('data-project-id');
-            
-            console.log("Toggle clicked for project:", projectId);
-            
-            if (projectId) {
-                const historyContent = document.getElementById(`history-content-${projectId}`);
-                if (historyContent) {
-                    // ログを追加
-                    console.log("History content element:", historyContent);
-                    
-                    historyContent.classList.toggle('collapsed');
-                    
-                    // 直接スタイルを適用
-                    if (historyContent.classList.contains('collapsed')) {
-                        historyContent.style.display = 'none';
-                        toggleElement.textContent = '▶';
-                    } else {
-                        historyContent.style.display = 'block';
-                        toggleElement.textContent = '▼';
-                    }
-                    
-                    console.log("Applied direct style:", historyContent.style.display);
-                    console.log("Toggle state changed:", 
-                        historyContent.classList.contains('collapsed') ? "collapsed" : "expanded");
-                }
-            }
-            
-            // イベントの伝播を停止
+    // 全てのトグルボタンに明示的にクリックイベントを追加
+    const toggleButtons = document.querySelectorAll('.toggle-history');
+    console.log(`Found ${toggleButtons.length} toggle buttons`);
+    
+    toggleButtons.forEach(button => {
+        const projectId = button.getAttribute('data-project-id');
+        console.log(`Setting up toggle for project ${projectId}`);
+        
+        // 既存のイベントをクリア
+        button.removeEventListener('click', function(){});
+        
+        // 新しいイベントを追加
+        button.addEventListener('click', function(e) {
             e.stopPropagation();
-        }
+            toggleHistory(projectId);
+        });
     });
     
-    // 初期状態を設定する関数
-    function initializeHistoryState() {
-        console.log("Initializing history states");
-        const childProjects = document.querySelectorAll('.child-project');
-        
-        childProjects.forEach(project => {
-            const status = project.getAttribute('data-status');
-            const toggle = project.querySelector('.toggle-history');
-            
-            if (toggle) {
-                const projectId = toggle.getAttribute('data-project-id');
-                const historyContent = document.getElementById(`history-content-${projectId}`);
-                
-                if (historyContent) {
-                    if (status === '完了') {
-                        historyContent.style.display = 'none';
-                        historyContent.classList.add('collapsed');
-                        toggle.textContent = '▶';
-                        console.log("Set collapsed for completed project:", projectId);
-                    } else {
-                        historyContent.style.display = 'block';
-                        historyContent.classList.remove('collapsed');
-                        toggle.textContent = '▼';
-                        console.log("Set expanded for in-progress project:", projectId);
-                    }
-                }
-            }
-        });
-    }
+    // 初期状態の設定（完了プロジェクトの履歴を折りたたむ）
+    const completedProjects = document.querySelectorAll('.child-project[data-status="完了"]');
+    console.log(`Found ${completedProjects.length} completed projects to collapse`);
     
-    // 少し遅延させて初期化（DOMの読み込み完了を確実にするため）
-    setTimeout(initializeHistoryState, 300);
+    completedProjects.forEach(project => {
+        const toggleButton = project.querySelector('.toggle-history');
+        if (toggleButton) {
+            const projectId = toggleButton.getAttribute('data-project-id');
+            const historyContent = document.getElementById(`history-content-${projectId}`);
+            
+            if (historyContent) {
+                console.log(`Collapsing history for completed project ${projectId}`);
+                historyContent.classList.add('collapsed');
+                historyContent.style.display = 'none';
+                toggleButton.textContent = '▶';
+            }
+        }
+    });
 });

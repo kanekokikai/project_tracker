@@ -1,296 +1,480 @@
-/* 全体のリセットとベーススタイル */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+/* Apple風デザイン用CSS - 最適化版 */
+:root {
+  --apple-primary: #0071e3;
+  --apple-secondary: #86868b;
+  --apple-dark: #1d1d1f;
+  --apple-medium: #424245;
+  --apple-light: #f5f5f7;
+  --apple-white: #ffffff;
+  --apple-border: #d2d2d7;
+  --apple-success: #4caf50;
+  --apple-warning: #ff9500;
+  --apple-error: #ff3b30;
+  --apple-shadow: rgba(0, 0, 0, 0.1);
+  --apple-radius: 8px;
+  --apple-transition: all 0.3s ease;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f5f5f5;
-    color: #333;
+  font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.4;  /* 行間を狭く */
+  margin: 0;
+  padding: 0;
+  color: var(--apple-dark);
+  background-color: var(--apple-light);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ヘッダー */
 .header {
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 0.8rem;
-    margin-bottom: 1rem;
+  background-color: var(--apple-white);
+  padding: 0.8rem; /* パディングを小さく */
+  box-shadow: 0 2px 10px var(--apple-shadow);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(210, 210, 215, 0.5);
 }
 
-.header-content {
-    max-width: 1200px;
-    margin: 0 auto;
+.header-content h1 {
+  font-weight: 500;
+  font-size: 1.5rem; /* フォントサイズを小さく */
+  margin: 0;
+  color: var(--apple-dark);
+  text-align: center;
 }
 
-.header h1 {
-    font-size: 1.3rem;
-    color: #333;
-}
-
-/* メインコンテンツ */
 .main-content {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 1rem;
-}
-
-/* アクションボタンエリア */
-.action-buttons {
-    display: flex;
-    gap: 1rem;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-#statusFilter {
-    max-width: 200px;
-    margin-left: 1rem;
-}
-
-/* プロジェクトカード */
-.project-card {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    padding: 0.8rem;
-    margin-bottom: 0.5rem;
-}
-
-.project-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
-}
-
-.project-title {
-    font-size: 1.1rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.project-actions {
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-}
-
-/* ボタンスタイル */
-.btn {
-    padding: 0.3rem 0.6rem;
-    border-radius: 4px;
-    border: none;
-    cursor: pointer;
-    font-size: 0.85rem;
-    transition: background-color 0.3s;
-}
-
-.btn-primary {
-    background-color: #007bff;
-    color: #fff;
-}
-
-.btn-primary:hover {
-    background-color: #0056b3;
-}
-
-.btn-danger {
-    background-color: #dc3545;
-    color: #fff;
-}
-
-.btn-danger:hover {
-    background-color: #c82333;
-}
-
-.btn-info {
-    background-color: #17a2b8;
-    color: #fff;
-}
-
-.btn-info:hover {
-    background-color: #138496;
-}
-
-.btn-success {
-    background-color: #28a745;
-    color: #fff;
-}
-
-.btn-success:hover {
-    background-color: #218838;
-}
-
-.btn-sm {
-    padding: 0.2rem 0.4rem;
-    font-size: 0.8rem;
-}
-
-.add-sub-project {
-    min-width: 24px;
-    height: 24px;
-    line-height: 1;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* ステータスバッジ */
-.status-badge {
-    padding: 0.2rem 0.4rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    margin-right: 0.3rem;
-}
-
-.status-未着手 { background-color: #f8f9fa; color: #6c757d; }
-.status-進行中 { background-color: #cce5ff; color: #004085; }
-.status-レビュー中 { background-color: #fff3cd; color: #856404; }
-.status-保留中 { background-color: #f8d7da; color: #721c24; }
-.status-完了 { background-color: #d4edda; color: #155724; }
-.status-中止 { background-color: #e2e3e5; color: #383d41; }
-
-/* 履歴表示 */
-.project-history {
-    margin-top: 0.5rem;
-}
-
-.history-item {
-    padding: 0.4rem 0.6rem;
-    border-left: 3px solid #007bff;
-    background-color: #f8f9fa;
-    margin-bottom: 0.3rem;
-}
-
-.history-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.85rem;
-    margin-bottom: 0.2rem;
-}
-
-.author {
-    font-weight: bold;
-}
-
-.date {
-    color: #6c757d;
-    font-size: 0.8rem;
-}
-
-.content {
-    font-size: 0.85rem;
-    margin-top: 0.2rem;
-    line-height: 1.4;
-}
-
-.status-change {
-    font-size: 0.85rem;
-    color: #0056b3;
-}
-
-/* モーダル */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.5);
-    z-index: 1000;
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 5% auto;
-    padding: 1.2rem;
-    border-radius: 8px;
-    max-width: 500px;
-    position: relative;
-}
-
-/* フォーム */
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.5rem;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 0.9rem;
-}
-
-label {
-    display: block;
-    margin-bottom: 0.4rem;
-    font-weight: bold;
-    font-size: 0.9rem;
-}
-
-/* 履歴一覧モーダル */
-.history-list {
-    max-height: 400px;
-    overflow-y: auto;
-    margin: 1rem 0;
+  padding: 1rem; /* パディングを小さく */
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* プロジェクトリスト */
 .project-list {
-    margin-top: 1rem;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-/* 子プロジェクト関連のスタイル */
-.sub-projects {
-    margin-left: 2rem;
-    margin-top: 0.5rem;
+.action-buttons {
+  margin-bottom: 1rem; /* マージンを小さく */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ボタンスタイル - コンパクト化 */
+.btn {
+  display: inline-block;
+  padding: 0.5rem 1rem; /* パディングを小さく */
+  border-radius: var(--apple-radius);
+  font-size: 0.9rem; /* フォントサイズを小さく */
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--apple-transition);
+  text-align: center;
+  border: none;
+  background: var(--apple-white);
+  color: var(--apple-dark);
+  box-shadow: 0 1px 3px var(--apple-shadow);
+  white-space: nowrap; /* 改行を防止 */
+}
+
+.btn-primary {
+  background-color: var(--apple-primary);
+  color: var(--apple-white);
+}
+
+.btn-primary:hover {
+  background-color: #005fc4;
+}
+
+.btn-danger {
+  background-color: var(--apple-error);
+  color: var(--apple-white);
+}
+
+.btn-danger:hover {
+  background-color: #e63028;
+}
+
+.btn-info {
+  background-color: var(--apple-medium);
+  color: var(--apple-white);
+}
+
+.btn-info:hover {
+  background-color: #3a3a3c;
+}
+
+/* フォームコントロール - 幅を調整 */
+.form-control {
+  display: inline-block;
+  padding: 0.5rem 0.8rem; /* パディングを小さく */
+  font-size: 0.9rem;
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius);
+  background-color: var(--apple-white);
+  transition: var(--apple-transition);
+  margin-left: 0.5rem;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  width: auto; /* 自動幅に設定 */
+  min-width: 120px; /* 最小幅を設定 */
+  max-width: 180px; /* 最大幅を制限 */
+}
+
+.form-control:focus {
+  border-color: var(--apple-primary);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
+}
+
+/* プロジェクトカード - コンパクト化 */
+.project-card {
+  border-radius: var(--apple-radius);
+  margin-bottom: 1rem; /* マージンを小さく */
+  padding: 1rem; /* パディングを小さく */
+  background-color: var(--apple-white);
+  box-shadow: 0 2px 8px var(--apple-shadow);
+  transition: var(--apple-transition);
+}
+
+.project-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.parent-project {
+  border-left: 5px solid var(--apple-primary);
 }
 
 .child-project {
-    border-left: 3px solid #007bff;
-    margin-bottom: 0.5rem;
-    background-color: #fafafa;
+  margin-left: 1.5rem; /* マージンを小さく */
+  border-left: 5px solid var(--apple-secondary);
 }
 
-/* 履歴折りたたみ機能のスタイル */
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem; /* マージンを小さく */
+}
+
+.project-title {
+  margin: 0;
+  font-weight: 500;
+  font-size: 1.1rem; /* フォントサイズを小さく */
+  color: var(--apple-dark);
+  display: flex;
+  align-items: center;
+}
+
 .toggle-history {
-    display: inline-block;
-    margin-left: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #666;
-    width: 20px;
-    height: 20px;
-    line-height: 20px;
-    text-align: center;
-    border-radius: 50%;
-    background-color: #f0f0f0;
-    transition: all 0.2s ease-in-out;
-    user-select: none;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  color: var(--apple-secondary);
+  transition: var(--apple-transition);
+  font-size: 0.9rem;
 }
 
 .toggle-history:hover {
-    background-color: #e0e0e0;
-    color: #333;
+  color: var(--apple-primary);
 }
 
-.project-history.history-is-collapsed {
-    display: none !important;
+.project-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
+.project-actions .btn {
+  margin: 0.2rem; /* マージンを小さく */
+  padding: 0.3rem 0.6rem; /* パディングを小さく */
+  font-size: 0.8rem; /* フォントサイズを小さく */
+}
 
-/* 完了したプロジェクトのスタイル */
-.child-project[data-status="完了"] {
-    border-left: 3px solid #28a745;
-    background-color: #f9f9f9;
+/* ステータスバッジ - コンパクト化 */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem; /* パディングを小さく */
+  border-radius: 20px;
+  font-size: 0.75rem; /* フォントサイズを小さく */
+  font-weight: 500;
+  color: var(--apple-white);
+  margin-right: 0.5rem;
+}
+
+.status-未着手 { background-color: var(--apple-secondary); }
+.status-進行中 { background-color: var(--apple-primary); }
+.status-レビュー中 { background-color: #9c27b0; }
+.status-保留中 { background-color: var(--apple-warning); }
+.status-完了 { background-color: var(--apple-success); }
+.status-中止 { background-color: var(--apple-error); }
+
+/* プロジェクト履歴 - コンパクト化 */
+.project-history {
+  margin-top: 0.7rem; /* マージンを小さく */
+  padding-left: 0.8rem; /* パディングを小さく */
+  border-left: 2px solid var(--apple-border);
+  transition: var(--apple-transition);
+}
+
+.project-history.collapsed {
+  display: none !important;
+}
+
+.history-item {
+  margin-bottom: 0.7rem; /* マージンを小さく */
+  padding: 0.7rem; /* パディングを小さく */
+  background-color: var(--apple-light);
+  border-radius: var(--apple-radius);
+  transition: var(--apple-transition);
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem; /* マージンを小さく */
+  font-size: 0.8rem; /* フォントサイズを小さく */
+  color: var(--apple-secondary);
+}
+
+.author {
+  font-weight: 500;
+  color: var(--apple-dark);
+  font-size: 0.8rem;
+}
+
+.date {
+  font-size: 0.8rem;
+}
+
+.status-change {
+  font-weight: 500;
+  margin-bottom: 0.3rem; /* マージンを小さく */
+  color: var(--apple-primary);
+  font-size: 0.9rem;
+}
+
+.content {
+  font-size: 0.9rem; /* フォントサイズを小さく */
+  color: var(--apple-dark);
+  line-height: 1.4;
+}
+
+/* モーダル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: var(--apple-transition);
+}
+
+.modal-content {
+  background-color: var(--apple-white);
+  margin: 10% auto;
+  padding: 1.5rem; /* パディングを小さく */
+  border-radius: var(--apple-radius);
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: var(--apple-transition);
+}
+
+.modal h3 {
+  margin-top: 0;
+  margin-bottom: 1rem; /* マージンを小さく */
+  font-weight: 500;
+  color: var(--apple-dark);
+  font-size: 1.2rem; /* フォントサイズを小さく */
+}
+
+.form-group {
+  margin-bottom: 1rem; /* マージンを小さく */
+}
+
+label {
+  display: block;
+  margin-bottom: 0.3rem; /* マージンを小さく */
+  font-size: 0.85rem; /* フォントサイズを小さく */
+  font-weight: 500;
+  color: var(--apple-secondary);
+}
+
+input[type="text"], 
+textarea, 
+select {
+  width: 100%;
+  padding: 0.7rem; /* パディングを小さく */
+  font-size: 0.95rem; /* フォントサイズを小さく */
+  border: 1px solid var(--apple-border);
+  border-radius: var(--apple-radius);
+  background-color: var(--apple-white);
+  transition: var(--apple-transition);
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  font-family: inherit;
+}
+
+input[type="text"]:focus, 
+textarea:focus, 
+select:focus {
+  border-color: var(--apple-primary);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.2);
+}
+
+textarea {
+  min-height: 80px; /* 高さを小さく */
+  resize: vertical;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .project-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .project-actions {
+    margin-top: 0.7rem; /* マージンを小さく */
+    justify-content: flex-start;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .action-buttons .btn,
+  .action-buttons .form-control {
+    margin: 0.4rem 0; /* マージンを小さく */
+    width: 100%;
+  }
+  
+  .child-project {
+    margin-left: 0.8rem; /* マージンを小さく */
+  }
+  
+  .modal-content {
+    margin: 5% auto;
+    padding: 1.2rem; /* パディングを小さく */
+    width: 85%;
+  }
+}
+
+/* 子プロジェクト履歴表示の修正 */
+.child-project .history-item {
+  margin-bottom: 0.7rem;
+  padding: 0.7rem;
+  background-color: var(--apple-light);
+  border-radius: var(--apple-radius);
+}
+
+.child-project .history-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.3rem;
+  font-size: 0.8rem !important; /* 親プロジェクトと同じフォントサイズに強制 */
+  color: var(--apple-secondary);
+}
+
+.child-project .author {
+  font-weight: 500;
+  color: var(--apple-dark);
+  font-size: 0.8rem !important; /* 強制的にフォントサイズを指定 */
+}
+
+.child-project .date {
+  font-size: 0.8rem !important; /* 強制的にフォントサイズを指定 */
+}
+
+.child-project .status-change {
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+  color: var(--apple-primary);
+  font-size: 0.9rem !important; /* 強制的にフォントサイズを指定 */
+}
+
+.child-project .content {
+  font-size: 0.9rem !important; /* 親プロジェクトと同じフォントサイズに強制 */
+  color: var(--apple-dark);
+  line-height: 1.4; /* 行間も親プロジェクトと揃える */
+}
+
+/* 履歴表示のさらなるコンパクト化 */
+.project-history {
+  margin-top: 0.5rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--apple-border);
+}
+
+.history-item {
+  margin-bottom: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background-color: var(--apple-light);
+  border-radius: var(--apple-radius);
+}
+
+.history-header {
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem;
+}
+
+.author {
+  font-size: 0.75rem;
+}
+
+.date {
+  font-size: 0.75rem;
+}
+
+.status-change {
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem;
+}
+
+.content {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* 子プロジェクトにも同じ設定を適用 */
+.child-project .history-item {
+  margin-bottom: 0.4rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.child-project .history-header {
+  margin-bottom: 0.2rem;
+  font-size: 0.75rem !important;
+}
+
+.child-project .author {
+  font-size: 0.75rem !important;
+}
+
+.child-project .date {
+  font-size: 0.75rem !important;
+}
+
+.child-project .status-change {
+  margin-bottom: 0.2rem;
+  font-size: 0.8rem !important;
+}
+
+.child-project .content {
+  font-size: 0.85rem !important;
+  line-height: 1.3;
 }

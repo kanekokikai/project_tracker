@@ -15,39 +15,62 @@ $statusOptions = [
 $stmt = $pdo->query("SELECT * FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
 $parentProjects = $stmt->fetchAll();
 
-// 子プロジェクトの取得
+// 親プロジェクトのIDリストを作成
+$parentIds = array_column($parentProjects, 'id');
+
+// 一度に全ての子プロジェクトを取得（IN句を使用）
 $childProjects = [];
-foreach ($parentProjects as $parent) {
-    $stmt = $pdo->prepare("SELECT * FROM projects WHERE parent_id = ? ORDER BY updated_at DESC");
-    $stmt->execute([$parent['id']]);
-    $childProjects[$parent['id']] = $stmt->fetchAll();
+if (!empty($parentIds)) {
+    $placeholders = str_repeat('?,', count($parentIds) - 1) . '?';
+    $stmt = $pdo->prepare("SELECT * FROM projects WHERE parent_id IN ($placeholders) ORDER BY parent_id, updated_at DESC");
+    $stmt->execute($parentIds);
+    $allChildProjects = $stmt->fetchAll();
+    
+    // 親プロジェクトIDでグループ化
+    foreach ($allChildProjects as $child) {
+        $childProjects[$child['parent_id']][] = $child;
+    }
 }
 
-// 最新の履歴を取得（各プロジェクトの最新3件）
-$histories = [];
-foreach ($parentProjects as $project) {
-    $stmt = $pdo->prepare("
-        SELECT * FROM project_history 
-        WHERE project_id = ? 
-        ORDER BY created_at DESC 
-        LIMIT 3
-    ");
-    $stmt->execute([$project['id']]);
-    $histories[$project['id']] = $stmt->fetchAll();
+// すべてのプロジェクトIDs（親+子）を取得
+$allProjectIds = $parentIds;
+foreach ($childProjects as $children) {
+    foreach ($children as $child) {
+        $allProjectIds[] = $child['id'];
+    }
+}
 
-    // 子プロジェクトの履歴も取得
-    if (isset($childProjects[$project['id']])) {
-        foreach ($childProjects[$project['id']] as $child) {
-            $stmt = $pdo->prepare("
-                SELECT * FROM project_history 
-                WHERE project_id = ? 
-                ORDER BY created_at DESC 
-                LIMIT 3
-            ");
-            $stmt->execute([$child['id']]);
-            $histories[$child['id']] = $stmt->fetchAll();
+// 一度に全ての履歴を取得（プロジェクトごとに最新3件）
+$histories = [];
+if (!empty($allProjectIds)) {
+    // この部分はMySQLの例です。他のDBでは異なる実装が必要な場合があります
+    $placeholders = str_repeat('?,', count($allProjectIds) - 1) . '?';
+    $stmt = $pdo->prepare("
+        SELECT h.* FROM project_history h
+        INNER JOIN (
+            SELECT project_id, created_at
+            FROM project_history
+            WHERE project_id IN ($placeholders)
+            ORDER BY project_id, created_at DESC
+        ) AS ranked 
+        ON h.project_id = ranked.project_id AND h.created_at = ranked.created_at
+        ORDER BY h.project_id, h.created_at DESC
+    ");
+    $stmt->execute($allProjectIds);
+    $allHistories = $stmt->fetchAll();
+    
+    // プロジェクトIDごとにグループ化し、最大3件のみ保持
+    $tempHistories = [];
+    foreach ($allHistories as $history) {
+        $projectId = $history['project_id'];
+        if (!isset($tempHistories[$projectId])) {
+            $tempHistories[$projectId] = [];
+        }
+        if (count($tempHistories[$projectId]) < 3) {
+            $tempHistories[$projectId][] = $history;
         }
     }
+    $histories = $tempHistories;
 }
 
 include 'includes/header.php';
@@ -97,12 +120,12 @@ include 'includes/header.php';
                                     <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
                                 </span>
                             </div>
-                            <?php if ($hist['status']): ?>
+                            <?php if (!empty($hist['status'])): ?>
                                 <div class="status-change">
                                     ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
                                 </div>
                             <?php endif; ?>
-                            <?php if ($hist['content']): ?>
+                            <?php if (!empty($hist['content'])): ?>
                                 <div class="content">
                                     <?= nl2br(htmlspecialchars($hist['content'])) ?>
                                 </div>
@@ -115,10 +138,9 @@ include 'includes/header.php';
             <!-- 子プロジェクト表示 -->
             <?php if (isset($childProjects[$project['id']]) && !empty($childProjects[$project['id']])): ?>
                 <div class="sub-projects">
-<!-- 子プロジェクト表示部分のコード変更 -->
-<!-- 子プロジェクト表示部分のコード変更 -->
+<!-- 子プロジェクト表示部分のコード修正 -->
 <?php foreach ($childProjects[$project['id']] as $childProject): ?>
-    <div class="project-card child-project" data-status="<?= $childProject['status'] ?>">
+    <div class="project-card child-project" data-status="<?= htmlspecialchars($childProject['status']) ?>">
         <div class="project-header">
             <h3 class="project-title">
                 <?= htmlspecialchars($childProject['name']) ?>
@@ -127,7 +149,7 @@ include 'includes/header.php';
                 </span>
             </h3>
             <div class="project-actions">
-                <span class="status-badge status-<?= $childProject['status'] ?>">
+                <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
                     <?= htmlspecialchars($childProject['status']) ?>
                 </span>
                 <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
@@ -140,7 +162,8 @@ include 'includes/header.php';
         <!-- 子プロジェクトの履歴表示 -->
         <?php if (!empty($histories[$childProject['id']])): ?>
             <div id="history-content-<?= $childProject['id'] ?>" 
-                 class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>">
+                 class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
+                 style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
                 <?php foreach ($histories[$childProject['id']] as $hist): ?>
                     <div class="history-item">
                         <div class="history-header">
@@ -149,12 +172,12 @@ include 'includes/header.php';
                                 <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
                             </span>
                         </div>
-                        <?php if ($hist['status']): ?>
+                        <?php if (!empty($hist['status'])): ?>
                             <div class="status-change">
                                 ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
                             </div>
                         <?php endif; ?>
-                        <?php if ($hist['content']): ?>
+                        <?php if (!empty($hist['content'])): ?>
                             <div class="content">
                                 <?= nl2br(htmlspecialchars($hist['content'])) ?>
                             </div>
@@ -165,12 +188,14 @@ include 'includes/header.php';
         <?php endif; ?>
     </div>
 <?php endforeach; ?>
+
                 </div>
             <?php endif; ?>
         </div>
     <?php endforeach; ?>
 </div>
 
+<!-- モーダル部分は変更なし -->
 <!-- 新規プロジェクト追加モーダル -->
 <div id="addProjectModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -264,5 +289,36 @@ include 'includes/header.php';
         </div>
     </div>
 </div>
+
+<script>
+// 履歴の表示・非表示を切り替える関数
+function toggleHistory(projectId) {
+    const historyContent = document.getElementById(`history-content-${projectId}`);
+    const toggleButton = document.querySelector(`.toggle-history[data-project-id="${projectId}"]`);
+    
+    if (historyContent) {
+        if (historyContent.classList.contains('collapsed')) {
+            historyContent.classList.remove('collapsed');
+            toggleButton.textContent = '▼';
+        } else {
+            historyContent.classList.add('collapsed');
+            toggleButton.textContent = '▶';
+        }
+    }
+}
+
+// ステータスでフィルタリングする関数
+function filterByStatus(status) {
+    const childProjects = document.querySelectorAll('.child-project');
+    
+    childProjects.forEach(project => {
+        if (status === 'all' || project.dataset.status === status) {
+            project.style.display = 'block';
+        } else {
+            project.style.display = 'none';
+        }
+    });
+}
+</script>
 
 <?php include 'includes/footer.php'; ?>
