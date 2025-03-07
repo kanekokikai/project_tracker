@@ -1,4 +1,9 @@
 <?php
+// キャッシュ制御ヘッダーを追加
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
 require_once __DIR__ . '/config/database.php';
 
 // ステータスの選択肢を定義
@@ -226,11 +231,11 @@ include 'includes/header.php';
             <input type="hidden" id="progressProjectId" name="project_id">
             <div class="form-group">
                 <label for="progressAuthor">名前</label>
-                <input type="text" id="progressAuthor" name="author" class="form-control" required>
+                <input type="text" id="progressAuthor" name="author" class="form-control" required style="width: 100% !important; padding: 0.8rem !important; font-size: 1rem !important; box-sizing: border-box !important;">
             </div>
             <div class="form-group">
                 <label for="progressContent">進捗内容</label>
-                <textarea id="progressContent" name="content" class="form-control" required></textarea>
+                <textarea id="progressContent" name="content" class="form-control" required style="width: 100% !important; min-height: 150px !important; padding: 0.8rem !important; font-size: 1rem !important; box-sizing: border-box !important;"></textarea>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-primary">追加</button>
@@ -239,6 +244,7 @@ include 'includes/header.php';
         </form>
     </div>
 </div>
+
 
 <!-- ステータス変更モーダル -->
 <div id="statusModal" class="modal" style="display: none;">

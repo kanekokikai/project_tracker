@@ -1,6 +1,32 @@
+// fetch関数に共通のオプションを設定（キャッシュ制御を追加）
+function fetchWithCache(url, options = {}) {
+    const defaultOptions = {
+        cache: 'no-store', // キャッシュを使用しない
+        headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
+        }
+    };
+    
+    // ヘッダーをマージ
+    const mergedOptions = { ...defaultOptions, ...options };
+    if (options.headers) {
+        mergedOptions.headers = { ...defaultOptions.headers, ...options.headers };
+    }
+    
+    return fetch(url, mergedOptions);
+}
+
 // モーダル関連の関数
 function openAddProjectModal() {
     document.getElementById('addProjectModal').style.display = 'block';
+    
+    // スタイルを直接適用
+    const inputField = document.getElementById('projectName');
+    if (inputField) {
+        inputField.style.width = '100%';
+        inputField.style.padding = '0.8rem';
+    }
 }
 
 function closeAddProjectModal() {
@@ -10,6 +36,21 @@ function closeAddProjectModal() {
 function openProgressModal(projectId) {
     document.getElementById('progressProjectId').value = projectId;
     document.getElementById('progressModal').style.display = 'block';
+    
+    // スタイルを直接適用
+    const authorField = document.getElementById('progressAuthor');
+    const contentField = document.getElementById('progressContent');
+    
+    if (authorField) {
+        authorField.style.width = '100%';
+        authorField.style.padding = '0.8rem';
+    }
+    
+    if (contentField) {
+        contentField.style.width = '100%';
+        contentField.style.minHeight = '150px';
+        contentField.style.padding = '0.8rem';
+    }
 }
 
 function closeProgressModal() {
@@ -19,11 +60,26 @@ function closeProgressModal() {
 function openStatusModal(projectId) {
     document.getElementById('statusProjectId').value = projectId;
     document.getElementById('statusModal').style.display = 'block';
+    
+    // スタイルを直接適用
+    const authorField = document.getElementById('statusAuthor');
+    const statusField = document.getElementById('newStatus');
+    
+    if (authorField) {
+        authorField.style.width = '100%';
+        authorField.style.padding = '0.8rem';
+    }
+    
+    if (statusField) {
+        statusField.style.width = '100%';
+        statusField.style.padding = '0.8rem';
+    }
 }
 
 function closeStatusModal() {
     document.getElementById('statusModal').style.display = 'none';
 }
+
 
 // 履歴の折りたたみ機能（簡素化版）
 function toggleHistory(projectId) {
@@ -47,7 +103,10 @@ function toggleHistory(projectId) {
 function openHistoryModal(projectId) {
     document.getElementById('historyModal').style.display = 'block';
     
-    fetch('api/get_history.php?project_id=' + projectId)
+    // 読み込み中表示
+    document.getElementById('historyList').innerHTML = '<p>読み込み中...</p>';
+    
+    fetchWithCache('api/get_history.php?project_id=' + projectId)
         .then(response => response.json())
         .then(data => {
             if (data.success) {
@@ -83,7 +142,7 @@ function closeHistoryModal() {
 // プロジェクト削除
 function confirmDelete(projectId) {
     if (confirm('このプロジェクトを削除してもよろしいですか？')) {
-        fetch('api/delete_project.php', {
+        fetchWithCache('api/delete_project.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -133,6 +192,35 @@ function closeSubProjectModal() {
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded - Initializing functionality");
     
+    // ページロード時のパフォーマンス最適化
+    performance.mark('app-init-start');
+
+    // 非同期でリソースをプリロード
+    setTimeout(() => {
+        // モーダル要素の事前初期化
+        const modals = [
+            'addProjectModal', 
+            'progressModal', 
+            'statusModal', 
+            'subProjectModal', 
+            'historyModal'
+        ];
+        
+        modals.forEach(id => {
+            const modal = document.getElementById(id);
+            if (modal) {
+                // モーダルの初期スタイルを設定
+                if (window.getComputedStyle(modal).display !== 'none') {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+        
+        performance.mark('app-init-end');
+        performance.measure('app-initialization', 'app-init-start', 'app-init-end');
+        console.log('App initialized');
+    }, 100);
+    
     // モーダル要素の存在確認（デバッグ用）
     console.log("Modal elements check:");
     console.log("addProjectModal exists:", !!document.getElementById('addProjectModal'));
@@ -148,7 +236,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const formData = new FormData(this);
             
-            fetch('api/add_project.php', {
+            fetchWithCache('api/add_project.php', {
                 method: 'POST',
                 body: formData
             })
@@ -174,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const formData = new FormData(this);
             
-            fetch('api/add_progress.php', {
+            fetchWithCache('api/add_progress.php', {
                 method: 'POST',
                 body: formData
             })
@@ -200,7 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const formData = new FormData(this);
             
-            fetch('api/change_status.php', {
+            fetchWithCache('api/change_status.php', {
                 method: 'POST',
                 body: formData
             })
@@ -226,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const formData = new FormData(this);
             
-            fetch('api/add_sub_project.php', {
+            fetchWithCache('api/add_sub_project.php', {
                 method: 'POST',
                 body: formData
             })

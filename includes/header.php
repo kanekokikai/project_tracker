@@ -14,6 +14,40 @@ $basePath = ($environment === 'local') ? '/project_tracker' : '/project-tracker'
     <!-- 強制的にキャッシュをクリアするためのバージョン番号を追加 -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/css/style.css?v=<?php echo time(); ?>">
 </head>
+
+<style type="text/css">
+/* 緊急修正：入力フィールドの幅を調整 */
+input[type="text"], 
+textarea, 
+select {
+  width: 100% !important;
+  padding: 0.8rem !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+textarea {
+  min-height: 150px !important;
+  resize: vertical !important;
+}
+
+.form-group {
+  margin-bottom: 1.2rem !important;
+}
+
+.modal-content {
+  padding: 1.5rem !important;
+}
+
+/* 特定のセレクタを厳密に指定 */
+#progressAuthor, #progressContent,
+#projectName, #subProjectName,
+#statusAuthor, #newStatus {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+</style>
+
 <body>
     <header class="header">
         <div class="header-content">
