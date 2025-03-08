@@ -401,3 +401,129 @@ label {
     width: 95%;
   }
 }
+
+/* 認証関連のスタイル */
+.logout-link {
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--apple-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.logout-link:hover {
+  text-decoration: underline;
+}
+
+.auth-message {
+  color: var(--apple-error);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+#authModal h2 {
+  color: var(--apple-dark);
+  font-weight: 500;
+  text-align: center;
+}
+
+#authModal p {
+  text-align: center;
+  color: var(--apple-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* 履歴アクションボタン */
+.history-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-icon {
+  background: none;
+  border: none;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--apple-secondary);
+  transition: all 0.2s ease;
+}
+
+.btn-icon:hover {
+  background-color: var(--apple-light);
+}
+
+.edit-history:hover {
+  color: var(--apple-primary);
+}
+
+.delete-history:hover {
+  color: var(--apple-error);
+}
+
+.icon-text {
+  font-weight: 500;
+}
+
+/* コンパクトな履歴アクションボタン */
+.date-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inline-actions {
+  display: inline-flex;
+  margin-left: 8px;
+}
+
+/* コンパクトな履歴アクションボタン - より目立つスタイル */
+.mini-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 3px;
+  cursor: pointer;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  /* 初期状態から目立つように */
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.edit-btn {
+  color: var(--apple-primary); /* 青色で編集ボタンを表示 */
+}
+
+.delete-btn {
+  color: var(--apple-error); /* 赤色で削除ボタンを表示 */
+}
+
+.mini-btn:hover {
+  transform: scale(1.1); /* ホバー時に少し大きくする */
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ホバー効果の強化 */
+.history-item .inline-actions {
+  opacity: 0.9; /* 常に表示されるように */
+}
+
+.history-item:hover .inline-actions {
+  opacity: 1;
+}

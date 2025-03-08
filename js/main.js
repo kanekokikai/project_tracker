@@ -80,24 +80,38 @@ function closeStatusModal() {
     document.getElementById('statusModal').style.display = 'none';
 }
 
-
-// 履歴の折りたたみ機能（簡素化版）
-function toggleHistory(projectId) {
-    const historyContent = document.getElementById(`history-content-${projectId}`);
-    const toggleButton = document.querySelector(`.toggle-history[data-project-id="${projectId}"]`);
+// 履歴の折りたたみ機能（直接DOM操作版）
+function toggleHistoryDirect(projectId) {
+    console.log("Direct toggle for project: " + projectId);
     
-    if (historyContent) {
-        if (historyContent.classList.contains('collapsed')) {
-            historyContent.classList.remove('collapsed');
-            toggleButton.textContent = '▼';
-            historyContent.style.display = 'block';
-        } else {
-            historyContent.classList.add('collapsed');
-            toggleButton.textContent = '▶';
-            historyContent.style.display = 'none';
-        }
+    var historyContent = document.getElementById('history-content-' + projectId);
+    var toggleButton = document.querySelector('.toggle-history[data-project-id="' + projectId + '"]');
+    
+    if (!historyContent) {
+        console.error("History content not found for project ID: " + projectId);
+        return false;
     }
+    
+    // コンピュテッドスタイルを取得して実際の表示状態を確認
+    var computedStyle = window.getComputedStyle(historyContent);
+    var isHidden = computedStyle.display === 'none';
+    
+    if (isHidden) {
+        // 履歴を展開
+        historyContent.style.display = 'block';
+        toggleButton.textContent = '▼';
+        console.log("Expanded history directly for project ID: " + projectId);
+    } else {
+        // 履歴を折りたたむ
+        historyContent.style.display = 'none';
+        toggleButton.textContent = '▶';
+        console.log("Collapsed history directly for project ID: " + projectId);
+    }
+    
+    // イベントの伝播を止める
+    return false;
 }
+
 
 // 履歴一覧モーダル関連
 function openHistoryModal(projectId) {
@@ -188,7 +202,78 @@ function closeSubProjectModal() {
     document.getElementById('subProjectModal').style.display = 'none';
 }
 
-// ページ読み込み完了時に実行
+// 履歴編集モーダル関連
+function openEditHistoryModal(historyId) {
+    // 履歴データの取得
+    fetchWithCache('api/get_history_detail.php?history_id=' + historyId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // フォームに値をセット
+                document.getElementById('editHistoryId').value = data.history.id;
+                document.getElementById('editHistoryAuthor').value = data.history.author;
+                document.getElementById('editHistoryContent').value = data.history.content || '';
+                
+                // モーダルを表示
+                document.getElementById('editHistoryModal').style.display = 'block';
+            } else {
+                alert('エラーが発生しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('履歴の取得に失敗しました');
+        });
+}
+
+function closeEditHistoryModal() {
+    document.getElementById('editHistoryModal').style.display = 'none';
+}
+
+// 履歴削除確認
+function confirmDeleteHistory(historyId) {
+    console.log("削除しようとしている履歴ID:", historyId); // デバッグ用
+
+    if (!historyId || isNaN(parseInt(historyId))) {
+        console.error("無効な履歴ID:", historyId);
+        alert('有効な履歴IDが指定されていません');
+        return;
+    }
+
+    if (confirm('この進捗を削除してもよろしいですか？')) {
+        // URLエンコードされたフォームデータを使用
+        const formData = new FormData();
+        formData.append('history_id', historyId);
+        
+        console.log("送信するデータ:", historyId); // デバッグ用
+        
+        // 履歴の削除
+        fetchWithCache('api/delete_history.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            console.log("サーバーからのレスポンスステータス:", response.status); // デバッグ用
+            return response.json();
+        })
+        .then(data => {
+            console.log("処理結果:", data); // デバッグ用
+            if (data.success) {
+                alert('進捗が削除されました');
+                location.reload();
+            } else {
+                console.error("削除エラー:", data.message);
+                alert('エラーが発生しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('削除処理中のエラー:', error);
+            alert('履歴の削除に失敗しました');
+        });
+    }
+}
+
+// ページ読み込み完了時に実行 - すべての初期化処理を1つのリスナーにまとめる
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded - Initializing functionality");
     
@@ -203,7 +288,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'progressModal', 
             'statusModal', 
             'subProjectModal', 
-            'historyModal'
+            'historyModal',
+            'editHistoryModal'
         ];
         
         modals.forEach(id => {
@@ -228,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("statusModal exists:", !!document.getElementById('statusModal'));
     console.log("subProjectModal exists:", !!document.getElementById('subProjectModal'));
     console.log("historyModal exists:", !!document.getElementById('historyModal'));
+    console.log("editHistoryModal exists:", !!document.getElementById('editHistoryModal'));
     
     // プロジェクト追加フォーム
     const addProjectForm = document.getElementById('addProjectForm');
@@ -333,6 +420,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // 履歴編集フォーム
+    const editHistoryForm = document.getElementById('editHistoryForm');
+    if (editHistoryForm) {
+        editHistoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetchWithCache('api/edit_history.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('進捗が更新されました');
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('履歴の更新に失敗しました');
+            });
+        });
+    }
+    
     // トグルボタンのイベント設定
     const toggleButtons = document.querySelectorAll('.toggle-history');
     console.log(`Found ${toggleButtons.length} toggle buttons`);
@@ -341,35 +455,84 @@ document.addEventListener('DOMContentLoaded', function() {
         const projectId = button.getAttribute('data-project-id');
         console.log(`Setting up toggle for project ${projectId}`);
         
-        // 新しいイベントを追加
+        // クリックイベントを追加
         button.addEventListener('click', function(e) {
+            e.preventDefault();
             e.stopPropagation();
+            console.log(`Toggle button clicked for project ${projectId}`);
             toggleHistory(projectId);
         });
     });
     
-    // 初期状態の設定（完了プロジェクトの履歴を折りたたむ）
+// 初期状態の設定（完了プロジェクトの履歴を折りたたむ）
+setTimeout(function() {
     const completedProjects = document.querySelectorAll('.child-project[data-status="完了"]');
     console.log(`Found ${completedProjects.length} completed projects to collapse`);
     
     completedProjects.forEach(project => {
+        const projectId = project.querySelector('.toggle-history').getAttribute('data-project-id');
+        const historyContent = document.getElementById('history-content-' + projectId);
         const toggleButton = project.querySelector('.toggle-history');
-        if (toggleButton) {
-            const projectId = toggleButton.getAttribute('data-project-id');
-            const historyContent = document.getElementById(`history-content-${projectId}`);
-            
-            if (historyContent) {
-                console.log(`Collapsing history for completed project ${projectId}`);
-                historyContent.classList.add('collapsed');
-                historyContent.style.display = 'none';
-                toggleButton.textContent = '▶';
-            }
+        
+        if (historyContent) {
+            console.log(`Collapsing history for completed project ${projectId}`);
+            historyContent.style.display = 'none';
+            toggleButton.textContent = '▶';
         }
     });
+}, 100); // 少し遅延させて確実にDOM要素が利用可能になってから実行    
+
     
-    // モーダルの外側をクリックした時に閉じる
+    // 認証フォーム
+    const authForm = document.getElementById('authForm');
+    if (authForm) {
+        authForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            const authMessage = document.getElementById('authMessage');
+            
+            // パスワードが空でないか確認
+            if (!password) {
+                authMessage.textContent = 'パスワードを入力してください';
+                return;
+            }
+            
+            // フォームデータを作成
+            const formData = new FormData();
+            formData.append('password', password);
+            
+            // 認証APIを呼び出し
+            fetchWithCache('api/authenticate.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 認証成功
+                    const authOverlay = document.querySelector('.auth-overlay');
+                    authOverlay.classList.add('authenticated');
+                    
+                    // モーダルを閉じる
+                    setTimeout(() => {
+                        document.getElementById('authModal').style.display = 'none';
+                        document.querySelector('.main-content').classList.remove('blur-content');
+                    }, 500);
+                } else {
+                    // 認証失敗
+                    authMessage.textContent = data.message;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                authMessage.textContent = '認証中にエラーが発生しました';
+            });
+        });
+    }
+    
+    // モーダルの外側をクリックした時に閉じる（認証モーダル以外）
     window.onclick = function(event) {
-        if (event.target.classList.contains('modal')) {
+        if (event.target.classList.contains('modal') && event.target.id !== 'authModal') {
             event.target.style.display = 'none';
         }
     };

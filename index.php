@@ -5,19 +5,34 @@ header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
 
 require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/auth.php';
+
+// 認証状態を確認
+$isAuth = isAuthenticated();
 
 // ステータスの選択肢を定義
 $statusOptions = [
     "未着手",
     "進行中",
     "レビュー中",
-    "保留中",
+    "保留中", 
     "完了",
     "中止"
 ];
 
-// 親プロジェクトの取得（parent_idがNULLのもの）- 最適化: 必要なカラムだけを取得
-$stmt = $pdo->query("SELECT id, name, status, updated_at FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
+
+// 最新の履歴を持つプロジェクト順に親プロジェクトを取得
+// サブクエリで各親プロジェクトの最新の履歴日時（子プロジェクトの履歴も含む）を取得
+$stmt = $pdo->query("
+    SELECT p.id, p.name, p.status, p.updated_at, 
+        (SELECT MAX(h.created_at) 
+         FROM project_history h
+         JOIN projects sp ON h.project_id = sp.id
+         WHERE sp.id = p.id OR sp.parent_id = p.id) as latest_history_date
+    FROM projects p
+    WHERE p.parent_id IS NULL
+    ORDER BY latest_history_date DESC, p.updated_at DESC
+");
 $parentProjects = $stmt->fetchAll();
 
 // 親プロジェクトのIDリストを作成
@@ -51,7 +66,7 @@ if (!empty($allProjectIds)) {
     // 各プロジェクトごとにクエリを実行するが、制限を付ける（最新3件のみ）
     foreach ($allProjectIds as $projectId) {
         $stmt = $pdo->prepare("
-            SELECT project_id, author, status, content, created_at
+            SELECT id, project_id, author, status, content, created_at
             FROM project_history
             WHERE project_id = ?
             ORDER BY created_at DESC
@@ -61,6 +76,7 @@ if (!empty($allProjectIds)) {
         $histories[$projectId] = $stmt->fetchAll();
     }
 }
+
 
 include 'includes/header.php';
 ?>
@@ -98,82 +114,113 @@ include 'includes/header.php';
                 </div>
             </div>
 
-            <!-- 親プロジェクトの履歴表示 -->
-            <?php if (!empty($histories[$project['id']])): ?>
-                <div class="project-history">
-                    <?php foreach ($histories[$project['id']] as $hist): ?>
-                        <div class="history-item">
-                            <div class="history-header">
-                                <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
-                                <span class="date">
-                                    <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
-                                </span>
-                            </div>
-                            <?php if (!empty($hist['status'])): ?>
-                                <div class="status-change">
-                                    ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
-                                </div>
-                            <?php endif; ?>
-                            <?php if (!empty($hist['content'])): ?>
-                                <div class="content">
-                                    <?= nl2br(htmlspecialchars($hist['content'])) ?>
-                                </div>
-                            <?php endif; ?>
+<!-- 親プロジェクトの履歴表示 -->
+<?php if (!empty($histories[$project['id']])): ?>
+    <div class="project-history">
+        <?php foreach ($histories[$project['id']] as $hist): ?>
+            <div class="history-item" data-history-id="<?= $hist['id'] ?>">
+                <div class="history-header">
+                    <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
+                    <div class="date-actions">
+                        <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+                        <div class="inline-actions">
+                            <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
+                            <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
                         </div>
-                    <?php endforeach; ?>
+                    </div>
                 </div>
-            <?php endif; ?>
+                <?php if (!empty($hist['status'])): ?>
+                    <div class="status-change">
+                        ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($hist['content'])): ?>
+                    <div class="content">
+                        <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
 
             <!-- 子プロジェクト表示 -->
             <?php if (isset($childProjects[$project['id']]) && !empty($childProjects[$project['id']])): ?>
                 <div class="sub-projects">
                     <?php foreach ($childProjects[$project['id']] as $childProject): ?>
                         <div class="project-card child-project" data-status="<?= htmlspecialchars($childProject['status']) ?>">
-                            <div class="project-header">
-                                <h3 class="project-title">
-                                    <?= htmlspecialchars($childProject['name']) ?>
-                                    <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>">
-                                        <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
-                                    </span>
-                                </h3>
-                                <div class="project-actions">
-                                    <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
-                                        <?= htmlspecialchars($childProject['status']) ?>
-                                    </span>
-                                    <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
-                                    <button class="btn btn-primary" onclick="openStatusModal(<?= $childProject['id'] ?>)">ステータス変更</button>
-                                    <button class="btn btn-info" onclick="openHistoryModal(<?= $childProject['id'] ?>)">すべての履歴</button>
-                                    <button class="btn btn-danger" onclick="confirmDelete(<?= $childProject['id'] ?>)">削除</button>
-                                </div>
-                            </div>
+    <div class="project-header">
+      
+    <h3 class="project-title">
+    <?= htmlspecialchars($childProject['name']) ?>
+    <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>" 
+  onclick="
+    var content = document.getElementById('history-content-<?= $childProject['id'] ?>');
+    if (content) {
+      content.style.cssText = content.style.display === 'none' ? 'display: block !important;' : 'display: none !important;';
+      this.textContent = content.style.display === 'none' ? '▶' : '▼';
+    }
+    return false;
+  ">
+    <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
+</span>
 
-                            <!-- 子プロジェクトの履歴表示 -->
-                            <?php if (!empty($histories[$childProject['id']])): ?>
-                                <div id="history-content-<?= $childProject['id'] ?>" 
-                                    class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
-                                    style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
-                                    <?php foreach ($histories[$childProject['id']] as $hist): ?>
-                                        <div class="history-item">
-                                            <div class="history-header">
-                                                <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
-                                                <span class="date">
-                                                    <?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?>
-                                                </span>
-                                            </div>
-                                            <?php if (!empty($hist['status'])): ?>
-                                                <div class="status-change">
-                                                    ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
-                                                </div>
-                                            <?php endif; ?>
-                                            <?php if (!empty($hist['content'])): ?>
-                                                <div class="content">
-                                                    <?= nl2br(htmlspecialchars($hist['content'])) ?>
-                                                </div>
-                                            <?php endif; ?>
-                                        </div>
-                                    <?php endforeach; ?>
-                                </div>
-                            <?php endif; ?>
+</h3>
+
+
+
+
+        <div class="project-actions">
+            <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
+                <?= htmlspecialchars($childProject['status']) ?>
+            </span>
+            <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
+            <button class="btn btn-primary" onclick="openStatusModal(<?= $childProject['id'] ?>)">ステータス変更</button>
+            <button class="btn btn-info" onclick="openHistoryModal(<?= $childProject['id'] ?>)">すべての履歴</button>
+            <button class="btn btn-danger" onclick="confirmDelete(<?= $childProject['id'] ?>)">削除</button>
+        </div>
+    </div>                            
+
+<!-- 子プロジェクトの履歴表示 -->
+<?php if (!empty($histories[$childProject['id']])): ?>
+    <div id="history-content-<?= $childProject['id'] ?>" 
+        class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
+        style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
+        <?php foreach ($histories[$childProject['id']] as $hist): ?>
+            <div class="history-item" data-history-id="<?= $hist['id'] ?>">
+                <div class="history-header">
+                    <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
+                    <div class="date-actions">
+                        <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+                        <div class="inline-actions">
+                            <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
+                            <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                        </div>
+                    </div>
+                </div>
+                <?php if (!empty($hist['status'])): ?>
+                    <div class="status-change">
+                        ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
+                    </div>
+                <?php endif; ?>
+                <?php if (!empty($hist['content'])): ?>
+                    <div class="content">
+                        <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+    </div>
+
+    <?php else: ?>
+    <!-- 履歴がない場合は何も表示しない -->
+    <div id="history-content-<?= $childProject['id'] ?>" 
+        class="project-history <?= ($childProject['status'] === '完了') ? 'collapsed' : '' ?>"
+        style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
+    </div>
+<?php endif; ?>
+
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -198,6 +245,10 @@ include 'includes/header.php';
                 <input type="text" id="projectName" name="name" class="form-control" required>
             </div>
             <div class="form-group">
+                <label for="projectAuthor">作成者</label>
+                <input type="text" id="projectAuthor" name="author" class="form-control" required>
+            </div>
+            <div class="form-group">
                 <button type="submit" class="btn btn-primary">追加</button>
                 <button type="button" class="btn" onclick="closeAddProjectModal()">キャンセル</button>
             </div>
@@ -216,12 +267,17 @@ include 'includes/header.php';
                 <input type="text" id="subProjectName" name="name" class="form-control" required>
             </div>
             <div class="form-group">
+                <label for="subProjectAuthor">作成者</label>
+                <input type="text" id="subProjectAuthor" name="author" class="form-control" required>
+            </div>
+            <div class="form-group">
                 <button type="submit" class="btn btn-primary">追加</button>
                 <button type="button" class="btn" onclick="closeSubProjectModal()">キャンセル</button>
             </div>
         </form>
     </div>
 </div>
+
 
 <!-- 進捗追加モーダル -->
 <div id="progressModal" class="modal" style="display: none;">
@@ -264,6 +320,11 @@ include 'includes/header.php';
                     <?php endforeach; ?>
                 </select>
             </div>
+            <!-- ここにコメント欄を追加 -->
+            <div class="form-group">
+                <label for="statusComment">コメント (任意)</label>
+                <textarea id="statusComment" name="comment" class="form-control"></textarea>
+            </div>
             <div class="form-group">
                 <button type="submit" class="btn btn-primary">変更</button>
                 <button type="button" class="btn" onclick="closeStatusModal()">キャンセル</button>
@@ -271,6 +332,7 @@ include 'includes/header.php';
         </form>
     </div>
 </div>
+
 
 <!-- 履歴一覧モーダル -->
 <div id="historyModal" class="modal" style="display: none;">
@@ -280,5 +342,27 @@ include 'includes/header.php';
         <div class="form-group">
             <button type="button" class="btn" onclick="closeHistoryModal()">閉じる</button>
         </div>
+    </div>
+</div>
+
+<!-- 履歴編集モーダル -->
+<div id="editHistoryModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>進捗内容の編集</h3>
+        <form id="editHistoryForm">
+            <input type="hidden" id="editHistoryId" name="history_id">
+            <div class="form-group">
+                <label for="editHistoryAuthor">名前</label>
+                <input type="text" id="editHistoryAuthor" name="author" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="editHistoryContent">進捗内容</label>
+                <textarea id="editHistoryContent" name="content" class="form-control"></textarea>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">更新</button>
+                <button type="button" class="btn" onclick="closeEditHistoryModal()">キャンセル</button>
+            </div>
+        </form>
     </div>
 </div>
