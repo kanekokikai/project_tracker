@@ -1,6 +1,6 @@
 <?php
 // 環境の切り替え
-$environment = 'xserver';  // 'local' または 'xserver'
+$environment = 'local';  // 'local' または 'xserver'
 
 // データベース接続情報
 if ($environment === 'local') {
@@ -32,10 +32,7 @@ try {
         PDO::ATTR_TIMEOUT => 3,
         
         // バッファリングクエリの最適化
-        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true,
-        
-        // 結果セットのフェッチモードを最適化
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::MYSQL_ATTR_USE_BUFFERED_QUERY => true
     ];
     
     $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);

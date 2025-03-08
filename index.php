@@ -22,21 +22,35 @@ $statusOptions = [
 
 
 // 最新の履歴を持つプロジェクト順に親プロジェクトを取得
-// サブクエリで各親プロジェクトの最新の履歴日時（子プロジェクトの履歴も含む）を取得
-$stmt = $pdo->query("
-    SELECT p.id, p.name, p.status, p.updated_at, 
-        (SELECT MAX(h.created_at) 
-         FROM project_history h
-         JOIN projects sp ON h.project_id = sp.id
-         WHERE sp.id = p.id OR sp.parent_id = p.id) as latest_history_date
-    FROM projects p
-    WHERE p.parent_id IS NULL
-    ORDER BY latest_history_date DESC, p.updated_at DESC
-");
-$parentProjects = $stmt->fetchAll();
+try {
+    // まず、親プロジェクトとその子プロジェクトの最新履歴を取得
+    // より互換性のあるクエリを使用
+    $stmt = $pdo->query("
+        SELECT p.id, p.name, p.status, p.updated_at, 
+               IFNULL(
+                   (SELECT MAX(h.created_at)
+                    FROM project_history h
+                    LEFT JOIN projects sp ON h.project_id = sp.id
+                    WHERE h.project_id = p.id 
+                       OR sp.parent_id = p.id
+                   ), '1900-01-01'
+               ) as latest_history_date
+        FROM projects p
+        WHERE p.parent_id IS NULL
+        ORDER BY latest_history_date DESC, p.updated_at DESC
+    ");
+    $parentProjects = $stmt->fetchAll();
+} catch (PDOException $e) {
+    // エラーが発生した場合は、より単純なクエリを試す
+    error_log('Advanced query failed: ' . $e->getMessage());
+    $stmt = $pdo->query("SELECT id, name, status, updated_at FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
+    $parentProjects = $stmt->fetchAll();
+}
+
 
 // 親プロジェクトのIDリストを作成
 $parentIds = array_column($parentProjects, 'id');
+
 
 // 子プロジェクトの取得 - 最適化: IN句を使用して一度に取得
 $childProjects = [];
@@ -82,9 +96,11 @@ include 'includes/header.php';
 ?>
 
 <div class="project-list">
-    <!-- フィルターとプロジェクト追加ボタン -->
-    <div class="action-buttons">
-        <button class="btn btn-primary" onclick="openAddProjectModal()">新規プロジェクト</button>
+
+<!-- フィルターとプロジェクト追加ボタン -->
+<div class="action-buttons">
+    <button class="btn btn-primary" onclick="openAddProjectModal()">新規プロジェクト</button>
+    <div class="filter-wrapper">
         <select id="statusFilter" class="form-control" onchange="filterByStatus(this.value)">
             <option value="all">すべてのステータス</option>
             <?php foreach ($statusOptions as $status): ?>
@@ -92,6 +108,7 @@ include 'includes/header.php';
             <?php endforeach; ?>
         </select>
     </div>
+</div>
 
     <!-- プロジェクト一覧 -->
     <?php foreach ($parentProjects as $project): ?>
