@@ -106,6 +106,8 @@ textarea {
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
+  /* 常に表示する（条件付き表示を削除） */
+  display: inline-block;
 }
 
 .logout-link:hover {
@@ -117,9 +119,8 @@ textarea {
     <header class="header">
         <div class="header-content">
             <h1>プロジェクト管理</h1>
-            <?php if ($isAuth): ?>
-                <a href="logout.php" class="logout-link">ログアウト</a>
-            <?php endif; ?>
+            <!-- 常にログアウトリンクを表示する（条件判定を削除） -->
+            <a href="logout.php" class="logout-link">ログアウト</a>
         </div>
     </header>
 
