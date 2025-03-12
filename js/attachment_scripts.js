@@ -3,6 +3,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log('添付ファイル機能の初期化を開始');
     
+    // キャッシュ用の変数を追加
+    const attachmentsCache = {};
+
     // モーダル要素
     const attachmentModal = document.getElementById('attachment-modal');
     const deleteConfirmModal = document.getElementById('delete-confirm-modal');
@@ -84,104 +87,35 @@ document.addEventListener('DOMContentLoaded', function() {
         const attachmentsTable = document.getElementById('attachments-table');
         const noAttachmentsMsg = document.querySelector('.no-attachments');
         
-        if (!attachmentsList || !attachmentsTable || !noAttachmentsMsg) {
-            console.error('添付ファイル一覧の要素が見つかりません');
+        // リストをクリア
+        attachmentsList.innerHTML = '';
+        
+        // キャッシュがあるか確認
+        const now = new Date().getTime();
+        if (attachmentsCache[projectId] && now - attachmentsCache[projectId].timestamp < 30000) {
+            // 30秒以内のキャッシュを使用
+            console.log(`プロジェクトID: ${projectId} のキャッシュを使用`);
+            displayAttachments(attachmentsCache[projectId].data, projectId);
             return;
         }
         
-        // リセット
-        attachmentsList.innerHTML = '';
+        // 読み込み中メッセージ
+        noAttachmentsMsg.textContent = '読み込み中...';
+        noAttachmentsMsg.style.display = 'block';
+        attachmentsTable.style.display = 'none';
         
+        // APIからデータを取得
         fetch(`api/get_attachments.php?project_id=${projectId}`)
             .then(response => response.json())
             .then(data => {
-                console.log('添付ファイル一覧の取得結果:', data);
+                // キャッシュに保存
+                attachmentsCache[projectId] = {
+                    data: data,
+                    timestamp: now
+                };
                 
-                if (data.status === 'success') {
-                    if (data.data.length > 0) {
-                        // 添付ファイルがある場合
-                        attachmentsTable.style.display = 'table';
-                        noAttachmentsMsg.style.display = 'none';
-                        
-                        data.data.forEach(file => {
-                            const row = document.createElement('tr');
-                            
-                            // ファイルタイプに応じたアイコンを選択
-                            let fileIcon = 'fa-file';
-                            if (file.file_type.includes('image')) {
-                                fileIcon = 'fa-file-image';
-                            } else if (file.file_type.includes('pdf')) {
-                                fileIcon = 'fa-file-pdf';
-                            } else if (file.file_type.includes('word') || file.file_type.includes('document')) {
-                                fileIcon = 'fa-file-word';
-                            } else if (file.file_type.includes('excel') || file.file_type.includes('spreadsheet')) {
-                                fileIcon = 'fa-file-excel';
-                            } else if (file.file_type.includes('zip') || file.file_type.includes('archive')) {
-                                fileIcon = 'fa-file-archive';
-                            } else if (file.file_type.includes('text')) {
-                                fileIcon = 'fa-file-alt';
-                            }
-                            
-                            row.innerHTML = `
-                                <td>
-                                    <div class="file-name" data-id="${file.id}" data-filename="${file.original_file_name}" data-filetype="${file.file_type}">
-                                        <i class="fas ${fileIcon} file-icon"></i>
-                                        ${file.original_file_name}
-                                    </div>
-                                </td>
-                                <td>${file.file_size_formatted}</td>
-                                <td>${formatDate(file.upload_date)}</td>
-                                <td class="file-actions">
-                                    <button class="download-btn" data-id="${file.id}" title="ダウンロード">
-                                        <i class="fas fa-download"></i>
-                                    </button>
-                                    <button class="delete-btn" data-id="${file.id}" data-name="${file.original_file_name}" title="削除">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            `;
-                            
-                            attachmentsList.appendChild(row);
-                        });
-                        
-// ファイル名のダブルクリックイベントリスナーを追加
-attachmentsList.querySelectorAll('.file-name').forEach(fileName => {
-    fileName.addEventListener('dblclick', function() {
-        const attachmentId = this.getAttribute('data-id');
-        // 別タブでファイルを表示
-        window.open(`api/download_attachment.php?attachment_id=${attachmentId}&view=1`, '_blank');
-    });
-});
-
-                        // ダウンロードボタンのイベントリスナーを追加
-                        attachmentsList.querySelectorAll('.download-btn').forEach(btn => {
-                            btn.addEventListener('click', function() {
-                                const attachmentId = this.getAttribute('data-id');
-                                downloadAttachment(attachmentId);
-                            });
-                        });
-                        
-                        // 削除ボタンのイベントリスナーを追加
-                        attachmentsList.querySelectorAll('.delete-btn').forEach(btn => {
-                            btn.addEventListener('click', function() {
-                                const attachmentId = this.getAttribute('data-id');
-                                const fileName = this.getAttribute('data-name');
-                                openDeleteConfirmModal(attachmentId, fileName);
-                            });
-                        });
-                        
-                    } else {
-                        // 添付ファイルがない場合
-                        attachmentsTable.style.display = 'none';
-                        noAttachmentsMsg.style.display = 'block';
-                    }
-                } else {
-                    // エラー処理
-                    console.error('添付ファイル一覧の取得に失敗しました:', data.message);
-                    attachmentsTable.style.display = 'none';
-                    noAttachmentsMsg.textContent = 'エラー：添付ファイルを取得できませんでした';
-                    noAttachmentsMsg.style.display = 'block';
-                }
+                // 表示
+                displayAttachments(data, projectId);
             })
             .catch(error => {
                 console.error('添付ファイル一覧の取得に失敗しました:', error);
@@ -189,6 +123,100 @@ attachmentsList.querySelectorAll('.file-name').forEach(fileName => {
                 noAttachmentsMsg.textContent = 'エラー：添付ファイルを取得できませんでした';
                 noAttachmentsMsg.style.display = 'block';
             });
+    }
+    
+    // 添付ファイル一覧を表示する
+    function displayAttachments(data, projectId) {
+        const attachmentsList = document.getElementById('attachments-list');
+        const attachmentsTable = document.getElementById('attachments-table');
+        const noAttachmentsMsg = document.querySelector('.no-attachments');
+        
+        if (data.status === 'success') {
+            if (data.data.length > 0) {
+                // 添付ファイルがある場合
+                attachmentsTable.style.display = 'table';
+                noAttachmentsMsg.style.display = 'none';
+                
+                data.data.forEach(file => {
+                    const row = document.createElement('tr');
+                    
+                    // ファイルタイプに応じたアイコンを選択
+                    let fileIcon = 'fa-file';
+                    if (file.file_type.includes('image')) {
+                        fileIcon = 'fa-file-image';
+                    } else if (file.file_type.includes('pdf')) {
+                        fileIcon = 'fa-file-pdf';
+                    } else if (file.file_type.includes('word') || file.file_type.includes('document')) {
+                        fileIcon = 'fa-file-word';
+                    } else if (file.file_type.includes('excel') || file.file_type.includes('spreadsheet')) {
+                        fileIcon = 'fa-file-excel';
+                    } else if (file.file_type.includes('zip') || file.file_type.includes('archive')) {
+                        fileIcon = 'fa-file-archive';
+                    } else if (file.file_type.includes('text')) {
+                        fileIcon = 'fa-file-alt';
+                    }
+                    
+                    row.innerHTML = `
+                        <td>
+                            <div class="file-name" data-id="${file.id}" data-filename="${file.original_file_name}" data-filetype="${file.file_type}">
+                                <i class="fas ${fileIcon} file-icon"></i>
+                                ${file.original_file_name}
+                            </div>
+                        </td>
+                        <td>${file.file_size_formatted}</td>
+                        <td>${formatDate(file.upload_date)}</td>
+                        <td class="file-actions">
+                            <button class="download-btn" data-id="${file.id}" title="ダウンロード">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="delete-btn" data-id="${file.id}" data-name="${file.original_file_name}" title="削除">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </td>
+                    `;
+                    
+                    attachmentsList.appendChild(row);
+                });
+                
+                // ファイル名のダブルクリックイベントリスナーを追加
+                attachmentsList.querySelectorAll('.file-name').forEach(fileName => {
+                    fileName.addEventListener('dblclick', function() {
+                        const attachmentId = this.getAttribute('data-id');
+                        // 別タブでファイルを表示
+                        window.open(`api/download_attachment.php?attachment_id=${attachmentId}&view=1`, '_blank');
+                    });
+                });
+
+                // ダウンロードボタンのイベントリスナーを追加
+                attachmentsList.querySelectorAll('.download-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const attachmentId = this.getAttribute('data-id');
+                        downloadAttachment(attachmentId);
+                    });
+                });
+                
+                // 削除ボタンのイベントリスナーを追加
+                attachmentsList.querySelectorAll('.delete-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const attachmentId = this.getAttribute('data-id');
+                        const fileName = this.getAttribute('data-name');
+                        openDeleteConfirmModal(attachmentId, fileName);
+                    });
+                });
+                
+            } else {
+                // 添付ファイルがない場合
+                attachmentsTable.style.display = 'none';
+                noAttachmentsMsg.textContent = '添付ファイルはありません';
+                noAttachmentsMsg.style.display = 'block';
+            }
+        } else {
+            // エラー処理
+            console.error('添付ファイル一覧の取得に失敗しました:', data.message);
+            attachmentsTable.style.display = 'none';
+            noAttachmentsMsg.textContent = 'エラー：添付ファイルを取得できませんでした';
+            noAttachmentsMsg.style.display = 'block';
+        }
     }
     
     // ファイルプレビュー
@@ -282,15 +310,16 @@ attachmentsList.querySelectorAll('.file-name').forEach(fileName => {
                     // 削除成功
                     deleteConfirmModal.style.display = 'none';
                     
-                    // ファイル一覧を再読み込み
+                    // プロジェクトIDを取得
                     const projectId = document.getElementById('project-id-input').value;
-                    loadAttachments(projectId);
                     
-                    // 添付ファイルアイコンの状態を更新
-                    const iconSpan = document.querySelector(`.attachment-icon[data-project-id="${projectId}"]`);
-                    if (iconSpan) {
-                        checkAttachments(projectId, iconSpan);
+                    // キャッシュを削除
+                    if (attachmentsCache[projectId]) {
+                        delete attachmentsCache[projectId];
                     }
+                    
+                    // ページをリロード
+                    window.location.reload();
                 } else {
                     // エラー処理
                     alert('削除に失敗しました: ' + data.message);
@@ -301,7 +330,7 @@ attachmentsList.querySelectorAll('.file-name').forEach(fileName => {
                 alert('削除に失敗しました');
             });
     }
-    
+
     // ドラッグ＆ドロップ機能の設定
     function setupDragAndDrop() {
         const dropArea = document.getElementById('drop-area');
