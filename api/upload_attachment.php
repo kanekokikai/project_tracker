@@ -54,7 +54,7 @@ if ($fileSize > 10 * 1024 * 1024) {
 
 // アップロードディレクトリの準備
 // config/database.php からの環境変数を利用
-$basePath = ($environment === 'production') ? '/project-tracker' : '/project_tracker';
+$basePath = ($environment === 'production') ? '/project_tracker' : '/project_tracker';
 $uploadDir = __DIR__ . "/../../uploads/project_files/{$project_id}/";
 
 
