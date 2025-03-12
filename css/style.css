@@ -554,3 +554,690 @@ label {
 .history-item:hover .inline-actions {
   opacity: 1;
 }
+
+/* 添付ファイル関連のスタイル */
+
+/* クリップアイコン */
+.attachment-icon {
+  margin-right: 5px;
+  color: #999;
+  cursor: pointer;
+}
+
+.attachment-icon.has-attachments {
+  color: #4a86e8;
+}
+
+/* モーダルスタイル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background-color: #ffffff;
+  margin: 5% auto;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 900px;
+  animation: modalFadeIn 0.3s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* 添付ファイルモーダルヘッダー（青い部分）を削除 */
+#attachment-modal .modal-header {
+  padding: 10px;
+  background-color: #ffffff;
+  color: #333;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  border-bottom: none;
+}
+
+#attachment-modal .modal-header h2 {
+  display: none;
+}
+
+#attachment-modal .close {
+  color: #999;
+  font-size: 24px;
+}
+
+#attachment-modal .close:hover {
+  color: #333;
+}
+
+/* 他のモーダルは元のデザインを維持 */
+#file-preview-modal .modal-header,
+#delete-confirm-modal .modal-header {
+  padding: 15px 20px;
+  background-color: #4a86e8;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+#file-preview-modal .close,
+#delete-confirm-modal .close {
+  color: white;
+}
+
+/* アップロードセクション */
+.upload-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.file-input-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  color: #4a86e8;
+  cursor: pointer;
+  display: inline;
+  font-weight: 500;
+  transition: color 0.2s;
+  background-color: #e8f0fe;
+  padding: 6px 12px;
+  border-radius: 4px;
+}
+
+.file-input-label:hover {
+  color: #3a76d8;
+  background-color: #d0e0fd;
+}
+
+#selected-file-name {
+  margin-left: 10px;
+  color: #666;
+}
+
+.upload-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.upload-button:hover {
+  background-color: #45a049;
+}
+
+.upload-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* プログレスバー */
+.progress-bar-container {
+  margin-top: 15px;
+  height: 8px;
+  width: 100%;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background-color: #4a86e8;
+  transition: width 0.2s;
+}
+
+#upload-message {
+  margin-top: 10px;
+  font-size: 0.9em;
+}
+
+.upload-success {
+  color: #4caf50;
+}
+
+.upload-error {
+  color: #f44336;
+}
+
+/* 添付ファイルリスト */
+.attachments-list-section {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#attachments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#attachments-table th,
+#attachments-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+#attachments-table th {
+  background-color: #f5f5f5;
+}
+
+#attachments-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.file-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.download-btn, 
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+}
+
+.download-btn {
+  color: #4a86e8;
+}
+
+.download-btn:hover {
+  background-color: rgba(74, 134, 232, 0.1);
+}
+
+.delete-btn {
+  color: #f44336;
+}
+
+.delete-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.file-name {
+  display: flex;
+  align-items: center;
+}
+
+.file-icon {
+  margin-right: 8px;
+  font-size: 1.2em;
+}
+
+.no-attachments {
+  color: #888;
+  text-align: center;
+  padding: 20px;
+}
+
+/* 削除確認モーダル */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button {
+  background-color: #ccc;
+  color: #333;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.delete-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#delete-file-name {
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+/* 添付ファイル関連のスタイル */
+
+/* クリップアイコン */
+.attachment-icon {
+  margin-right: 5px;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.attachment-icon:hover {
+  color: #666;
+}
+
+.attachment-icon.has-attachments {
+  color: #4a86e8;
+}
+
+.attachment-icon.has-attachments:hover {
+  color: #3a76d8;
+}
+
+/* モーダルスタイル */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  width: 80%;
+  max-width: 900px;
+  animation: modalFadeIn 0.3s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.delete-confirm-content {
+  max-width: 450px;
+}
+
+.preview-content {
+  max-width: 800px;
+}
+
+@keyframes modalFadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-30px);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0);
+  }
+}
+
+.modal-header {
+  padding: 10px 15px;
+  background-color: #4a86e8;
+  color: white;
+  display: flex;
+  justify-content: flex-end; /* 右寄せに変更 */
+  align-items: center;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+/* h2を非表示にするスタイルも追加しておく（念のため） */
+.modal-header h2 {
+  display: none;
+}
+
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.4em;
+  font-weight: 500;
+}
+
+.close {
+  color: white;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close:hover,
+.close:focus {
+  color: #f1f1f1;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+/* ドラッグ＆ドロップエリア */
+.drop-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 25px;
+  text-align: center;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.drop-area.highlight {
+  background-color: #e8f0fe;
+  border-color: #4a86e8;
+}
+
+.drop-area p {
+  margin: 10px 0;
+  color: #666;
+}
+
+/* アップロードセクション */
+.upload-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.file-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  color: #4a86e8;
+  cursor: pointer;
+  display: inline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.file-input-label:hover {
+  color: #3a76d8;
+  text-decoration: underline;
+}
+
+.selected-file {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #e8f0fe;
+  border-radius: 4px;
+  max-width: 100%;
+  word-break: break-all;
+  display: inline-block;
+}
+
+.upload-button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+.upload-button:hover {
+  background-color: #45a049;
+}
+
+.upload-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+/* プログレスバー */
+.progress-bar-container {
+  margin-top: 15px;
+  height: 8px;
+  width: 100%;
+  background-color: #f1f1f1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0;
+  background-color: #4a86e8;
+  transition: width 0.2s;
+}
+
+#upload-message {
+  margin-top: 15px;
+  font-size: 0.9em;
+}
+
+.upload-success {
+  color: #4caf50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-success:before {
+  content: "✓";
+  display: inline-block;
+  margin-right: 5px;
+  font-weight: bold;
+}
+
+.upload-error {
+  color: #f44336;
+}
+
+/* 添付ファイルリスト */
+.attachments-list-section {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+#attachments-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+#attachments-table th,
+#attachments-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+#attachments-table th {
+  background-color: #f5f5f5;
+  font-weight: 500;
+  color: #666;
+}
+
+#attachments-table tr:last-child td {
+  border-bottom: none;
+}
+
+#attachments-table tr:hover {
+  background-color: #f9f9f9;
+}
+
+.file-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.download-btn, 
+.delete-btn,
+.preview-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.download-btn {
+  color: #4a86e8;
+}
+
+.download-btn:hover {
+  background-color: rgba(74, 134, 232, 0.1);
+}
+
+.delete-btn {
+  color: #f44336;
+}
+
+.delete-btn:hover {
+  background-color: rgba(244, 67, 54, 0.1);
+}
+
+.file-name {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.file-name:hover {
+  text-decoration: underline;
+  color: #4a86e8;
+}
+
+.file-icon {
+  margin-right: 8px;
+  font-size: 1.2em;
+}
+
+.no-attachments {
+  color: #888;
+  text-align: center;
+  padding: 30px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  margin: 0;
+}
+
+/* 削除確認モーダル */
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-button {
+  background-color: #eee;
+  color: #333;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #ddd;
+}
+
+.delete-button {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #e53935;
+}
+
+#delete-file-name {
+  font-weight: bold;
+  margin-top: 5px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  word-break: break-all;
+}
+
+/* ファイルプレビューモーダル */
+#file-preview-container {
+  text-align: center;
+  padding: 20px;
+  max-height: 500px;
+  overflow: auto;
+}
+
+#file-preview-container img {
+  max-width: 100%;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+#file-preview-container .text-preview {
+  text-align: left;
+  white-space: pre-wrap;
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  overflow: auto;
+  font-family: monospace;
+}
+
+.preview-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.preview-btn {
+  display: inline-block;
+  padding: 8px 20px;
+  background-color: #4a86e8;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.preview-btn:hover {
+  background-color: #3a76d8;
+}
+
+.file-error {
+  color: #f44336;
+  text-align: center;
+  padding: 20px;
+}

@@ -27,6 +27,10 @@ function verifyPassword($password) {
 function authenticateUser() {
     $_SESSION['authenticated'] = true;
     $_SESSION['auth_time'] = time();
+    
+    // 添付ファイル機能用にユーザーIDを設定
+    // 実際のユーザー管理がない場合は1を固定値として使用
+    $_SESSION['user_id'] = 1;
 }
 
 /**
@@ -36,6 +40,7 @@ function logoutUser() {
     $_SESSION['authenticated'] = false;
     unset($_SESSION['authenticated']);
     unset($_SESSION['auth_time']);
+    unset($_SESSION['user_id']); // 追加: user_idも削除
     
     // セッションを完全に破棄
     session_unset();

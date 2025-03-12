@@ -115,10 +115,16 @@ include 'includes/header.php';
         <div class="project-card parent-project">
             <div class="project-header">
                 <div class="title-section">
-                    <h2 class="project-title">
-                        <?= htmlspecialchars($project['name']) ?>
-                        <button class="btn btn-success btn-sm add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')">＋</button>
-                    </h2>
+
+<!-- 親プロジェクトのタイトル部分を修正 -->
+<h2 class="project-title">
+    <span class="attachment-icon" data-project-id="<?= $project['id'] ?>">
+        <i class="fas fa-paperclip"></i>
+    </span>
+    <span class="project-name"><?= htmlspecialchars($project['name']) ?></span>
+    <button class="btn btn-success btn-sm add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')">＋</button>
+</h2>
+
                 </div>
                 <div class="project-actions">
                     <span class="status-badge status-<?= $project['status'] ?>">
@@ -169,8 +175,12 @@ include 'includes/header.php';
                         <div class="project-card child-project" data-status="<?= htmlspecialchars($childProject['status']) ?>">
     <div class="project-header">
       
-    <h3 class="project-title">
-    <?= htmlspecialchars($childProject['name']) ?>
+<!-- 子プロジェクトのタイトル部分を修正 -->
+<h3 class="project-title">
+    <span class="attachment-icon" data-project-id="<?= $childProject['id'] ?>">
+        <i class="fas fa-paperclip"></i>
+    </span>
+    <span class="project-name"><?= htmlspecialchars($childProject['name']) ?></span>
     <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>" 
   onclick="
     var content = document.getElementById('history-content-<?= $childProject['id'] ?>');
@@ -182,10 +192,7 @@ include 'includes/header.php';
   ">
     <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
 </span>
-
 </h3>
-
-
 
 
         <div class="project-actions">
