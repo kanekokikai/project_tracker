@@ -547,6 +547,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // ページロード時に初期化
     init();
     
+    //コメント追加
     // Ajaxでページ内容が更新された場合に再初期化するための公開メソッド
     window.reinitAttachments = init;
 });
