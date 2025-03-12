@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // キャッシュ用の変数を追加
     const attachmentsCache = {};
 
+        // 最大ファイルサイズを定義（10MB）
+        const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
     // モーダル要素
     const attachmentModal = document.getElementById('attachment-modal');
     const deleteConfirmModal = document.getElementById('delete-confirm-modal');
@@ -90,10 +93,10 @@ document.addEventListener('DOMContentLoaded', function() {
         // リストをクリア
         attachmentsList.innerHTML = '';
         
-        // キャッシュがあるか確認
-        const now = new Date().getTime();
-        if (attachmentsCache[projectId] && now - attachmentsCache[projectId].timestamp < 30000) {
-            // 30秒以内のキャッシュを使用
+// キャッシュがあるか確認
+const now = new Date().getTime();
+if (attachmentsCache[projectId] && now - attachmentsCache[projectId].timestamp < 300000) {
+    // 5分以内のキャッシュを使用            
             console.log(`プロジェクトID: ${projectId} のキャッシュを使用`);
             displayAttachments(attachmentsCache[projectId].data, projectId);
             return;
@@ -295,41 +298,81 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteConfirmModal.style.display = 'block';
     }
     
-    // 添付ファイル削除
-    function deleteAttachment(attachmentId) {
-        const formData = new FormData();
-        formData.append('attachment_id', attachmentId);
-        
-        fetch('api/delete_attachment.php', {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // 削除成功
-                    deleteConfirmModal.style.display = 'none';
+// 添付ファイル削除
+function deleteAttachment(attachmentId) {
+    // 削除ボタンを無効化（処理中の表示）
+    const confirmDeleteBtn = document.getElementById('confirm-delete');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.disabled = true;
+        confirmDeleteBtn.textContent = '削除中...';
+    }
+    
+    const formData = new FormData();
+    formData.append('attachment_id', attachmentId);
+    
+    fetch('api/delete_attachment.php', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // 削除成功
+                deleteConfirmModal.style.display = 'none';
+                
+                // プロジェクトIDを取得
+                const projectId = document.getElementById('project-id-input').value;
+                
+                // キャッシュを削除
+                if (attachmentsCache[projectId]) {
+                    delete attachmentsCache[projectId];
+                }
+                
+                // DOM要素を直接削除（リロードせずに画面を更新）
+                const attachmentRow = document.querySelector(`.delete-btn[data-id="${attachmentId}"]`).closest('tr');
+                if (attachmentRow) {
+                    attachmentRow.remove();
                     
-                    // プロジェクトIDを取得
-                    const projectId = document.getElementById('project-id-input').value;
+                    // 添付ファイルがなくなった場合のメッセージ表示
+                    const attachmentsList = document.getElementById('attachments-list');
+                    const attachmentsTable = document.getElementById('attachments-table');
+                    const noAttachmentsMsg = document.querySelector('.no-attachments');
                     
-                    // キャッシュを削除
-                    if (attachmentsCache[projectId]) {
-                        delete attachmentsCache[projectId];
+                    if (attachmentsList.children.length === 0) {
+                        attachmentsTable.style.display = 'none';
+                        noAttachmentsMsg.textContent = '添付ファイルはありません';
+                        noAttachmentsMsg.style.display = 'block';
                     }
                     
-                    // ページをリロード
-                    window.location.reload();
-                } else {
-                    // エラー処理
-                    alert('削除に失敗しました: ' + data.message);
+                    // アイコンの状態を更新
+                    const iconSpan = document.querySelector(`.attachment-icon[data-project-id="${projectId}"]`);
+                    if (iconSpan) {
+                        checkAttachments(projectId, iconSpan);
+                    }
                 }
-            })
-            .catch(error => {
-                console.error('添付ファイルの削除に失敗しました:', error);
-                alert('削除に失敗しました');
-            });
-    }
+            } else {
+                // エラー処理
+                alert('削除に失敗しました: ' + data.message);
+            }
+            
+            // 削除ボタンを再度有効化
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = '削除';
+            }
+        })
+        .catch(error => {
+            console.error('添付ファイルの削除に失敗しました:', error);
+            alert('削除に失敗しました');
+            
+            // 削除ボタンを再度有効化
+            if (confirmDeleteBtn) {
+                confirmDeleteBtn.disabled = false;
+                confirmDeleteBtn.textContent = '削除';
+            }
+        });
+}
+
 
     // ドラッグ＆ドロップ機能の設定
     function setupDragAndDrop() {
@@ -378,6 +421,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const file = dt.files[0];
             
             if (file) {
+                // ファイルサイズチェック
+                if (file.size > MAX_FILE_SIZE) {
+                    selectedFileName.textContent = file.name + ' (警告: ファイルサイズが大きすぎます)';
+                    uploadBtn.disabled = true;
+                    return;
+                }
+                
                 // ファイル入力にファイルを設定
                 fileInput.files = dt.files;
                 
@@ -387,9 +437,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 // アップロードボタンを有効化
                 uploadBtn.disabled = false;
             }
-        }
-    }
-    
+        } // この行を修正
+        
+        } // この行を追加 - setupDragAndDropの閉じ括弧
+
     // ファイルアップロード処理
     function setupFileUpload() {
         const fileInput = document.getElementById('file-input');
@@ -406,16 +457,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // ファイル選択時の処理
-        fileInput.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                selectedFileName.textContent = this.files[0].name;
-                uploadBtn.disabled = false;
-            } else {
-                selectedFileName.textContent = '選択されていません';
-                uploadBtn.disabled = true;
-            }
-        });
+
+// ファイル選択時の処理
+fileInput.addEventListener('change', function() {
+    if (this.files.length > 0) {
+        const file = this.files[0];
         
+        // ファイルサイズチェック
+        if (file.size > MAX_FILE_SIZE) {
+            selectedFileName.textContent = file.name + ' (警告: ファイルサイズが大きすぎます)';
+            uploadBtn.disabled = true;
+            uploadMessage.innerHTML = '<span class="upload-error">ファイルサイズは10MB以下である必要があります</span>';
+            return;
+        }
+        
+        selectedFileName.textContent = file.name;
+        uploadBtn.disabled = false;
+        uploadMessage.innerHTML = '';
+    } else {
+        selectedFileName.textContent = '選択されていません';
+        uploadBtn.disabled = true;
+    }
+});
+
         // フォーム送信時の処理
         uploadForm.addEventListener('submit', function(e) {
             e.preventDefault();
