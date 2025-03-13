@@ -26,7 +26,7 @@ try {
     
 // ファイルの物理的な削除
 // 絶対パスで指定
-$filePath = '/home/xs765558/public_html/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
+$filePath = '/home/xs765558/xs765558.xsrv.jp/public_html/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
 
 // デバッグ用：削除しようとしているファイルパスを記録
 error_log("Attempting to delete file: " . $filePath);

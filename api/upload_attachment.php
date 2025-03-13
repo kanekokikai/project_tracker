@@ -55,7 +55,7 @@ if ($fileSize > 10 * 1024 * 1024) {
 // =========== 修正箇所開始 ===========
 // アップロードディレクトリの準備
 // 絶対パスで指定
-$uploadDir = '/home/xs765558/public_html/project_tracker/uploads/project_files/' . $project_id . '/';
+$uploadDir = '/home/xs765558/xs765558.xsrv.jp/public_html/project_tracker/uploads/project_files/' . $project_id . '/';
 
 // デバッグ用：アップロードディレクトリを記録
 error_log("Upload directory: " . $uploadDir);
