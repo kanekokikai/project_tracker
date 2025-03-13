@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
 // キャッシュがあるか確認
 const now = new Date().getTime();
-if (attachmentsCache[projectId] && now - attachmentsCache[projectId].timestamp < 300000) {
+if (attachmentsCache[projectId] && now - attachmentsCache[projectId].timestamp < 3000) {
     // 5分以内のキャッシュを使用            
             console.log(`プロジェクトID: ${projectId} のキャッシュを使用`);
             displayAttachments(attachmentsCache[projectId].data, projectId);

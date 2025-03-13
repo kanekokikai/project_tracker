@@ -3,7 +3,7 @@
 header('Content-Type: application/json');
 require_once '../config/database.php';
 
-// POSTリクエストかつパラメータの確認
+// POSTリクエストと添付ファイルIDの確認
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['attachment_id'])) {
     echo json_encode(['status' => 'error', 'message' => '不正なリクエスト']);
     exit;
@@ -15,45 +15,56 @@ try {
     // トランザクション開始
     $pdo->beginTransaction();
     
-    // 添付ファイル情報を取得
-    $stmt = $pdo->prepare("
-        SELECT pa.*, p.id as project_id
-        FROM project_attachments pa
-        JOIN projects p ON pa.project_id = p.id
-        WHERE pa.id = ?
-    ");
+    // 添付ファイル情報の取得
+    $stmt = $pdo->prepare("SELECT * FROM project_attachments WHERE id = ?");
     $stmt->execute([$attachment_id]);
     $attachment = $stmt->fetch(PDO::FETCH_ASSOC);
     
     if (!$attachment) {
-        $pdo->rollBack();
-        echo json_encode(['status' => 'error', 'message' => '添付ファイルが見つかりません']);
-        exit;
+        throw new Exception('添付ファイルが見つかりません');
     }
     
-    // ファイルパスを構築
-    $filePath = __DIR__ . "/../../uploads/project_files/{$attachment['project_id']}/{$attachment['file_name']}";    
-
-    // ファイルが存在すれば削除
+    // ファイルの物理的な削除
+    $rootPath = $_SERVER['DOCUMENT_ROOT']; // ドキュメントルート（例：C:/xampp/htdocs）
+    $filePath = $rootPath . '/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
+    
+    // デバッグ用：削除しようとしているファイルパスを記録
+    error_log("Attempting to delete file: " . $filePath);
+    
+    // ファイルが存在するか確認してから削除
     if (file_exists($filePath)) {
         if (!unlink($filePath)) {
-            $pdo->rollBack();
-            echo json_encode(['status' => 'error', 'message' => 'ファイルの削除に失敗しました']);
-            exit;
+            throw new Exception('ファイルの削除に失敗しました');
         }
+        // デバッグ用：ファイル削除成功を記録
+        error_log("File successfully deleted: " . $filePath);
+    } else {
+        // ファイルが見つからなかった場合は警告だけ出して続行
+        error_log("Warning: File not found for deletion: " . $filePath);
     }
     
-    // データベースから削除
+    // データベースから添付ファイル情報を削除
     $stmt = $pdo->prepare("DELETE FROM project_attachments WHERE id = ?");
     $stmt->execute([$attachment_id]);
     
-    // トランザクションコミット
+    // トランザクションをコミット
     $pdo->commit();
     
-    echo json_encode(['status' => 'success', 'message' => '添付ファイルが削除されました']);
+    echo json_encode([
+        'status' => 'success',
+        'message' => '添付ファイルが削除されました'
+    ]);
+} catch (Exception $e) {
+    // エラーが発生した場合はロールバック
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     
-} catch (PDOException $e) {
-    $pdo->rollBack();
-    echo json_encode(['status' => 'error', 'message' => 'データベースエラー: ' . $e->getMessage()]);
+    echo json_encode([
+        'status' => 'error',
+        'message' => $e->getMessage()
+    ]);
+    
+    // デバッグ用：エラー情報を記録
+    error_log("File deletion error: " . $e->getMessage());
 }
-?>

@@ -1,6 +1,6 @@
 <?php
 // 環境の切り替え
-$environment = 'xserver';  // 'local' または 'xserver'
+$environment = 'local';  // 'local' または 'xserver'
 
 // データベース接続情報
 if ($environment === 'local') {

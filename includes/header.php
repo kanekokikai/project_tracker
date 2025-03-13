@@ -7,7 +7,7 @@ require_once __DIR__ . '/../includes/auth.php'; // 追加: 認証ファイルの
 $isAuth = isAuthenticated();
 
 // 環境に応じたベースパスを設定
-$basePath = ($environment === 'local') ? '/project_tracker' : '/project_tracker';
+$basePath = ($environment === 'local') ? '/project_tracker' : '/project-tracker';
 ?>
 <!DOCTYPE html>
 <html lang="ja">

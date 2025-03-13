@@ -52,12 +52,15 @@ if ($fileSize > 10 * 1024 * 1024) {
     exit;
 }
 
+// =========== 修正箇所開始 ===========
 // アップロードディレクトリの準備
-// config/database.php からの環境変数を利用
-$basePath = ($environment === 'production') ? '/project_tracker' : '/project_tracker';
-$uploadDir = __DIR__ . "/../../uploads/project_files/{$project_id}/";
+// 開発環境とリリース環境で共通のパスを使用するよう修正
+$rootPath = $_SERVER['DOCUMENT_ROOT']; // ドキュメントルート（例：C:/xampp/htdocs）
+$uploadDir = $rootPath . '/project_tracker/uploads/project_files/' . $project_id . '/';
 
-
+// デバッグ用：アップロードディレクトリを記録（リリース時にコメントアウト可）
+error_log("Upload directory: " . $uploadDir);
+// =========== 修正箇所終了 ===========
 
 // ディレクトリが存在しない場合は作成
 if (!file_exists($uploadDir)) {
@@ -71,6 +74,11 @@ if (!file_exists($uploadDir)) {
 $fileExtension = pathinfo($fileName, PATHINFO_EXTENSION);
 $uniqueFileName = uniqid() . '_' . time() . '.' . $fileExtension;
 $uploadPath = $uploadDir . $uniqueFileName;
+
+// =========== 修正箇所開始 ===========
+// デバッグ用：アップロードパスを記録（リリース時にコメントアウト可）
+error_log("File upload path: " . $uploadPath);
+// =========== 修正箇所終了 ===========
 
 // ファイルの移動
 if (!move_uploaded_file($fileTmp, $uploadPath)) {
@@ -98,6 +106,8 @@ try {
     
     $attachment_id = $pdo->lastInsertId();
     
+    // =========== 修正箇所開始 ===========
+    // レスポンスにデバッグ情報を追加（リリース時に不要であれば削除可）
     echo json_encode([
         'status' => 'success',
         'message' => 'ファイルがアップロードされました',
@@ -106,9 +116,11 @@ try {
             'file_name' => $uniqueFileName,
             'original_file_name' => $fileName,
             'file_size' => $fileSize,
-            'file_type' => $fileType
+            'file_type' => $fileType,
+            'debug_path' => str_replace($_SERVER['DOCUMENT_ROOT'], '[DOCUMENT_ROOT]', $uploadPath) // デバッグ用
         ]
     ]);
+    // =========== 修正箇所終了 ===========
 } catch (PDOException $e) {
     // アップロードしたファイルを削除
     @unlink($uploadPath);
