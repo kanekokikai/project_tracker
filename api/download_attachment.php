@@ -24,10 +24,13 @@ try {
         exit;
     }
     
-    // ファイルパスの構築
-    $rootPath = $_SERVER['DOCUMENT_ROOT']; // ドキュメントルート（例：C:/xampp/htdocs）
-    $filePath = $rootPath . '/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
-    
+// ファイルパスの構築
+// 絶対パスで指定
+$filePath = '/home/xs765558/public_html/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
+
+// デバッグ用：ファイルパスをログに記録
+error_log("Attempting to access file: " . $filePath);
+
     // デバッグ用：ファイルパスをログに記録
     error_log("Attempting to access file: " . $filePath);
     

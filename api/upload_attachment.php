@@ -54,11 +54,10 @@ if ($fileSize > 10 * 1024 * 1024) {
 
 // =========== 修正箇所開始 ===========
 // アップロードディレクトリの準備
-// 開発環境とリリース環境で共通のパスを使用するよう修正
-$rootPath = $_SERVER['DOCUMENT_ROOT']; // ドキュメントルート（例：C:/xampp/htdocs）
-$uploadDir = $rootPath . '/project_tracker/uploads/project_files/' . $project_id . '/';
+// 絶対パスで指定
+$uploadDir = '/home/xs765558/public_html/project_tracker/uploads/project_files/' . $project_id . '/';
 
-// デバッグ用：アップロードディレクトリを記録（リリース時にコメントアウト可）
+// デバッグ用：アップロードディレクトリを記録
 error_log("Upload directory: " . $uploadDir);
 // =========== 修正箇所終了 ===========
 

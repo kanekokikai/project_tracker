@@ -24,13 +24,13 @@ try {
         throw new Exception('添付ファイルが見つかりません');
     }
     
-    // ファイルの物理的な削除
-    $rootPath = $_SERVER['DOCUMENT_ROOT']; // ドキュメントルート（例：C:/xampp/htdocs）
-    $filePath = $rootPath . '/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
-    
-    // デバッグ用：削除しようとしているファイルパスを記録
-    error_log("Attempting to delete file: " . $filePath);
-    
+// ファイルの物理的な削除
+// 絶対パスで指定
+$filePath = '/home/xs765558/public_html/project_tracker/uploads/project_files/' . $attachment['project_id'] . '/' . $attachment['file_name'];
+
+// デバッグ用：削除しようとしているファイルパスを記録
+error_log("Attempting to delete file: " . $filePath);
+
     // ファイルが存在するか確認してから削除
     if (file_exists($filePath)) {
         if (!unlink($filePath)) {
