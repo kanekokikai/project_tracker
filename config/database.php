@@ -1,6 +1,12 @@
 <?php
-// 環境の切り替え
-$environment = 'xserver';  // 'local' または 'xserver'
+// 環境の切り替え - ホスト名に基づいて自動判定
+$environment = 'local';  // デフォルト値
+
+// エックスサーバーのドメインを検出
+if (strpos($_SERVER['HTTP_HOST'], 'xsrv.jp') !== false || 
+    strpos($_SERVER['SERVER_NAME'], 'xsrv.jp') !== false) {
+    $environment = 'xserver';
+}
 
 // データベース接続情報
 if ($environment === 'local') {
@@ -16,6 +22,7 @@ if ($environment === 'local') {
     define('DB_PASS', 'kaneko0911');
     define('DB_NAME', 'xs765558_projecttracker');
 }
+
 
 // データベース接続
 try {
