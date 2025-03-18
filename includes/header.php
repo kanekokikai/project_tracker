@@ -7,10 +7,16 @@ require_once __DIR__ . '/../includes/auth.php'; // 追加: 認証ファイルの
 $isAuth = isAuthenticated();
 
 // 環境に応じたベースパスを設定
-$basePath = ($environment === 'local') ? '/project_tracker' : '';
-// エックスサーバー環境の場合は明示的に指定
+$basePath = '';  // デフォルトは空（ドキュメントルート直下）
+
+// エックスサーバー環境でパスを正しく設定
 if ($environment === 'xserver') {
-    $basePath = '';  // ドキュメントルートからの相対パスを空にする
+    $basePath = '/project_tracker';
+}
+
+// ローカル環境の場合
+if ($environment === 'local') {
+    $basePath = '/project_tracker';
 }
 
 ?>
