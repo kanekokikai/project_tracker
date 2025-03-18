@@ -10,7 +10,8 @@ DirectoryIndex index.php index.html index.htm
 # URLの書き換え設定（必要な場合）
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /project_tracker/
+    # エックスサーバー環境ではドキュメントルートからの相対パスを使用
+    RewriteBase /
 
     # 実際のファイルやディレクトリでないものに対するリクエストを index.php に転送
     RewriteCond %{REQUEST_FILENAME} !-f

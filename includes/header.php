@@ -8,6 +8,11 @@ $isAuth = isAuthenticated();
 
 // 環境に応じたベースパスを設定
 $basePath = ($environment === 'local') ? '/project_tracker' : '';
+// エックスサーバー環境の場合は明示的に指定
+if ($environment === 'xserver') {
+    $basePath = '';  // ドキュメントルートからの相対パスを空にする
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="ja">

@@ -85,7 +85,7 @@
     </div>
 </div>
 
-<script src="js/main.js?v=<?php echo time(); ?>"></script>
-<script src="js/attachment_scripts.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $basePath; ?>/js/main.js?v=<?php echo time(); ?>"></script>
+<script src="<?php echo $basePath; ?>/js/attachment_scripts.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
