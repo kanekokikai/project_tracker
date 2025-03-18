@@ -1,5 +1,21 @@
 <?php
+// セッション設定 - デバッグ用
+ini_set('session.cookie_secure', 0);
+ini_set('session.use_only_cookies', 1);
+ini_set('session.use_cookies', 1);
+ini_set('session.use_trans_sid', 0);
+ini_set('session.cookie_httponly', 1);
+
+// セッション開始
 session_start();
+
+// エックスサーバー環境での自動認証（デバッグ用）
+if (strpos($_SERVER['HTTP_HOST'], 'xsrv.jp') !== false) {
+    // 本番環境でデバッグしやすいように自動認証（デバッグ後に削除すること）
+    $_SESSION['authenticated'] = true;
+    $_SESSION['auth_time'] = time();
+    $_SESSION['user_id'] = 1;
+}
 
 // パスワード保護の設定
 define('AUTH_PASSWORD', 'kaneko0911'); // ここにパスワードを設定
