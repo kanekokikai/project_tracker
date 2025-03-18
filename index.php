@@ -1,4 +1,39 @@
 <?php
+
+// デバッグ用（確認後は必ず削除）
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
+// 基本情報の確認
+echo "PHPバージョン: " . PHP_VERSION . "<br>";
+echo "現在の作業ディレクトリ: " . getcwd() . "<br>";
+
+// データベース接続テスト
+try {
+    require_once __DIR__ . '/config/database.php';
+    echo "データベース設定ファイルの読み込み: 成功<br>";
+    
+    // PDO接続が正常に行われるか確認
+    echo "データベース接続テスト: ";
+    $test_conn = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);
+    echo "成功<br>";
+    
+    // auth.phpの読み込みテスト
+    echo "認証ファイルの読み込み: ";
+    require_once __DIR__ . '/includes/auth.php';
+    echo "成功<br>";
+    
+    echo "<hr>デバッグ情報の表示完了。この部分はデバッグ後に削除してください。<hr>";
+} catch (Exception $e) {
+    echo "エラー発生: " . $e->getMessage() . "<br>";
+    echo "エラー発生ファイル: " . $e->getFile() . " (行: " . $e->getLine() . ")<br>";
+    echo "<pre>" . $e->getTraceAsString() . "</pre>";
+    die("デバッグ完了 - エラーを確認してください");
+}
+
+
+
 // キャッシュ制御ヘッダーを追加
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Cache-Control: post-check=0, pre-check=0", false);
