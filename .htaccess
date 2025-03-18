@@ -1,0 +1,23 @@
+# デフォルトの索引ファイルを指定
+DirectoryIndex index.php index.html index.htm
+
+# PHPエラー表示設定（開発時のみ有効に）
+php_flag display_errors on
+php_value error_reporting 32767
+
+# アクセス権限設定
+<Files *.php>
+    Order Allow,Deny
+    Allow from all
+</Files>
+
+# URLの書き換え設定（必要な場合）
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /project_tracker/
+    
+    # 実際のファイルやディレクトリでないものに対するリクエストをindex.phpに転送
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . index.php [L]
+</IfModule>
