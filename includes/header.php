@@ -125,6 +125,24 @@ textarea {
 .logout-link:hover {
   text-decoration: underline;
 }
+
+/* 削除確認モーダルのヘッダー非表示（強制的に） */
+#delete-confirm-modal .modal-header {
+  display: none !important;
+}
+
+/* 本文部分の調整 */
+#delete-confirm-modal .modal-body {
+  padding-top: 25px !important;
+  border-radius: 8px !important;
+}
+
+/* モーダル本体のスタイル調整 */
+#delete-confirm-modal .modal-content {
+  border-radius: 8px !important;
+  padding-top: 0 !important;
+}
+
 </style>
 
 <body>

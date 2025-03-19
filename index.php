@@ -1,21 +1,4 @@
 <?php
-// デバッグ用（確認後は必ず削除）
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// 基本情報の確認
-echo "PHPバージョン: " . PHP_VERSION . "<br>";
-echo "現在の作業ディレクトリ: " . getcwd() . "<br>";
-echo "リクエストURI: " . $_SERVER['REQUEST_URI'] . "<br>";
-echo "ドキュメントルート: " . $_SERVER['DOCUMENT_ROOT'] . "<br>";
-echo "サーバーホスト: " . $_SERVER['HTTP_HOST'] . "<br>";
-
-// ファイルの存在確認
-echo "style.cssの存在: " . (file_exists(__DIR__ . '/css/style.css') ? 'あり' : 'なし') . "<br>";
-echo "main.jsの存在: " . (file_exists(__DIR__ . '/js/main.js') ? 'あり' : 'なし') . "<br>";
-echo "attachment_scripts.jsの存在: " . (file_exists(__DIR__ . '/js/attachment_scripts.js') ? 'あり' : 'なし') . "<br>";
-
 
 // キャッシュ制御ヘッダーを追加
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");

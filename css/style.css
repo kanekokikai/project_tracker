@@ -322,10 +322,10 @@ select.form-control:focus {
 .modal-content {
   background-color: var(--apple-white);
   margin: 10% auto;
-  padding: 1.8rem;
+  padding: 1.2rem; /* パディングを小さく調整 */
   border-radius: var(--apple-radius);
-  width: 90%;
-  max-width: 550px;
+  width: 80%; /* 幅を90%から80%に変更 */
+  max-width: 450px; /* 最大幅を550pxから450pxに縮小 */
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
@@ -336,6 +336,18 @@ select.form-control:focus {
   color: var(--apple-dark);
   font-size: 1.2rem;
 }
+
+/* 入力フィールドの幅調整 - 追加 */
+#projectName, #subProjectName, #progressAuthor, #statusAuthor, #editHistoryAuthor {
+  width: 60% !important;
+  max-width: 300px !important;
+}
+
+/* テキストエリアは通常通りの幅を保持 - 追加 */
+textarea.form-control {
+  width: 100% !important;
+}
+
 
 /* フォーム要素 */
 .form-group {
@@ -618,9 +630,8 @@ label {
   color: #333;
 }
 
-/* 他のモーダルは元のデザインを維持 */
-#file-preview-modal .modal-header,
-#delete-confirm-modal .modal-header {
+/* ファイルプレビューモーダルのみ元のデザインを維持 */
+#file-preview-modal .modal-header {
   padding: 15px 20px;
   background-color: #4a86e8;
   color: white;
@@ -631,9 +642,23 @@ label {
   border-top-right-radius: 8px;
 }
 
-#file-preview-modal .close,
-#delete-confirm-modal .close {
+#file-preview-modal .close {
   color: white;
+}
+
+/* 削除確認モーダルのヘッダーを非表示に */
+#delete-confirm-modal .modal-header {
+  display: none;
+}
+
+/* ヘッダーがなくなった分、上部のパディングを追加 */
+#delete-confirm-modal .modal-body {
+  padding-top: 25px;
+}
+
+/* 確認ボタンのみで十分なので、閉じるボタンも非表示に */
+#delete-confirm-modal .close {
+  display: none;
 }
 
 /* アップロードセクション */
