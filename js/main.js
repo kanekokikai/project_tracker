@@ -126,17 +126,21 @@ function openHistoryModal(projectId) {
             if (data.success) {
                 const historyList = document.getElementById('historyList');
                 historyList.innerHTML = data.history.map(hist => `
-                    <div class="history-item">
+                    <div class="history-item-list" data-history-id="${hist.id}">
                         <div class="history-header">
                             <span class="author">${hist.author}</span>
                             <span class="date">${new Date(hist.created_at).toLocaleString('ja-JP')}</span>
                         </div>
                         ${hist.status ? 
-                            `<div class="status-change">ステータスを「${hist.status}」に変更</div>` : 
+                            `<div class="status-change">
+                                ステータスを「${hist.status}」に変更
+                            </div>` : 
                             ''
                         }
                         ${hist.content ? 
-                            `<div class="content">${hist.content}</div>` : 
+                            `<div class="content">
+                                ${hist.content.replace(/\n/g, '<br>')}
+                            </div>` : 
                             ''
                         }
                     </div>
@@ -149,9 +153,7 @@ function openHistoryModal(projectId) {
         });
 }
 
-function closeHistoryModal() {
-    document.getElementById('historyModal').style.display = 'none';
-}
+
 
 // プロジェクト削除
 function confirmDelete(projectId) {
@@ -536,4 +538,135 @@ setTimeout(function() {
             event.target.style.display = 'none';
         }
     };
+});
+
+// ステータスドロップダウンを表示
+function showStatusDropdown(element, event) {
+    event.stopPropagation(); // イベントの伝播を停止
+    
+    const projectId = element.getAttribute('data-project-id');
+    const rect = element.getBoundingClientRect();
+    const dropdown = document.getElementById('status-dropdown');
+    
+    // 位置を設定
+    dropdown.style.top = (window.scrollY + rect.bottom + 5) + 'px';
+    dropdown.style.left = (rect.left) + 'px';
+    
+    // 表示
+    dropdown.style.display = 'block';
+    
+    // すべてのステータスオプションにクリックイベントを追加
+    const options = dropdown.querySelectorAll('.status-option');
+    options.forEach(option => {
+      option.onclick = function() {
+        const newStatus = this.getAttribute('data-status');
+        updateProjectStatus(projectId, newStatus);
+        dropdown.style.display = 'none';
+      };
+    });
+    
+    // データ属性にプロジェクトIDを設定
+    dropdown.setAttribute('data-project-id', projectId);
+  }
+  
+// ドキュメント内の任意の場所をクリックしたときにドロップダウンを非表示
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('status-dropdown');
+    if (dropdown && dropdown.style.display === 'block') {  // dropdownの存在確認を追加
+      dropdown.style.display = 'none';
+    }
+  });
+
+  // プロジェクトのステータスを更新する関数
+  function updateProjectStatus(projectId, newStatus) {
+    // Ajaxリクエストを作成
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'api/update_status.php', true);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    
+    // リクエスト完了時の処理
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (response.success) {
+            // 成功した場合、ページをリロード
+            location.reload();
+          } else {
+            alert('ステータスの更新に失敗しました: ' + response.message);
+          }
+        } catch (e) {
+          alert('エラーが発生しました: ' + e.message);
+        }
+      } else {
+        alert('リクエストエラー: ' + xhr.status);
+      }
+    };
+    
+    // リクエスト失敗時の処理
+    xhr.onerror = function() {
+      alert('ネットワークエラーが発生しました');
+    };
+    
+    // リクエスト送信
+    xhr.send('project_id=' + projectId + '&status=' + newStatus);
+  }
+
+
+  // 長いコンテンツを展開/折りたたむ関数
+function toggleContent(contentId) {
+    const contentElement = document.getElementById(contentId);
+    const toggleButton = contentElement.nextElementSibling;
+    
+    if (contentElement.classList.contains('expanded')) {
+        // 折りたたむ
+        contentElement.classList.remove('expanded');
+        toggleButton.textContent = '続きを読む';
+    } else {
+        // 展開する
+        contentElement.classList.add('expanded');
+        toggleButton.textContent = '折りたたむ';
+    }
+}
+
+// プロジェクト名編集モーダル関連
+function openEditProjectModal(projectId, projectName) {
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectName').value = projectName;
+    document.getElementById('editProjectModal').style.display = 'block';
+}
+
+function closeEditProjectModal() {
+    document.getElementById('editProjectModal').style.display = 'none';
+}
+
+// ページロード時にイベントリスナーを追加
+document.addEventListener('DOMContentLoaded', function() {
+    // 既存のコード...
+    
+    // プロジェクト名編集フォーム
+    const editProjectForm = document.getElementById('editProjectForm');
+    if (editProjectForm) {
+        editProjectForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            
+            fetchWithCache('api/edit_project.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('エラーが発生しました: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            });
+        });
+    }
 });

@@ -123,19 +123,26 @@ include 'includes/header.php';
         <i class="fas fa-paperclip"></i>
     </span>
     <span class="project-name"><?= htmlspecialchars($project['name']) ?></span>
-    <button class="btn btn-success btn-sm add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')">＋</button>
+    <i class="fas fa-plus-circle action-icon add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')" data-tooltip="サブプロジェクト追加"></i>
+    <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $project['id'] ?>)" data-tooltip="コメント追加"></i>
 </h2>
 
+
                 </div>
-                <div class="project-actions">
-                    <span class="status-badge status-<?= $project['status'] ?>">
-                        <?= htmlspecialchars($project['status']) ?>
-                    </span>
-                    <button class="btn btn-primary" onclick="openProgressModal(<?= $project['id'] ?>)">進捗追加</button>
-                    <button class="btn btn-primary" onclick="openStatusModal(<?= $project['id'] ?>)">ステータス変更</button>
-                    <button class="btn btn-info" onclick="openHistoryModal(<?= $project['id'] ?>)">すべての履歴</button>
-                    <button class="btn btn-danger" onclick="confirmDelete(<?= $project['id'] ?>)">削除</button>
-                </div>
+<!-- 親プロジェクトのボタン部分を修正 -->
+<div class="project-actions">
+    <span class="status-badge status-<?= $project['status'] ?> clickable-status" 
+          data-project-id="<?= $project['id'] ?>" 
+          onclick="showStatusDropdown(this, event)">
+        <?= htmlspecialchars($project['status']) ?>
+        <i class="fas fa-caret-down status-caret"></i>
+    </span>
+    <i class="fas fa-book-open action-icon" onclick="openHistoryModal(<?= $project['id'] ?>)" data-tooltip="すべての履歴"></i>
+    <i class="fas fa-trash-alt action-icon delete-icon" onclick="confirmDelete(<?= $project['id'] ?>)" data-tooltip="削除"></i>
+    <i class="fas fa-edit action-icon" onclick="openEditProjectModal(<?= $project['id'] ?>, '<?= htmlspecialchars(addslashes($project['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
+</div>
+
+
             </div>
 
 <!-- 親プロジェクトの履歴表示 -->
@@ -143,30 +150,47 @@ include 'includes/header.php';
     <div class="project-history">
         <?php foreach ($histories[$project['id']] as $hist): ?>
             <div class="history-item" data-history-id="<?= $hist['id'] ?>">
-                <div class="history-header">
-                    <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
-                    <div class="date-actions">
-                        <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
-                        <div class="inline-actions">
-                            <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
-                            <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                <!-- 作成者アイコン（2文字表示） -->
+                <div class="author-avatar" data-author-name="<?= htmlspecialchars($hist['author']) ?>">
+                    <?= mb_substr(htmlspecialchars($hist['author']), 0, 2) ?>
+                </div>
+                
+                <!-- コメント吹き出し - 名前を削除 -->
+                <?php if (!empty($hist['status'])): ?>
+                    <div class="bubble status-bubble">
+                        <div class="content">
+                            ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
                         </div>
                     </div>
-                </div>
-                <?php if (!empty($hist['status'])): ?>
-                    <div class="status-change">
-                        ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
-                    </div>
                 <?php endif; ?>
+                
                 <?php if (!empty($hist['content'])): ?>
-                    <div class="content">
-                        <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                    <div class="bubble">
+                        <div class="content <?= (mb_strlen($hist['content']) > 100) ? 'expandable' : '' ?>" 
+                             id="content-<?= $hist['id'] ?>">
+                            <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                        </div>
+                        <?php if (mb_strlen($hist['content']) > 100): ?>
+                            <div class="content-toggle" onclick="toggleContent('content-<?= $hist['id'] ?>')">
+                                続きを読む
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
+                
+                <!-- 日付と編集/削除ボタン -->
+                <div class="date-actions">
+                    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+                    <div class="inline-actions">
+                        <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
+                        <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                    </div>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
+
 
 
             <!-- 子プロジェクト表示 -->
@@ -193,18 +217,23 @@ include 'includes/header.php';
   ">
     <?= ($childProject['status'] === '完了') ? '▶' : '▼' ?>
 </span>
+    <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $childProject['id'] ?>)" data-tooltip="コメント追加"></i>
 </h3>
 
+<!-- 子プロジェクトのボタン部分 -->
+<div class="project-actions">
+    <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?> clickable-status" 
+          data-project-id="<?= $childProject['id'] ?>" 
+          onclick="showStatusDropdown(this, event)">
+        <?= htmlspecialchars($childProject['status']) ?>
+        <i class="fas fa-caret-down status-caret"></i>
+    </span>
+    <i class="fas fa-book-open action-icon" onclick="openHistoryModal(<?= $childProject['id'] ?>)" data-tooltip="すべての履歴"></i>
+    <i class="fas fa-trash-alt action-icon delete-icon" onclick="confirmDelete(<?= $childProject['id'] ?>)" data-tooltip="削除"></i>
+    <i class="fas fa-edit action-icon" onclick="openEditProjectModal(<?= $childProject['id'] ?>, '<?= htmlspecialchars(addslashes($childProject['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
+</div>
 
-        <div class="project-actions">
-            <span class="status-badge status-<?= htmlspecialchars($childProject['status']) ?>">
-                <?= htmlspecialchars($childProject['status']) ?>
-            </span>
-            <button class="btn btn-primary" onclick="openProgressModal(<?= $childProject['id'] ?>)">進捗追加</button>
-            <button class="btn btn-primary" onclick="openStatusModal(<?= $childProject['id'] ?>)">ステータス変更</button>
-            <button class="btn btn-info" onclick="openHistoryModal(<?= $childProject['id'] ?>)">すべての履歴</button>
-            <button class="btn btn-danger" onclick="confirmDelete(<?= $childProject['id'] ?>)">削除</button>
-        </div>
+
     </div>                            
 
 <!-- 子プロジェクトの履歴表示 -->
@@ -214,30 +243,46 @@ include 'includes/header.php';
         style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
         <?php foreach ($histories[$childProject['id']] as $hist): ?>
             <div class="history-item" data-history-id="<?= $hist['id'] ?>">
-                <div class="history-header">
-                    <span class="author"><?= htmlspecialchars($hist['author']) ?></span>
-                    <div class="date-actions">
-                        <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
-                        <div class="inline-actions">
-                            <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
-                            <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                <!-- 作成者アイコン（2文字表示） -->
+                <div class="author-avatar" data-author-name="<?= htmlspecialchars($hist['author']) ?>">
+                    <?= mb_substr(htmlspecialchars($hist['author']), 0, 2) ?>
+                </div>
+                
+                <!-- コメント吹き出し - 名前を削除 -->
+                <?php if (!empty($hist['status'])): ?>
+                    <div class="bubble status-bubble">
+                        <div class="content">
+                            ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
                         </div>
                     </div>
-                </div>
-                <?php if (!empty($hist['status'])): ?>
-                    <div class="status-change">
-                        ステータスを「<?= htmlspecialchars($hist['status']) ?>」に変更
-                    </div>
                 <?php endif; ?>
+                
                 <?php if (!empty($hist['content'])): ?>
-                    <div class="content">
-                        <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                    <div class="bubble">
+                        <div class="content <?= (mb_strlen($hist['content']) > 100) ? 'expandable' : '' ?>" 
+                             id="content-child-<?= $hist['id'] ?>">
+                            <?= nl2br(htmlspecialchars($hist['content'])) ?>
+                        </div>
+                        <?php if (mb_strlen($hist['content']) > 100): ?>
+                            <div class="content-toggle" onclick="toggleContent('content-child-<?= $hist['id'] ?>')">
+                                続きを読む
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
+                
+                <!-- 日付と編集/削除ボタン -->
+                <div class="date-actions">
+                    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+                    <div class="inline-actions">
+                        <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
+                        <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                    </div>
+                </div>
             </div>
         <?php endforeach; ?>
     </div>
-
+    
     <?php else: ?>
     <!-- 履歴がない場合は何も表示しない -->
     <div id="history-content-<?= $childProject['id'] ?>" 
@@ -245,6 +290,8 @@ include 'includes/header.php';
         style="<?= ($childProject['status'] === '完了') ? 'display: none;' : 'display: block;' ?>">
     </div>
 <?php endif; ?>
+
+
 
                         </div>
                     <?php endforeach; ?>
@@ -391,3 +438,29 @@ include 'includes/header.php';
         </form>
     </div>
 </div>
+
+<!-- ステータスドロップダウン (index.phpのbody終了前に追加) -->
+<div id="status-dropdown" class="status-dropdown" style="display:none;">
+    <?php foreach ($statusOptions as $status): ?>
+        <div class="status-option" data-status="<?= $status ?>"><?= $status ?></div>
+    <?php endforeach; ?>
+</div>
+
+<!-- プロジェクト名編集モーダル -->
+<div id="editProjectModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h3>プロジェクト名編集</h3>
+        <form id="editProjectForm">
+            <input type="hidden" id="editProjectId" name="project_id">
+            <div class="form-group">
+                <label for="editProjectName">プロジェクト名</label>
+                <input type="text" id="editProjectName" name="name" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">更新</button>
+                <button type="button" class="btn" onclick="closeEditProjectModal()">キャンセル</button>
+            </div>
+        </form>
+    </div>
+</div>
+
