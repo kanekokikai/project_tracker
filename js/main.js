@@ -129,7 +129,13 @@ function openHistoryModal(projectId) {
                     <div class="history-item-list" data-history-id="${hist.id}">
                         <div class="history-header">
                             <span class="author">${hist.author}</span>
-                            <span class="date">${new Date(hist.created_at).toLocaleString('ja-JP')}</span>
+                            <div class="history-actions">
+                                <span class="date">${new Date(hist.created_at).toLocaleString('ja-JP')}</span>
+                                <div class="inline-actions">
+                                    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(${hist.id})" title="編集"></i>
+                                    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(${hist.id})" title="削除"></i>
+                                </div>
+                            </div>
                         </div>
                         ${hist.status ? 
                             `<div class="status-change">
@@ -153,6 +159,13 @@ function openHistoryModal(projectId) {
         });
 }
 
+
+
+
+// 履歴モーダルを閉じる関数
+function closeHistoryModal() {
+    document.getElementById('historyModal').style.display = 'none';
+}
 
 
 // プロジェクト削除

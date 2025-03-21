@@ -182,8 +182,8 @@ include 'includes/header.php';
                 <div class="date-actions">
                     <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
                     <div class="inline-actions">
-                        <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
-                        <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
+                    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>                    
                     </div>
                 </div>
             </div>
@@ -275,8 +275,8 @@ include 'includes/header.php';
                 <div class="date-actions">
                     <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
                     <div class="inline-actions">
-                        <button class="mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集">✎</button>
-                        <button class="mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除">×</button>
+                    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
+                    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>                    
                     </div>
                 </div>
             </div>
