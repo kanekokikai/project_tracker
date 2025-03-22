@@ -21,6 +21,11 @@ function fetchWithCache(url, options = {}) {
 function openAddProjectModal() {
     document.getElementById('addProjectModal').style.display = 'block';
     
+    // フォームをリセット
+    document.getElementById('addProjectForm').reset();
+    document.getElementById('teamMembers').value = '[]';
+    document.getElementById('teamMemberTags').innerHTML = '';
+    
     // スタイルを直接適用
     const inputField = document.getElementById('projectName');
     if (inputField) {
@@ -28,6 +33,7 @@ function openAddProjectModal() {
         inputField.style.padding = '0.8rem';
     }
 }
+
 
 function closeAddProjectModal() {
     document.getElementById('addProjectModal').style.display = 'none';
@@ -331,12 +337,20 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log("historyModal exists:", !!document.getElementById('historyModal'));
     console.log("editHistoryModal exists:", !!document.getElementById('editHistoryModal'));
     
-    // プロジェクト追加フォーム
-    const addProjectForm = document.getElementById('addProjectForm');
-    if (addProjectForm) {
-        addProjectForm.addEventListener('submit', function(e) {
+// プロジェクト追加フォーム
+const addProjectForm = document.getElementById('addProjectForm');
+if (addProjectForm) {
+    // フォームのsubmitイベントを削除して、ボタンのクリックイベントに置き換え
+    const submitButton = addProjectForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+        submitButton.addEventListener('click', function(e) {
             e.preventDefault();
-            const formData = new FormData(this);
+            const formData = new FormData(addProjectForm);
+            
+            // チームメンバー情報が空でないか確認
+            if (document.getElementById('teamMembers').value === '') {
+                document.getElementById('teamMembers').value = '[]';
+            }
             
             fetchWithCache('api/add_project.php', {
                 method: 'POST',
@@ -357,6 +371,71 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // フォームのsubmitイベントを無効化
+    addProjectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        return false;
+    });
+}
+
+
+// チームメンバー入力欄のセットアップ
+setupTeamMemberInput('teamMemberInput', 'teamMemberTags', 'teamMembers');
+setupTeamMemberInput('editTeamMemberInput', 'editTeamMemberTags', 'editTeamMembers');
+
+// 作成者入力欄の変更を検知してチームメンバーに追加
+const projectAuthor = document.getElementById('projectAuthor');
+if (projectAuthor) {
+    projectAuthor.addEventListener('change', addAuthorToTeam);
+    projectAuthor.addEventListener('blur', addAuthorToTeam);
+}
+
+// 編集モーダルのチームメンバー入力処理
+const editTeamMemberInput = document.getElementById('editTeamMemberInput');
+if (editTeamMemberInput) {
+    editTeamMemberInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            const value = this.value.trim();
+            if (value) {
+                try {
+                    const currentMembers = JSON.parse(document.getElementById('editTeamMembers').value);
+                    if (!currentMembers.includes(value)) {
+                        currentMembers.push(value);
+                        document.getElementById('editTeamMembers').value = JSON.stringify(currentMembers);
+                        
+                        const tagsContainer = document.getElementById('editTeamMemberTags');
+                        const tag = document.createElement('div');
+                        tag.className = 'team-member-tag';
+                        tag.innerHTML = `
+                            ${value}
+                            <span class="delete-tag" data-index="${currentMembers.length - 1}">×</span>
+                        `;
+                        tagsContainer.appendChild(tag);
+                        
+                        // 削除ボタンにイベントリスナーを追加
+                        tag.querySelector('.delete-tag').addEventListener('click', function() {
+                            const idx = parseInt(this.getAttribute('data-index'));
+                            const members = JSON.parse(document.getElementById('editTeamMembers').value);
+                            members.splice(idx, 1);
+                            document.getElementById('editTeamMembers').value = JSON.stringify(members);
+                            this.parentElement.remove();
+                            // 他のタグのデータインデックスを更新
+                            updateDataIndexes('editTeamMemberTags');
+                        });
+                    }
+                } catch (e) {
+                    console.error('チームメンバーデータの操作エラー:', e);
+                }
+                this.value = '';
+            }
+            return false;
+        }
+    });
+}
+
+
     // 進捗追加フォーム
     const addProgressForm = document.getElementById('addProgressForm');
     if (addProgressForm) {
@@ -435,33 +514,63 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 履歴編集フォーム
-    const editHistoryForm = document.getElementById('editHistoryForm');
-    if (editHistoryForm) {
-        editHistoryForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetchWithCache('api/edit_history.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('進捗が更新されました');
-                    location.reload();
-                } else {
-                    alert('エラーが発生しました: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('履歴の更新に失敗しました');
-            });
+// 履歴編集フォーム
+const editHistoryForm = document.getElementById('editHistoryForm');
+if (editHistoryForm) {
+    editHistoryForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetchWithCache('api/edit_history.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('進捗が更新されました');
+                location.reload();
+            } else {
+                alert('エラーが発生しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('履歴の更新に失敗しました');
         });
-    }
-    
+    });
+}
+
+// プロジェクト編集フォーム
+const editProjectForm = document.getElementById('editProjectForm');
+if (editProjectForm) {
+    editProjectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetchWithCache('api/edit_project.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('プロジェクトが更新されました');
+                location.reload();
+            } else {
+                alert('エラーが発生しました: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('プロジェクトの更新に失敗しました');
+        });
+    });
+}
+
+
+
+
     // トグルボタンのイベント設定
     const toggleButtons = document.querySelectorAll('.toggle-history');
     console.log(`Found ${toggleButtons.length} toggle buttons`);
@@ -478,6 +587,92 @@ document.addEventListener('DOMContentLoaded', function() {
             toggleHistory(projectId);
         });
     });
+
+
+// チームメンバータグの追加と削除を管理する関数
+function setupTeamMemberInput(inputId, tagsId, hiddenInputId) {
+    const input = document.getElementById(inputId);
+    const tagsContainer = document.getElementById(tagsId);
+    const hiddenInput = document.getElementById(hiddenInputId);
+    
+    if (!input || !tagsContainer || !hiddenInput) return;
+    
+    // 現在のメンバーリスト
+    let members = [];
+    
+    // hiddenInputの初期値があれば読み込む - 常に最新の値を取得するために関数化
+    function loadMembers() {
+      try {
+        if (hiddenInput.value && hiddenInput.value !== '[]') {
+          members = JSON.parse(hiddenInput.value);
+        }
+      } catch (e) {
+        console.error('チームメンバーデータの解析エラー:', e);
+      }
+    }
+    
+    // 初期値の読み込みと描画
+    loadMembers();
+    renderTags();
+    
+    // Enterキーで入力を処理 - フォーム送信を防止
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // 最新の値を読み込み直す（他の場所で更新されている可能性があるため）
+        loadMembers();
+        
+        const value = input.value.trim();
+        if (value && !members.includes(value)) {
+          members.push(value);
+          renderTags();
+          updateHiddenInput();
+          input.value = '';
+        }
+        return false;
+      }
+    });
+
+    // タグを描画する関数
+    function renderTags() {
+      tagsContainer.innerHTML = '';
+      
+      members.forEach((member, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'team-member-tag';
+        tag.innerHTML = `
+          ${member}
+          <span class="delete-tag" data-index="${index}">×</span>
+        `;
+        tagsContainer.appendChild(tag);
+        
+        // 削除ボタンにイベントリスナーを追加
+        tag.querySelector('.delete-tag').addEventListener('click', function() {
+          const idx = parseInt(this.getAttribute('data-index'));
+          members.splice(idx, 1);
+          renderTags();
+          updateHiddenInput();
+        });
+      });
+    }
+
+    // hiddenInputを更新する関数
+    function updateHiddenInput() {
+      hiddenInput.value = JSON.stringify(members);
+    }
+}
+
+  // data-indexを更新する関数
+  function updateDataIndexes(containerId) {
+    const container = document.getElementById(containerId);
+    const tags = container.querySelectorAll('.team-member-tag');
+    tags.forEach((tag, index) => {
+      tag.querySelector('.delete-tag').setAttribute('data-index', index);
+    });
+  }
+  
     
 // 初期状態の設定（完了プロジェクトの履歴を折りたたむ）
 setTimeout(function() {
@@ -642,44 +837,149 @@ function toggleContent(contentId) {
     }
 }
 
-// プロジェクト名編集モーダル関連
+// プロジェクト名編集モーダルの関数
 function openEditProjectModal(projectId, projectName) {
+    console.log("プロジェクト編集モーダルを開きます: ID=", projectId);
+    
+    // 基本情報を設定
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName;
-    document.getElementById('editProjectModal').style.display = 'block';
-}
-
-function closeEditProjectModal() {
-    document.getElementById('editProjectModal').style.display = 'none';
-}
-
-// ページロード時にイベントリスナーを追加
-document.addEventListener('DOMContentLoaded', function() {
-    // 既存のコード...
     
-    // プロジェクト名編集フォーム
-    const editProjectForm = document.getElementById('editProjectForm');
-    if (editProjectForm) {
-        editProjectForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
+    // APIでプロジェクト情報を取得
+    fetch(`api/get_project_details.php?project_id=${projectId}`)
+      .then(response => response.json())
+      .then(data => {
+        console.log("取得したプロジェクト情報:", data);
+        
+        // チームメンバー情報を取得して表示
+        if (data.success && data.project && data.project.team_members) {
+          try {
+            const members = JSON.parse(data.project.team_members);
+            console.log("メンバー:", members);
             
-            fetchWithCache('api/edit_project.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    location.reload();
-                } else {
-                    alert('エラーが発生しました: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('エラーが発生しました');
-            });
-        });
+            // hidden入力にチームメンバー情報をセット
+            document.getElementById('editTeamMembers').value = data.project.team_members;
+            
+            // チームメンバータグを表示
+            const tagsContainer = document.getElementById('editTeamMemberTags');
+            tagsContainer.innerHTML = '';
+            
+            // 各メンバーのタグを生成
+            if (Array.isArray(members) && members.length > 0) {
+              members.forEach((member, index) => {
+                const tag = document.createElement('div');
+                tag.className = 'team-member-tag';
+                tag.textContent = member;
+                
+                // 削除ボタンを追加
+                const deleteBtn = document.createElement('span');
+                deleteBtn.className = 'delete-tag';
+                deleteBtn.textContent = '×';
+                deleteBtn.setAttribute('data-index', index);
+                deleteBtn.onclick = function() {
+                  // メンバーを削除
+                  const idx = parseInt(this.getAttribute('data-index'));
+                  const members = JSON.parse(document.getElementById('editTeamMembers').value);
+                  members.splice(idx, 1);
+                  document.getElementById('editTeamMembers').value = JSON.stringify(members);
+                  this.parentElement.remove();
+                  updateDataIndexes('editTeamMemberTags');
+                };
+                
+                tag.appendChild(deleteBtn);
+                tagsContainer.appendChild(tag);
+              });
+            }
+          } catch (e) {
+            console.error('JSONパースエラー:', e);
+          }
+        }
+      })
+      .catch(error => console.error('データ取得エラー:', error));
+    
+    // モーダルを表示
+    document.getElementById('editProjectModal').style.display = 'block';
+  }
+
+
+
+
+// 作成者を自動的にチームメンバーに追加する関数
+function addAuthorToTeam() {
+    const authorField = document.getElementById('projectAuthor');
+    const teamMembersHidden = document.getElementById('teamMembers');
+    
+    if (!authorField || !teamMembersHidden) return;
+    
+    const authorName = authorField.value.trim();
+    if (!authorName) return;
+    
+    // 現在のメンバーリストを取得
+    let members = [];
+    try {
+      if (teamMembersHidden.value) {
+        members = JSON.parse(teamMembersHidden.value);
+      }
+    } catch (e) {
+      console.error('チームメンバーデータの解析エラー:', e);
     }
-});
+    
+    // 作成者が既にリストにない場合のみ追加
+    if (!members.includes(authorName)) {
+      members.push(authorName);
+      teamMembersHidden.value = JSON.stringify(members);
+      
+      // setupTeamMemberInputの関数を再利用して描画を更新
+      const tagsContainer = document.getElementById('teamMemberTags');
+      if (tagsContainer) {
+        tagsContainer.innerHTML = '';
+        members.forEach((member, index) => {
+          const tag = document.createElement('div');
+          tag.className = 'team-member-tag';
+          tag.innerHTML = `
+            ${member}
+            <span class="delete-tag" data-index="${index}">×</span>
+          `;
+          tagsContainer.appendChild(tag);
+          
+          // 削除ボタンにイベントリスナーを追加
+          tag.querySelector('.delete-tag').addEventListener('click', function() {
+            const currentMembers = JSON.parse(teamMembersHidden.value);
+            const idx = parseInt(this.getAttribute('data-index'));
+            currentMembers.splice(idx, 1);
+            teamMembersHidden.value = JSON.stringify(currentMembers);
+            this.parentElement.remove();
+            // 他のタグのデータインデックスを更新
+            updateDataIndexes('teamMemberTags');
+          });
+        });
+      }
+    }
+}
+
+
+
+  // すべてのフォームでエンターキーが押されたときの処理
+document.addEventListener('DOMContentLoaded', function() {
+    // プロジェクト追加・編集フォーム内のテキスト入力でエンターキーを無効化
+    const forms = ['addProjectForm', 'editProjectForm', 'addSubProjectForm'];
+    
+    forms.forEach(formId => {
+      const form = document.getElementById(formId);
+      if (form) {
+        // フォーム内のすべてのinputにイベントリスナーを追加
+        const inputs = form.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+          // チームメンバー入力以外のテキスト入力でエンターキーを無効化
+          if (input.id !== 'teamMemberInput' && input.id !== 'editTeamMemberInput') {
+            input.addEventListener('keydown', function(e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                return false;
+              }
+            });
+          }
+        });
+      }
+    });
+  });

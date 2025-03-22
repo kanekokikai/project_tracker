@@ -24,13 +24,16 @@ try {
     }
     $author = $_POST['author'];
 
+// チームメンバー情報の取得（オプション）
+$teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';    
+
     // トランザクション開始
     $pdo->beginTransaction();
 
     // プロジェクト追加
-    $stmt = $pdo->prepare("INSERT INTO projects (name, status, created_at, updated_at) VALUES (?, '未着手', NOW(), NOW())");
-    $stmt->execute([$_POST['name']]);
-    
+    $stmt = $pdo->prepare("INSERT INTO projects (name, status, team_members, created_at, updated_at) VALUES (?, '未着手', ?, NOW(), NOW())");
+    $stmt->execute([$_POST['name'], $teamMembers]);    
+
     // 追加されたプロジェクトのIDを取得
     $projectId = $pdo->lastInsertId();
     

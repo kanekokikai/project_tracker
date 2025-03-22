@@ -27,11 +27,13 @@ if (!isset($_POST['project_id']) || !isset($_POST['name']) || empty($_POST['name
 $projectId = $_POST['project_id'];
 $newName = $_POST['name'];
 
+$teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';
+
 try {
     // プロジェクト名を更新
-    $stmt = $pdo->prepare("UPDATE projects SET name = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->execute([$newName, $projectId]);
-    
+    $stmt = $pdo->prepare("UPDATE projects SET name = ?, team_members = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->execute([$newName, $teamMembers, $projectId]);
+        
     header('Content-Type: application/json');
     echo json_encode(['success' => true]);
     

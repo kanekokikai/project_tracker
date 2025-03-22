@@ -1390,15 +1390,33 @@ label {
   visibility: hidden;
   transition: all 0.2s ease;
   pointer-events: none;
-  z-index: 100;
+  z-index: 200; /* z-indexを上げる (元は100) */
 }
 
 .action-icon:hover::after {
   opacity: 1;
   visibility: visible;
-  bottom: -25px;
+  bottom: -35px; /* 少し下に表示位置を下げる (元は-25px) */
 }
 
+/* プロジェクトタイトル内のアイコンが見やすいように調整 */
+.project-title .action-icon {
+  position: relative;
+  z-index: 110; /* 通常状態でもz-indexを指定 */
+}
+
+/* overflow: visible を明示的に設定して、ツールチップがはみ出せるようにする */
+.project-header {
+  overflow: visible;
+}
+
+.project-title {
+  overflow: visible;
+}
+
+.project-actions {
+  overflow: visible;
+}
 
 /* ステータスドロップダウンのスタイル修正 */
 .status-dropdown {
@@ -1797,7 +1815,7 @@ i.mini-btn {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   margin: -5px 0;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; を削除 */
 }
 
 .parent-project .project-title::before {
@@ -1820,7 +1838,7 @@ i.mini-btn {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
   margin: -3px 0;
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden; を削除 */
 }
 
 .child-project .project-title::before {
@@ -1891,4 +1909,165 @@ i.mini-btn {
 
 .history-item-list .mini-btn:hover {
   transform: translateY(-2px);
+}
+
+/* チームメンバータグのスタイル */
+.team-member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  min-height: 24px;
+}
+
+.team-member-tag {
+  display: inline;
+  color: var(--apple-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.team-member-tag:not(:last-child)::after {
+  content: ",";
+  margin-right: 4px;
+}
+
+.team-member-tag .delete-tag {
+  margin-left: 2px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--apple-secondary);
+}
+
+.team-member-tag .delete-tag:hover {
+  color: var(--apple-error);
+}
+
+/* プロジェクト名のチームメンバーホバー表示 - 修正版 */
+.project-name {
+  position: relative;
+  cursor: default;
+}
+
+/* チームメンバーツールチップを大きく目立つデザインに変更 */
+.team-members-tooltip {
+  position: absolute;
+  top: 120%;
+  left: 0;
+  background-color: rgba(255, 255, 255, 0.25); /* より透明な背景 */
+  color: #333; /* 濃い目の黒文字 */
+  padding: 12px 18px;
+  border-radius: 18px; /* より丸い外枠 */
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 200;
+  white-space: nowrap;
+  margin-top: 5px;
+  pointer-events: none;
+  max-width: 300px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.3) inset;
+  transform: translateY(-10px) scale(0.95);
+  text-overflow: ellipsis;
+  overflow: hidden;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(8px); /* ぼかし効果 */
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* 小さな三角形を追加してツールチップ感を出す */
+.team-members-tooltip::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 15px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid rgba(255, 255, 255, 0.3);
+}
+
+/* ホバー時のアニメーション効果強化 */
+.project-name:hover .team-members-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+/* チームメンバー名の表示スタイル */
+.team-member-name {
+  display: inline-block;
+  padding: 3px 10px;
+  background-color: rgba(255, 255, 255, 0.5); /* 半透明の白背景 */
+  color: #333; /* 黒文字 */
+  border-radius: 12px; /* より丸い形状 */
+  margin: 2px;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(4px); /* 個別の名前タグにもぼかし効果 */
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* フォームコントロールの全般的なスタイルをオーバーライド */
+.form-control {
+  text-align: left !important;
+  padding-left: 10px !important;
+}
+
+/* チームメンバー入力欄のスタイル調整 - より強い指定 */
+input#teamMemberInput, 
+input#editTeamMemberInput {
+  width: 60% !important;
+  max-width: 300px !important;
+  text-align: left !important;
+  padding-left: 10px !important;
+  text-indent: 0 !important;
+  box-sizing: border-box !important;
+}
+
+
+/* プレースホルダーテキスト用のスタイル */
+#teamMemberInput::placeholder, #editTeamMemberInput::placeholder {
+  text-align: left !important;
+  padding-left: 0 !important;
+  text-indent: 0 !important;
+}
+
+
+
+/* チームメンバータグのスタイル修正 */
+.team-member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+  min-height: 24px;
+}
+
+.team-member-tag {
+  display: inline;
+  color: var(--apple-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.team-member-tag:not(:last-child)::after {
+  content: ",";
+  margin-right: 4px;
+}
+
+.team-member-tag .delete-tag {
+  margin-left: 2px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--apple-secondary);
+}
+
+.team-member-tag .delete-tag:hover {
+  color: var(--apple-error);
 }

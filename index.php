@@ -27,7 +27,7 @@ try {
     // まず、親プロジェクトとその子プロジェクトの最新履歴を取得
     // より互換性のあるクエリを使用
     $stmt = $pdo->query("
-        SELECT p.id, p.name, p.status, p.updated_at, 
+        SELECT p.id, p.name, p.status, p.updated_at, p.team_members,
                IFNULL(
                    (SELECT MAX(h.created_at)
                     FROM project_history h
@@ -44,7 +44,7 @@ try {
 } catch (PDOException $e) {
     // エラーが発生した場合は、より単純なクエリを試す
     error_log('Advanced query failed: ' . $e->getMessage());
-    $stmt = $pdo->query("SELECT id, name, status, updated_at FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
+    $stmt = $pdo->query("SELECT id, name, status, updated_at, team_members FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
     $parentProjects = $stmt->fetchAll();
 }
 
@@ -57,7 +57,7 @@ $parentIds = array_column($parentProjects, 'id');
 $childProjects = [];
 if (!empty($parentIds)) {
     $placeholders = str_repeat('?,', count($parentIds) - 1) . '?';
-    $stmt = $pdo->prepare("SELECT id, parent_id, name, status, updated_at FROM projects WHERE parent_id IN ($placeholders) ORDER BY parent_id, updated_at DESC");
+    $stmt = $pdo->prepare("SELECT id, parent_id, name, status, updated_at, team_members FROM projects WHERE parent_id IN ($placeholders) ORDER BY parent_id, updated_at DESC");
     $stmt->execute($parentIds);
     $allChildProjects = $stmt->fetchAll();
     
@@ -122,7 +122,22 @@ include 'includes/header.php';
     <span class="attachment-icon" data-project-id="<?= $project['id'] ?>">
         <i class="fas fa-paperclip"></i>
     </span>
-    <span class="project-name"><?= htmlspecialchars($project['name']) ?></span>
+
+
+    <span class="project-name">
+    <?= htmlspecialchars($project['name']) ?>
+    <?php if (!empty($project['team_members'])): ?>
+        <span class="team-members-tooltip">
+            <?php 
+            $members = json_decode($project['team_members'], true) ?: [];
+            foreach ($members as $index => $member): ?>
+                <span class="team-member-name"><?= htmlspecialchars($member) ?></span>
+            <?php endforeach; ?>
+        </span>
+    <?php endif; ?>
+</span>
+
+
     <i class="fas fa-plus-circle action-icon add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')" data-tooltip="サブプロジェクト追加"></i>
     <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $project['id'] ?>)" data-tooltip="コメント追加"></i>
 </h2>
@@ -205,7 +220,22 @@ include 'includes/header.php';
     <span class="attachment-icon" data-project-id="<?= $childProject['id'] ?>">
         <i class="fas fa-paperclip"></i>
     </span>
-    <span class="project-name"><?= htmlspecialchars($childProject['name']) ?></span>
+
+
+    <span class="project-name">
+    <?= htmlspecialchars($childProject['name']) ?>
+    <?php if (!empty($childProject['team_members'])): ?>
+        <span class="team-members-tooltip">
+            <?php 
+            $members = json_decode($childProject['team_members'], true) ?: [];
+            foreach ($members as $index => $member): ?>
+                <span class="team-member-name"><?= htmlspecialchars($member) ?></span>
+            <?php endforeach; ?>
+        </span>
+    <?php endif; ?>
+</span>
+
+
     <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>" 
   onclick="
     var content = document.getElementById('history-content-<?= $childProject['id'] ?>');
@@ -219,6 +249,7 @@ include 'includes/header.php';
 </span>
     <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $childProject['id'] ?>)" data-tooltip="コメント追加"></i>
 </h3>
+
 
 <!-- 子プロジェクトのボタン部分 -->
 <div class="project-actions">
@@ -321,12 +352,20 @@ include 'includes/header.php';
                 <input type="text" id="projectAuthor" name="author" class="form-control" required>
             </div>
             <div class="form-group">
+                <label for="teamMemberInput">チームメンバー</label>
+                <div id="teamMemberTags" class="team-member-tags"></div>
+                <input type="text" id="teamMemberInput" class="form-control" placeholder="名前を入力してEnterで追加">
+                <input type="hidden" id="teamMembers" name="team_members" value="">
+            </div>
+
+            <div class="form-group">
                 <button type="submit" class="btn btn-primary">追加</button>
                 <button type="button" class="btn" onclick="closeAddProjectModal()">キャンセル</button>
             </div>
         </form>
     </div>
 </div>
+
 
 <!-- 子プロジェクト追加モーダル -->
 <div id="subProjectModal" class="modal" style="display: none;">
@@ -449,13 +488,22 @@ include 'includes/header.php';
 <!-- プロジェクト名編集モーダル -->
 <div id="editProjectModal" class="modal" style="display: none;">
     <div class="modal-content">
-        <h3>プロジェクト名編集</h3>
+        <h3>プロジェクト編集</h3>
         <form id="editProjectForm">
             <input type="hidden" id="editProjectId" name="project_id">
             <div class="form-group">
                 <label for="editProjectName">プロジェクト名</label>
                 <input type="text" id="editProjectName" name="name" class="form-control" required>
             </div>
+
+
+<div class="form-group">
+    <label for="editTeamMemberInput">チームメンバー</label>
+    <div id="editTeamMemberTags" class="team-member-tags"></div>
+    <input type="text" id="editTeamMemberInput" class="form-control" placeholder="名前を入力してEnterで追加">
+    <input type="hidden" id="editTeamMembers" name="team_members" value="">
+</div>
+
             <div class="form-group">
                 <button type="submit" class="btn btn-primary">更新</button>
                 <button type="button" class="btn" onclick="closeEditProjectModal()">キャンセル</button>
@@ -463,4 +511,3 @@ include 'includes/header.php';
         </form>
     </div>
 </div>
-
