@@ -332,10 +332,28 @@ document.addEventListener('DOMContentLoaded', function() {
 // 検索バーの機能設定
 const memberSearch = document.getElementById('memberSearch');
 const clearSearch = document.getElementById('clearSearch');
-if (memberSearch && clearSearch) {
+const searchModeToggle = document.getElementById('searchModeToggle');
+
+if (memberSearch && clearSearch && searchModeToggle) {
+    // 検索モード切り替え
+    searchModeToggle.addEventListener('change', function() {
+        if (this.checked) {
+            // プロジェクト名検索モード
+            memberSearch.placeholder = "プロジェクト名で検索...";
+        } else {
+            // 名前検索モード（デフォルト）
+            memberSearch.placeholder = "名前で検索...";
+        }
+        
+        // 現在の検索語で再検索
+        if (memberSearch.value.trim() !== '') {
+            performSearch(memberSearch.value.trim());
+        }
+    });
+    
     // 検索機能
     memberSearch.addEventListener('input', function() {
-        const searchValue = this.value.trim().toLowerCase();
+        const searchValue = this.value.trim();
         
         // クリアボタンの表示/非表示
         if (searchValue.length > 0) {
@@ -345,15 +363,75 @@ if (memberSearch && clearSearch) {
         }
         
         // 検索の実行
-        filterByMemberName(searchValue);
+        performSearch(searchValue);
     });
     
     // クリアボタン
     clearSearch.addEventListener('click', function() {
         memberSearch.value = '';
         this.style.display = 'none';
-        filterByMemberName(''); // 検索をクリア
+        performSearch(''); // 検索をクリア
     });
+}
+
+// 検索実行関数
+function performSearch(searchValue) {
+    const isProjectSearch = document.getElementById('searchModeToggle').checked;
+    
+    if (isProjectSearch) {
+        // プロジェクト名検索
+        filterByProjectName(searchValue);
+    } else {
+        // 名前検索
+        filterByMemberName(searchValue);
+    }
+}
+
+// プロジェクト名での検索フィルタリング関数
+function filterByProjectName(name) {
+    const projectCards = document.querySelectorAll('.project-card');
+    let hasVisibleProjects = false;
+    
+    if (name === '') {
+        // 空の検索語の場合はすべて表示（ただしステータスフィルターは維持）
+        projectCards.forEach(card => {
+            const currentStatus = document.getElementById('statusFilter').value;
+            if (currentStatus === 'all') {
+                card.style.display = 'block';
+            } else {
+                const cardStatus = card.querySelector('.status-badge').textContent.trim();
+                card.style.display = cardStatus === currentStatus ? 'block' : 'none';
+            }
+        });
+        return;
+    }
+    
+    projectCards.forEach(card => {
+        // プロジェクト名を取得
+        const projectNameElement = card.querySelector('.project-name');
+        let shouldShow = false;
+        
+        if (projectNameElement) {
+            // プロジェクト名のテキストを取得（ただしチームメンバーツールチップを除く）
+            const projectNameText = projectNameElement.childNodes[0].nodeValue || projectNameElement.textContent;
+            if (projectNameText.toLowerCase().includes(name.toLowerCase())) {
+                shouldShow = true;
+            }
+        }
+        
+        // ステータスフィルターも考慮する
+        const currentStatus = document.getElementById('statusFilter').value;
+        if (shouldShow && (currentStatus === 'all' || 
+            card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+            card.style.display = 'block';
+            hasVisibleProjects = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // 検索結果がない場合のメッセージ表示
+    updateNoResultsMessage(hasVisibleProjects);
 }
 
 // メンバー名での検索フィルタリング関数
@@ -384,7 +462,7 @@ function filterByMemberName(name) {
             // チームメンバーの名前を全て取得
             const memberElements = teamMembersElement.querySelectorAll('.team-member-name');
             memberElements.forEach(element => {
-                if (element.textContent.toLowerCase().includes(name)) {
+                if (element.textContent.toLowerCase().includes(name.toLowerCase())) {
                     shouldShow = true;
                 }
             });
@@ -394,7 +472,7 @@ function filterByMemberName(name) {
         const authorAvatars = card.querySelectorAll('.author-avatar');
         authorAvatars.forEach(avatar => {
             const authorName = avatar.getAttribute('data-author-name');
-            if (authorName && authorName.toLowerCase().includes(name)) {
+            if (authorName && authorName.toLowerCase().includes(name.toLowerCase())) {
                 shouldShow = true;
             }
         });
@@ -411,6 +489,11 @@ function filterByMemberName(name) {
     });
     
     // 検索結果がない場合のメッセージ表示
+    updateNoResultsMessage(hasVisibleProjects);
+}
+
+// 検索結果がない場合のメッセージ表示・非表示を処理する関数
+function updateNoResultsMessage(hasVisibleProjects) {
     const noResultsMessage = document.getElementById('noSearchResults');
     if (!hasVisibleProjects) {
         if (!noResultsMessage) {

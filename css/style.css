@@ -2077,7 +2077,7 @@ input#editTeamMemberInput {
   display: flex;
   align-items: center;
   margin: 0 auto;
-  max-width: 200px; /* 幅を400pxから200pxに半減 */
+  max-width: 300px; /* 幅を400pxから200pxに半減 */
   width: 100%;
 }
 
@@ -2127,6 +2127,24 @@ input#editTeamMemberInput {
   color: var(--apple-error);
 }
 
+/* 中央に配置するためのスタイル追加 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+}
+
+.action-buttons > * {
+  flex: 0 0 auto;
+}
+
+.search-wrapper {
+  flex: 0 0 300px; /* 200pxから300pxに変更 */
+}
+
+
 /* 検索結果がない場合のメッセージ */
 .no-results-message {
   text-align: center;
@@ -2168,4 +2186,179 @@ input#editTeamMemberInput {
 .search-input:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
+}
+
+/* 検索バーのスタイル */
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  margin: 0 auto;
+  max-width: 200px;
+  width: 100%;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 35px;
+  padding-right: 60px; /* トグルスイッチのためのスペース */
+  border: none;
+  border-radius: 24px;
+  background-color: var(--apple-white);
+  color: var(--apple-dark);
+  font-size: 0.9rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.3), 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--apple-secondary);
+  font-size: 0.9rem;
+}
+
+.clear-search {
+  position: absolute;
+  right: 40px; /* トグルスイッチのためにさらに右へ */
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--apple-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.clear-search:hover {
+  color: var(--apple-error);
+}
+
+/* トグルスイッチのスタイル */
+.toggle-switch {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 20px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--apple-primary);
+}
+
+input:focus + .toggle-slider {
+  box-shadow: 0 0 1px var(--apple-primary);
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(16px);
+}
+
+/* 検索結果がない場合のメッセージ */
+.no-results-message {
+  text-align: center;
+  padding: 20px;
+  margin: 20px 0;
+  background-color: var(--apple-light);
+  border-radius: var(--apple-radius);
+  color: var(--apple-secondary);
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 中央に配置するためのスタイル追加 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+}
+
+.action-buttons > * {
+  flex: 0 0 auto;
+}
+
+.search-wrapper {
+  flex: 0 0 200px;
+}
+
+/* レスポンシブ対応のための調整 */
+@media (max-width: 768px) {
+  .action-buttons {
+      flex-direction: column;
+      align-items: stretch;
+  }
+  
+  .search-wrapper {
+      margin: 0.5rem 0;
+      order: 1;
+  }
+  
+  .filter-wrapper {
+      margin: 0.5rem 0;
+      order: 2;
+  }
+}
+
+/* 検索バーの幅を広げる - 優先度を上げるために !important を使用 */
+.search-wrapper {
+  max-width: 250px !important;
+  flex: 0 0 250px !important;
+}
+
+/* 中央に配置するためのスタイル追加 */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: nowrap;
+}
+
+.action-buttons > * {
+  flex: 0 0 auto;
 }

@@ -106,6 +106,10 @@ include 'includes/header.php';
         <div class="search-bar">
             <i class="fas fa-search search-icon"></i>
             <input type="text" id="memberSearch" class="search-input" placeholder="名前で検索..." autocomplete="off">
+            <label class="toggle-switch">
+                <input type="checkbox" id="searchModeToggle">
+                <span class="toggle-slider"></span>
+            </label>
             <i class="fas fa-times-circle clear-search" id="clearSearch" style="display: none;"></i>
         </div>
     </div>
