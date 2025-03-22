@@ -101,6 +101,15 @@ include 'includes/header.php';
 <!-- フィルターとプロジェクト追加ボタン -->
 <div class="action-buttons">
     <button class="btn btn-primary" onclick="openAddProjectModal()">新規プロジェクト</button>
+    
+    <div class="search-wrapper">
+        <div class="search-bar">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="memberSearch" class="search-input" placeholder="名前で検索..." autocomplete="off">
+            <i class="fas fa-times-circle clear-search" id="clearSearch" style="display: none;"></i>
+        </div>
+    </div>
+    
     <div class="filter-wrapper">
         <select id="statusFilter" class="form-control" onchange="filterByStatus(this.value)">
             <option value="all">すべてのステータス</option>
@@ -110,6 +119,7 @@ include 'includes/header.php';
         </select>
     </div>
 </div>
+
 
     <!-- プロジェクト一覧 -->
     <?php foreach ($parentProjects as $project): ?>

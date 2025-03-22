@@ -328,6 +328,104 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('App initialized');
     }, 100);
     
+
+// 検索バーの機能設定
+const memberSearch = document.getElementById('memberSearch');
+const clearSearch = document.getElementById('clearSearch');
+if (memberSearch && clearSearch) {
+    // 検索機能
+    memberSearch.addEventListener('input', function() {
+        const searchValue = this.value.trim().toLowerCase();
+        
+        // クリアボタンの表示/非表示
+        if (searchValue.length > 0) {
+            clearSearch.style.display = 'block';
+        } else {
+            clearSearch.style.display = 'none';
+        }
+        
+        // 検索の実行
+        filterByMemberName(searchValue);
+    });
+    
+    // クリアボタン
+    clearSearch.addEventListener('click', function() {
+        memberSearch.value = '';
+        this.style.display = 'none';
+        filterByMemberName(''); // 検索をクリア
+    });
+}
+
+// メンバー名での検索フィルタリング関数
+function filterByMemberName(name) {
+    const projectCards = document.querySelectorAll('.project-card');
+    let hasVisibleProjects = false;
+    
+    if (name === '') {
+        // 空の検索語の場合はすべて表示（ただしステータスフィルターは維持）
+        projectCards.forEach(card => {
+            const currentStatus = document.getElementById('statusFilter').value;
+            if (currentStatus === 'all') {
+                card.style.display = 'block';
+            } else {
+                const cardStatus = card.querySelector('.status-badge').textContent.trim();
+                card.style.display = cardStatus === currentStatus ? 'block' : 'none';
+            }
+        });
+        return;
+    }
+    
+    projectCards.forEach(card => {
+        // チームメンバー情報を取得
+        const teamMembersElement = card.querySelector('.project-name .team-members-tooltip');
+        let shouldShow = false;
+        
+        if (teamMembersElement) {
+            // チームメンバーの名前を全て取得
+            const memberElements = teamMembersElement.querySelectorAll('.team-member-name');
+            memberElements.forEach(element => {
+                if (element.textContent.toLowerCase().includes(name)) {
+                    shouldShow = true;
+                }
+            });
+        }
+        
+        // 履歴内の作成者も検索
+        const authorAvatars = card.querySelectorAll('.author-avatar');
+        authorAvatars.forEach(avatar => {
+            const authorName = avatar.getAttribute('data-author-name');
+            if (authorName && authorName.toLowerCase().includes(name)) {
+                shouldShow = true;
+            }
+        });
+        
+        // ステータスフィルターも考慮する
+        const currentStatus = document.getElementById('statusFilter').value;
+        if (shouldShow && (currentStatus === 'all' || 
+            card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+            card.style.display = 'block';
+            hasVisibleProjects = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // 検索結果がない場合のメッセージ表示
+    const noResultsMessage = document.getElementById('noSearchResults');
+    if (!hasVisibleProjects) {
+        if (!noResultsMessage) {
+            const message = document.createElement('div');
+            message.id = 'noSearchResults';
+            message.className = 'no-results-message';
+            message.textContent = '検索結果がありません';
+            document.querySelector('.project-list').appendChild(message);
+        }
+    } else if (noResultsMessage) {
+        noResultsMessage.remove();
+    }
+}
+
+
     // モーダル要素の存在確認（デバッグ用）
     console.log("Modal elements check:");
     console.log("addProjectModal exists:", !!document.getElementById('addProjectModal'));
