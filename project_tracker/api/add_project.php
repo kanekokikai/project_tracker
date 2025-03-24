@@ -14,8 +14,8 @@ try {
         throw new Exception('Invalid request method');
     }
 
-    if (empty($_POST['name']) || empty($_POST['parent_id'])) {
-        throw new Exception('Project name and parent ID are required');
+    if (empty($_POST['name'])) {
+        throw new Exception('Project name is required');
     }
     
     // 作成者名の取得（必須）
@@ -24,40 +24,39 @@ try {
     }
     $author = $_POST['author'];
 
+// チームメンバー情報の取得（オプション）
+$teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';    
+
     // トランザクション開始
     $pdo->beginTransaction();
 
-    // 子プロジェクト追加（ステータスと日時を明示的に設定）
-    $stmt = $pdo->prepare("INSERT INTO projects (name, parent_id, status, created_at, updated_at) VALUES (?, ?, '未着手', NOW(), NOW())");
-    $stmt->execute([$_POST['name'], $_POST['parent_id']]);
+    // プロジェクト追加
+    $stmt = $pdo->prepare("INSERT INTO projects (name, status, team_members, created_at, updated_at) VALUES (?, '未着手', ?, NOW(), NOW())");
+    $stmt->execute([$_POST['name'], $teamMembers]);    
+
+    // 追加されたプロジェクトのIDを取得
+    $projectId = $pdo->lastInsertId();
     
-    // 追加された子プロジェクトのIDを取得
-    $subProjectId = $pdo->lastInsertId();
-    
-    // 履歴に子プロジェクト作成の記録を追加（親プロジェクトの履歴として記録）
-    $content = "サブプロジェクト「{$_POST['name']}」を作成しました";
+    // 履歴にプロジェクト作成の記録を追加
+    $content = "新規プロジェクト「{$_POST['name']}」を作成しました";
     $stmt = $pdo->prepare("INSERT INTO project_history (project_id, author, content, created_at) VALUES (?, ?, ?, NOW())");
     $stmt->execute([
-        $_POST['parent_id'],  // 親プロジェクトの履歴として記録
-        $author,              // 固定値から変数に変更
+        $projectId,
+        $author,
         $content
     ]);
-    
-    // 親プロジェクトの更新日時を更新
-    $stmt = $pdo->prepare("UPDATE projects SET updated_at = NOW() WHERE id = ?");
-    $stmt->execute([$_POST['parent_id']]);
     
     // トランザクションをコミット
     $pdo->commit();
 
     echo json_encode([
         'success' => true,
-        'message' => 'Sub-project added successfully'
+        'message' => 'Project added successfully'
     ]);
 
 } catch (Exception $e) {
     // エラー発生時はロールバック
-    if ($pdo->inTransaction()) {
+    if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
     

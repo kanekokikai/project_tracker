@@ -2231,7 +2231,7 @@ input#editTeamMemberInput {
 
 .clear-search {
   position: absolute;
-  right: 55px; /* 40pxから55pxに変更して重なりを解消 */
+  right: 40px; /* トグルスイッチのためにさらに右へ */
   top: 50%;
   transform: translateY(-50%);
   color: var(--apple-secondary);
