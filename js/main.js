@@ -1241,3 +1241,141 @@ function closeModal(modalId) {
       }
     });
   });
+
+
+  function initSidebar() {
+    console.log('サイドバー初期化開始');
+    const sidebarToggle = document.querySelector('.sidebar-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarPin = document.querySelector('.sidebar-pin');
+    const sidebarOverlay = document.querySelector('.sidebar-overlay');
+    const projectNav = document.querySelector('.project-nav');
+    
+    // 要素チェック
+    if (!sidebarToggle || !sidebar || !sidebarPin || !sidebarOverlay || !projectNav) {
+        console.error('サイドバー要素が見つかりません');
+        return;
+    }
+    
+    // ピン留め状態を取得
+    const isPinned = localStorage.getItem('sidebarPinned') === 'true';
+    
+    // ピン留め状態を復元
+    if (isPinned) {
+        sidebar.classList.add('pinned');
+        sidebar.classList.add('active');
+        sidebarPin.classList.add('active');
+    }
+    
+    // サイドバーを開く
+    sidebarToggle.addEventListener('click', function() {
+        if (sidebar.classList.contains('pinned')) return;
+        
+        sidebar.classList.add('active');
+        sidebarOverlay.classList.add('active');
+        document.body.style.overflow = 'hidden'; // 背景スクロール防止
+        
+        // プロジェクトリストを生成（初回のみ）
+        if (projectNav.children.length === 0) {
+            generateProjectList();
+        }
+    });
+    
+    // サイドバーを閉じる
+    function closeSidebar() {
+        if (sidebar.classList.contains('pinned')) return;
+        
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+        document.body.style.overflow = ''; // 背景スクロールを戻す
+    }
+    
+    // ピン留め切り替え
+    sidebarPin.addEventListener('click', function() {
+        sidebar.classList.toggle('pinned');
+        this.classList.toggle('active');
+        
+        if (sidebar.classList.contains('pinned')) {
+            // ピン留め状態を保存
+            localStorage.setItem('sidebarPinned', 'true');
+            sidebarOverlay.classList.remove('active');
+            document.body.style.overflow = ''; // 背景スクロールを戻す
+        } else {
+            // ピン留め解除
+            localStorage.setItem('sidebarPinned', 'false');
+            // サイドバーを閉じる
+            sidebar.classList.remove('active');
+        }
+    });
+    
+    sidebarOverlay.addEventListener('click', closeSidebar);
+    
+    // 初回表示時にプロジェクトリストを生成（ピン留め時）
+    if (isPinned && projectNav.children.length === 0) {
+        generateProjectList();
+    }
+    
+    // プロジェクトリストを生成する関数
+    function generateProjectList() {
+        const parentProjects = document.querySelectorAll('.parent-project');
+        
+        parentProjects.forEach(project => {
+            const projectTitle = project.querySelector('.project-name');
+            if (!projectTitle) return;
+            
+            // プロジェクト名を取得（チームメンバーの表示を除いた純粋なテキスト）
+            const projectName = projectTitle.childNodes[0].nodeValue.trim() || projectTitle.textContent.trim();
+            
+            // プロジェクトIDを取得（後でスクロール位置の特定に使用）
+            const projectId = project.querySelector('.attachment-icon').getAttribute('data-project-id');
+            
+            // リストアイテムを作成
+            const listItem = document.createElement('li');
+            listItem.className = 'project-nav-item';
+            listItem.textContent = projectName;
+            listItem.setAttribute('data-project-id', projectId);
+            
+            // クリックイベントを設定
+            listItem.addEventListener('click', function() {
+                // プロジェクトへスクロール
+                const targetProject = document.querySelector(`.project-card .attachment-icon[data-project-id="${projectId}"]`).closest('.project-card');
+                
+                // ヘッダー高さを取得（ヘッダーの高さが変わっても対応できるよう）
+                const headerHeight = document.querySelector('.header').offsetHeight;
+                
+                // スムーズにスクロール - ヘッダー分のオフセットを設定
+                window.scrollTo({
+                    top: targetProject.offsetTop - headerHeight - 20, // ヘッダー高さ + 余白20px分
+                    behavior: 'smooth'
+                });
+                
+                // サイドバーを閉じる（ピン留めされていない場合）
+                if (!sidebar.classList.contains('pinned')) {
+                    closeSidebar();
+                }
+                
+                // プロジェクトリストのアクティブ状態を更新
+                document.querySelectorAll('.project-nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                listItem.classList.add('active');
+                
+                // ハイライト効果を追加
+                targetProject.classList.add('highlight-project');
+                setTimeout(() => {
+                    targetProject.classList.remove('highlight-project');
+                }, 2000);
+            });
+            
+            projectNav.appendChild(listItem);
+        });
+    }
+}
+
+
+// 既存のDOMContentLoadedイベントリスナーに追加
+document.addEventListener('DOMContentLoaded', function() {
+    // 既に存在するDOMContentLoadedイベントの末尾に以下を追加
+    // サイドバー初期化
+    setTimeout(initSidebar, 500);
+});

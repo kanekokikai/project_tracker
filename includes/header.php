@@ -29,6 +29,7 @@ if ($environment === 'local') {
     <title>プロジェクト管理</title>
     <!-- 強制的にキャッシュをクリアするためのバージョン番号を追加 -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/css/style.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <style type="text/css">
@@ -146,33 +147,45 @@ textarea {
 </style>
 
 <body>
+<!-- サイドバーボタン -->
+<div class="sidebar-toggle">
+    <i class="fas fa-list"></i>
+    <span>プロジェクト一覧</span>
+</div>
+
+<!-- サイドバー -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h2>プロジェクト一覧</h2>
+        <i class="fas fa-thumbtack sidebar-pin" title="サイドバーを固定"></i>
+    </div>
+    <div class="sidebar-content">
+        <ul class="project-nav">
+            <!-- JavaScriptで動的に生成されるプロジェクトリスト -->
+        </ul>
+    </div>
+</div>
+
+<!-- サイドバーオーバーレイ -->
+<div class="sidebar-overlay"></div>
+
+
+    <!-- ヘッダーは1つだけ残す -->
     <header class="header">
         <div class="header-content">
             <h1>プロジェクト管理</h1>
-            <!-- 常にログアウトリンクを表示する（条件判定を削除） -->
             <a href="logout.php" class="logout-link">ログアウト</a>
         </div>
     </header>
 
-    <!-- 追加: 認証オーバーレイ -->
-    <div class="auth-overlay <?php echo $isAuth ? 'authenticated' : ''; ?>"></div>
-    
-    <!-- 追加: 認証モーダル -->
-    <div id="authModal" class="modal" style="display: <?php echo $isAuth ? 'none' : 'flex'; ?>;">
-        <div class="modal-content">
-            <h2>プロジェクト管理システム</h2>
-            <p>このシステムはパスワードで保護されています。</p>
-            <form id="authForm">
-                <div class="form-group">
-                    <label for="password">パスワード</label>
-                    <input type="password" id="password" name="password" class="form-control" required autofocus>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">ログイン</button>
-                </div>
-                <div id="authMessage" class="auth-message" style="color: red; margin-top: 10px;"></div>
-            </form>
+    <!-- 既存のコンテンツ開始部分 -->
+    <div class="main-content">
+        <!-- 認証オーバーレイ -->
+        <div class="auth-overlay <?php echo $isAuth ? 'authenticated' : ''; ?>"></div>
+        
+        <!-- 認証モーダル -->
+        <div id="authModal" class="modal" style="display: <?php echo $isAuth ? 'none' : 'flex'; ?>;">
+            <!-- モーダルコンテンツ -->
         </div>
-    </div>
-    
-    <main class="main-content <?php echo !$isAuth ? 'blur-content' : ''; ?>">
+        
+        <main class="main-content <?php echo !$isAuth ? 'blur-content' : ''; ?>">
