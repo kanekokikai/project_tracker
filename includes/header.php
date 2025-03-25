@@ -27,8 +27,8 @@ if ($environment === 'local') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- ファビコン設定 -->
-    <link rel="icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
-    <link rel="shortcut icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
+    <link rel="icon" href="<?php echo $basePath; ?>/images/favicon.png?v=<?php echo time(); ?>" type="image/png">
+    <link rel="shortcut icon" href="<?php echo $basePath; ?>/images/favicon.png?v=<?php echo time(); ?>" type="image/png">    
     <title>プロジェクト管理</title>
     <!-- 強制的にキャッシュをクリアするためのバージョン番号を追加 -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/css/style.css?v=<?php echo time(); ?>">
