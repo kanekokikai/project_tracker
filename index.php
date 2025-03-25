@@ -9,6 +9,7 @@ require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
 
 // 認証状態を確認
+// 認証状態を確認
 $isAuth = isAuthenticated();
 
 // ステータスの選択肢を定義

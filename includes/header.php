@@ -183,9 +183,151 @@ textarea {
         <!-- 認証オーバーレイ -->
         <div class="auth-overlay <?php echo $isAuth ? 'authenticated' : ''; ?>"></div>
         
-        <!-- 認証モーダル -->
-        <div id="authModal" class="modal" style="display: <?php echo $isAuth ? 'none' : 'flex'; ?>;">
-            <!-- モーダルコンテンツ -->
+
+
+<!-- 認証モーダル -->
+<div id="authModal" class="modal" style="display: <?php echo $isAuth ? 'none' : 'flex'; ?>;">
+    <div class="modal-content">
+        <div class="auth-header">
+            <h2>ログイン</h2>
         </div>
-        
-        <main class="main-content <?php echo !$isAuth ? 'blur-content' : ''; ?>">
+        <div class="auth-body">
+            <form id="authForm">
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" class="form-control" placeholder="パスワードを入力" required>
+                    </div>
+                </div>
+                <div id="authMessage" class="auth-message"></div>
+                <div class="form-group auth-buttons">
+                    <button type="submit" class="btn btn-primary auth-btn">ログイン</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+/* 新しい認証モーダルのスタイル */
+#authModal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1001;
+}
+
+/* グローバルモーダルスタイルの上書き */
+#authModal {
+    z-index: 9999;
+}
+
+#authModal .modal-content {
+    max-width: 250px !important;
+    width: 250px !important;
+    min-width: 250px !important;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    padding: 0;
+    overflow: hidden;
+    background: linear-gradient(to bottom, #fafbfc, #f2f4f7);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: center;
+}
+
+.auth-header h2 {
+    margin: 0;
+    color: var(--apple-dark);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.auth-body {
+    padding: 15px;
+}
+
+.input-with-icon {
+    position: relative;
+}
+
+.input-with-icon i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--apple-secondary);
+}
+
+.input-with-icon input {
+    padding-left: 30px !important;
+    height: 40px;
+    border-radius: 12px !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    background-color: white !important;
+    font-size: 1rem !important;
+    transition: all 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.input-with-icon input:focus {
+    border-color: var(--apple-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.25) !important;
+    outline: none;
+}
+
+.auth-message {
+    color: var(--apple-error);
+    font-size: 0.85rem;
+    margin: 10px 0;
+    text-align: center;
+    min-height: 20px;
+}
+
+.auth-buttons {
+    margin-top: 20px;
+}
+
+.auth-btn {
+    width: 100%;
+    height: 40px;
+    border-radius: 12px !important;
+    font-size: 1rem !important;
+    font-weight: 500;
+    background: linear-gradient(to bottom, #127afa, #0071e3);
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-btn:hover {
+    background: linear-gradient(to bottom, #0071e3, #005fc4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 113, 227, 0.3);
+}
+
+.auth-overlay {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(250, 251, 252, 0.7);
+}
+
+.auth-overlay.authenticated {
+    backdrop-filter: blur(0);
+    -webkit-backdrop-filter: blur(0);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+}
+</style>
+
+<main class="main-content <?php echo !$isAuth ? 'blur-content' : ''; ?>">
