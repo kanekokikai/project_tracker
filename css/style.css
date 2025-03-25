@@ -2449,7 +2449,7 @@ input:checked + .toggle-slider:before {
   align-items: center;
   padding: 15px 20px;
   border-bottom: 1px solid #e0e0e0;
-  background-color: #c8c9e0fa;
+  background-color: #c9e0fa;
   color: #333;
   border-radius: 0 10px 0 0; /* 右上の角だけ丸く */
 }
@@ -2569,4 +2569,26 @@ input:checked + .toggle-slider:before {
     .sidebar-toggle span {
         font-size: 0.9rem;
     }
+}
+
+/* コンパクトな履歴アクションボタン - より目立つスタイル */
+.mini-btn {
+  background: none;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: bold;
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  padding: 0;
+  margin-left: 3px;
+  cursor: pointer;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  /* 初期状態から目立つように */
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.05);
 }

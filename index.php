@@ -211,13 +211,13 @@ include 'includes/header.php';
                 
                 <!-- 日付と編集/削除ボタン -->
                 <div class="date-actions">
-                    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
-                    <div class="inline-actions">
-                    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
-                    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>                    
-                    </div>
-                </div>
-            </div>
+    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+    <div class="inline-actions">
+    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>
+    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
+    </div>
+</div>    
+          </div>
         <?php endforeach; ?>
     </div>
 <?php endif; ?>
@@ -321,12 +321,12 @@ include 'includes/header.php';
                 
                 <!-- 日付と編集/削除ボタン -->
                 <div class="date-actions">
-                    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
-                    <div class="inline-actions">
-                    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
-                    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>                    
-                    </div>
-                </div>
+    <span class="date"><?= date('Y/m/d H:i', strtotime($hist['created_at'])) ?></span>
+    <div class="inline-actions">
+    <i class="fas fa-trash-alt mini-btn delete-btn" onclick="confirmDeleteHistory(<?= $hist['id'] ?>)" title="削除"></i>
+    <i class="fas fa-edit mini-btn edit-btn" onclick="openEditHistoryModal(<?= $hist['id'] ?>)" title="編集"></i>
+    </div>
+</div>                    
             </div>
         <?php endforeach; ?>
     </div>
