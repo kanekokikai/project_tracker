@@ -27,9 +27,12 @@ if ($environment === 'local') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>プロジェクト管理</title>
+    <link rel="icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
+　　<link rel="shortcut icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
     <!-- 強制的にキャッシュをクリアするためのバージョン番号を追加 -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- ファビコン設定 -->
 </head>
 
 <style type="text/css">
@@ -172,11 +175,11 @@ textarea {
 
     <!-- ヘッダーは1つだけ残す -->
     <header class="header">
-        <div class="header-content">
-            <h1>プロジェクト管理</h1>
-            <a href="logout.php" class="logout-link">ログアウト</a>
-        </div>
-    </header>
+    <div class="header-content">
+        <h1><img src="<?php echo $basePath; ?>/images/logo.png" alt="ロゴ" class="app-logo">プロジェクト管理</h1>
+        <a href="logout.php" class="logout-link">ログアウト</a>
+    </div>
+</header>    
 
     <!-- 既存のコンテンツ開始部分 -->
     <div class="main-content">
