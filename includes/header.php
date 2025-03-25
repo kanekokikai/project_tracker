@@ -26,13 +26,13 @@ if ($environment === 'local') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プロジェクト管理</title>
+    <!-- ファビコン設定 -->
     <link rel="icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
-　　<link rel="shortcut icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
+    <link rel="shortcut icon" href="<?php echo $basePath; ?>/images/favicon.png" type="image/png">
+    <title>プロジェクト管理</title>
     <!-- 強制的にキャッシュをクリアするためのバージョン番号を追加 -->
     <link rel="stylesheet" href="<?php echo $basePath; ?>/css/style.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <!-- ファビコン設定 -->
 </head>
 
 <style type="text/css">
