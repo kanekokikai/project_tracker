@@ -403,12 +403,15 @@ function performSearch(searchValue) {
 }
 
 // プロジェクト名での検索フィルタリング関数
+// プロジェクト名での検索フィルタリング関数 - サブプロジェクト対応完全版
 function filterByProjectName(name) {
     const projectCards = document.querySelectorAll('.project-card');
+    const parentProjects = document.querySelectorAll('.parent-project');
+    const childProjects = document.querySelectorAll('.child-project');
     let hasVisibleProjects = false;
     
+    // 検索語が空の場合は、ステータスフィルターのみ適用
     if (name === '') {
-        // 空の検索語の場合はすべて表示（ただしステータスフィルターは維持）
         projectCards.forEach(card => {
             const currentStatus = document.getElementById('statusFilter').value;
             if (currentStatus === 'all') {
@@ -421,25 +424,107 @@ function filterByProjectName(name) {
         return;
     }
     
+    // 表示する親プロジェクトのIDを保存するセット
+    const visibleParentIds = new Set();
+    // 表示する子プロジェクトのIDを保存するセット
+    const visibleChildIds = new Set();
+    
+    // 現在のステータスフィルター
+    const currentStatus = document.getElementById('statusFilter').value;
+    
+    // ステップ1: 検索条件に一致するプロジェクトを特定する
     projectCards.forEach(card => {
-        // プロジェクト名を取得
         const projectNameElement = card.querySelector('.project-name');
-        let shouldShow = false;
+        if (!projectNameElement) return;
         
-        if (projectNameElement) {
-            // プロジェクト名のテキストを取得（ただしチームメンバーツールチップを除く）
-            const projectNameText = projectNameElement.childNodes[0].nodeValue || projectNameElement.textContent;
-            if (projectNameText.toLowerCase().includes(name.toLowerCase())) {
-                shouldShow = true;
+        // プロジェクト名のテキストを取得（チームメンバーツールチップを除く）
+        const projectNameText = projectNameElement.childNodes[0].nodeValue || projectNameElement.textContent;
+        
+        // ステータスフィルターを確認
+        const cardStatus = card.querySelector('.status-badge').textContent.trim();
+        const statusMatch = currentStatus === 'all' || cardStatus === currentStatus;
+        
+        // 名前の照合
+        if (projectNameText.toLowerCase().includes(name.toLowerCase()) && statusMatch) {
+            // カードのタイプと ID を取得
+            const isChild = card.classList.contains('child-project');
+            const attachmentIcon = card.querySelector('.attachment-icon');
+            const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
+            
+            if (projectId) {
+                if (isChild) {
+                    // 子プロジェクトが一致した場合
+                    visibleChildIds.add(projectId);
+                    
+                    // 親プロジェクトを特定して表示対象に加える
+                    const parentCard = card.closest('.parent-project');
+                    if (parentCard) {
+                        const parentIcon = parentCard.querySelector('.attachment-icon');
+                        const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                        if (parentId) {
+                            visibleParentIds.add(parentId);
+                        }
+                    }
+                } else {
+                    // 親プロジェクトが一致した場合
+                    visibleParentIds.add(projectId);
+                }
             }
         }
+    });
+    
+    // ステップ2: 表示状態を設定
+    hasVisibleProjects = visibleParentIds.size > 0 || visibleChildIds.size > 0;
+    
+    // 全プロジェクトの表示状態を更新
+    parentProjects.forEach(card => {
+        const attachmentIcon = card.querySelector('.attachment-icon');
+        const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
         
-        // ステータスフィルターも考慮する
-        const currentStatus = document.getElementById('statusFilter').value;
-        if (shouldShow && (currentStatus === 'all' || 
-            card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+        // 親プロジェクトの表示を設定
+        if (projectId && visibleParentIds.has(projectId)) {
             card.style.display = 'block';
-            hasVisibleProjects = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    childProjects.forEach(card => {
+        const attachmentIcon = card.querySelector('.attachment-icon');
+        const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
+        
+        // 子プロジェクトの表示を設定
+        if (projectId && visibleChildIds.has(projectId)) {
+            card.style.display = 'block';
+            
+            // 親プロジェクトが表示されていることを確認
+            const parentCard = card.closest('.parent-project');
+            if (parentCard) {
+                parentCard.style.display = 'block';
+                
+                const parentIcon = parentCard.querySelector('.attachment-icon');
+                const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                if (parentId) {
+                    visibleParentIds.add(parentId);
+                }
+            }
+        } else if (projectId) {
+            // 親プロジェクトが検索結果に含まれる子プロジェクトか確認
+            const parentCard = card.closest('.parent-project');
+            if (parentCard) {
+                const parentIcon = parentCard.querySelector('.attachment-icon');
+                const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                
+                // 親プロジェクトが表示対象なら、すべての子プロジェクトも表示
+                if (parentId && visibleParentIds.has(parentId) && 
+                    (currentStatus === 'all' || card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            } else {
+                card.style.display = 'none';
+            }
         } else {
             card.style.display = 'none';
         }
@@ -447,15 +532,18 @@ function filterByProjectName(name) {
     
     // 検索結果がない場合のメッセージ表示
     updateNoResultsMessage(hasVisibleProjects);
-}
+} 
+
 
 // メンバー名での検索フィルタリング関数
 function filterByMemberName(name) {
     const projectCards = document.querySelectorAll('.project-card');
+    const parentProjects = document.querySelectorAll('.parent-project');
+    const childProjects = document.querySelectorAll('.child-project');
     let hasVisibleProjects = false;
     
+    // 検索語が空の場合は、ステータスフィルターのみ適用
     if (name === '') {
-        // 空の検索語の場合はすべて表示（ただしステータスフィルターは維持）
         projectCards.forEach(card => {
             const currentStatus = document.getElementById('statusFilter').value;
             if (currentStatus === 'all') {
@@ -468,11 +556,20 @@ function filterByMemberName(name) {
         return;
     }
     
+    // 表示する親プロジェクトのIDを保存するセット
+    const visibleParentIds = new Set();
+    // 表示する子プロジェクトのIDを保存するセット
+    const visibleChildIds = new Set();
+    
+    // 現在のステータスフィルター
+    const currentStatus = document.getElementById('statusFilter').value;
+    
+    // ステップ1: メンバー名に一致するプロジェクトを特定する
     projectCards.forEach(card => {
-        // チームメンバー情報を取得
-        const teamMembersElement = card.querySelector('.project-name .team-members-tooltip');
         let shouldShow = false;
         
+        // チームメンバー情報を取得
+        const teamMembersElement = card.querySelector('.project-name .team-members-tooltip');
         if (teamMembersElement) {
             // チームメンバーの名前を全て取得
             const memberElements = teamMembersElement.querySelectorAll('.team-member-name');
@@ -493,11 +590,89 @@ function filterByMemberName(name) {
         });
         
         // ステータスフィルターも考慮する
-        const currentStatus = document.getElementById('statusFilter').value;
-        if (shouldShow && (currentStatus === 'all' || 
-            card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+        const cardStatus = card.querySelector('.status-badge').textContent.trim();
+        const statusMatch = currentStatus === 'all' || cardStatus === currentStatus;
+        
+        if (shouldShow && statusMatch) {
+            // カードのタイプと ID を取得
+            const isChild = card.classList.contains('child-project');
+            const attachmentIcon = card.querySelector('.attachment-icon');
+            const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
+            
+            if (projectId) {
+                if (isChild) {
+                    // 子プロジェクトが一致した場合
+                    visibleChildIds.add(projectId);
+                    
+                    // 親プロジェクトを特定して表示対象に加える
+                    const parentCard = card.closest('.parent-project');
+                    if (parentCard) {
+                        const parentIcon = parentCard.querySelector('.attachment-icon');
+                        const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                        if (parentId) {
+                            visibleParentIds.add(parentId);
+                        }
+                    }
+                } else {
+                    // 親プロジェクトが一致した場合
+                    visibleParentIds.add(projectId);
+                }
+            }
+        }
+    });
+    
+    // ステップ2: 表示状態を設定
+    hasVisibleProjects = visibleParentIds.size > 0 || visibleChildIds.size > 0;
+    
+    // 全プロジェクトの表示状態を更新
+    parentProjects.forEach(card => {
+        const attachmentIcon = card.querySelector('.attachment-icon');
+        const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
+        
+        // 親プロジェクトの表示を設定
+        if (projectId && visibleParentIds.has(projectId)) {
             card.style.display = 'block';
-            hasVisibleProjects = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    childProjects.forEach(card => {
+        const attachmentIcon = card.querySelector('.attachment-icon');
+        const projectId = attachmentIcon ? attachmentIcon.getAttribute('data-project-id') : null;
+        
+        // 子プロジェクトの表示を設定
+        if (projectId && visibleChildIds.has(projectId)) {
+            card.style.display = 'block';
+            
+            // 親プロジェクトが表示されていることを確認
+            const parentCard = card.closest('.parent-project');
+            if (parentCard) {
+                parentCard.style.display = 'block';
+                
+                const parentIcon = parentCard.querySelector('.attachment-icon');
+                const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                if (parentId) {
+                    visibleParentIds.add(parentId);
+                }
+            }
+        } else if (projectId) {
+            // 親プロジェクトが検索結果に含まれる子プロジェクトか確認
+            const parentCard = card.closest('.parent-project');
+            if (parentCard) {
+                const parentIcon = parentCard.querySelector('.attachment-icon');
+                const parentId = parentIcon ? parentIcon.getAttribute('data-project-id') : null;
+                
+                // 親プロジェクトが表示対象なら、ステータスフィルターに一致する子プロジェクトも表示
+                if (parentId && visibleParentIds.has(parentId) && 
+                    (currentStatus === 'all' || card.querySelector('.status-badge').textContent.trim() === currentStatus)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            } else {
+                card.style.display = 'none';
+            }
         } else {
             card.style.display = 'none';
         }
@@ -506,6 +681,8 @@ function filterByMemberName(name) {
     // 検索結果がない場合のメッセージ表示
     updateNoResultsMessage(hasVisibleProjects);
 }
+
+
 
 // 検索結果がない場合のメッセージ表示・非表示を処理する関数
 function updateNoResultsMessage(hasVisibleProjects) {
@@ -522,7 +699,6 @@ function updateNoResultsMessage(hasVisibleProjects) {
         noResultsMessage.remove();
     }
 }
-
 
     // モーダル要素の存在確認（デバッグ用）
     console.log("Modal elements check:");
