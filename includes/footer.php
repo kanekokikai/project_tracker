@@ -87,5 +87,199 @@
 
 <script src="<?php echo $basePath; ?>/js/main.js?v=<?php echo time(); ?>"></script>
 <script src="<?php echo $basePath; ?>/js/attachment_scripts.js?v=<?php echo time(); ?>"></script>
+
+<script>
+// 部署フィルター処理
+function filterByDepartment(department) {
+    // URLを作成
+    let currentUrl = new URL(window.location.href);
+    
+    // 既存のステータスパラメータを保持
+    let status = currentUrl.searchParams.get('status');
+    
+    // URLパラメータをリセット
+    currentUrl.search = '';
+    
+    // 新しいパラメータを設定
+    if (department) {
+        currentUrl.searchParams.set('department', department);
+    }
+    
+    // ステータスパラメータを保持
+    if (status) {
+        currentUrl.searchParams.set('status', status);
+    }
+    
+    // ページをリロード
+    window.location.href = currentUrl.toString();
+}
+
+// プロジェクト新規作成モーダルが開かれたとき
+document.addEventListener('DOMContentLoaded', function() {
+    
+// URL から department パラメータを取得
+const urlParams = new URLSearchParams(window.location.search);
+const department = urlParams.get('department');
+
+// 部署フィルターのセレクトボックスを取得
+const departmentFilter = document.getElementById('departmentFilter');
+
+// 現在の部署を選択状態にする
+if (department && departmentFilter) {
+    for (let i = 0; i < departmentFilter.options.length; i++) {
+        if (departmentFilter.options[i].value === department) {
+            departmentFilter.selectedIndex = i;
+            break;
+        }
+    }
+}    
+    
+// プロジェクト編集モーダルが開かれたときの処理
+window.openEditProjectModal = function(projectId, projectName) {
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectName').value = projectName;
+    
+    // チームメンバータグをクリア
+    const editTagsContainer = document.getElementById('editTeamMemberTags');
+    editTagsContainer.innerHTML = '';
+    
+    // 部署情報とチームメンバー情報を取得
+    fetch(`api/get_project.php?id=${projectId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // サブプロジェクトかどうかチェック（parent_idがあればサブプロジェクト）
+                const isSubProject = data.project.parent_id !== null;
+                const departmentFormGroup = document.querySelector('#editProjectModal .form-group:has(#editProjectDepartment)');
+                
+                // サブプロジェクトの場合は部署選択を非表示
+                if (isSubProject && departmentFormGroup) {
+                    departmentFormGroup.style.display = 'none';
+                } else if (departmentFormGroup) {
+                    departmentFormGroup.style.display = 'block';
+                    
+                    // 部署設定（メインプロジェクトの場合のみ）
+                    const department = data.project.department || '選択なし';
+                    const departmentSelect = document.getElementById('editProjectDepartment');
+                    
+                    for (let i = 0; i < departmentSelect.options.length; i++) {
+                        if (departmentSelect.options[i].value === department) {
+                            departmentSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+                
+                // チームメンバー設定
+                if (data.project.team_members) {
+                    const members = JSON.parse(data.project.team_members);
+                    document.getElementById('editTeamMembers').value = JSON.stringify(members);
+                    
+                    members.forEach(member => {
+                        const tag = document.createElement('div');
+                        tag.className = 'member-tag';
+                        tag.innerHTML = `
+                            ${member}
+                            <span class="remove-tag" onclick="removeMemberTag(this, 'edit')">&times;</span>
+                        `;
+                        editTagsContainer.appendChild(tag);
+                    });
+                }
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    
+    document.getElementById('editProjectModal').style.display = 'flex';
+};
+
+
+// 既存の編集プロジェクトフォーム送信ハンドラを上書き
+const editProjectForm = document.getElementById('editProjectForm');
+if (editProjectForm) {
+    editProjectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const projectId = document.getElementById('editProjectId').value;
+        
+        // サブプロジェクトかどうかを確認
+        fetch(`api/get_project.php?id=${projectId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const formData = new FormData();
+                    formData.append('project_id', projectId);
+                    formData.append('name', document.getElementById('editProjectName').value);
+                    formData.append('team_members', document.getElementById('editTeamMembers').value);
+                    
+                    // サブプロジェクトの場合
+                    if (data.project.parent_id !== null) {
+                        // 親プロジェクトの部署を取得して設定するか、そのまま現在の部署を維持
+                        formData.append('department', data.project.department || '選択なし');
+                    } else {
+                        // メインプロジェクトの場合はフォームから部署を取得
+                        formData.append('department', document.getElementById('editProjectDepartment').value);
+                    }
+                    
+                    fetch('api/edit_project.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            closeEditProjectModal();
+                            location.reload();
+                        } else {
+                            alert(data.message || 'エラーが発生しました。');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('通信エラーが発生しました。');
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('プロジェクト情報の取得に失敗しました。');
+            });
+    });
+}
+
+
+// 既存の新規プロジェクトフォーム送信ハンドラを上書き
+const addProjectForm = document.getElementById('addProjectForm');
+if (addProjectForm) {
+    addProjectForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData();
+        formData.append('name', document.getElementById('projectName').value);
+        formData.append('author', document.getElementById('projectAuthor').value);
+        formData.append('team_members', document.getElementById('teamMembers').value);
+        formData.append('department', document.getElementById('projectDepartment').value);
+        
+        fetch('api/add_project.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeAddProjectModal();
+                location.reload();
+            } else {
+                alert(data.message || 'エラーが発生しました。');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('通信エラーが発生しました。');
+        });
+    });
+}   
+});
+</script>
+
 </body>
 </html>

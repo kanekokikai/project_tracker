@@ -24,15 +24,18 @@ try {
     }
     $author = $_POST['author'];
 
-// チームメンバー情報の取得（オプション）
-$teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';    
+    // チームメンバー情報の取得（オプション）
+    $teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';
+    
+    // 部署情報の取得（オプション）
+    $department = isset($_POST['department']) ? $_POST['department'] : '選択なし';
 
     // トランザクション開始
     $pdo->beginTransaction();
 
     // プロジェクト追加
-    $stmt = $pdo->prepare("INSERT INTO projects (name, status, team_members, created_at, updated_at) VALUES (?, '未着手', ?, NOW(), NOW())");
-    $stmt->execute([$_POST['name'], $teamMembers]);    
+    $stmt = $pdo->prepare("INSERT INTO projects (name, status, team_members, department, created_at, updated_at) VALUES (?, '未着手', ?, ?, NOW(), NOW())");
+    $stmt->execute([$_POST['name'], $teamMembers, $department]);    
 
     // 追加されたプロジェクトのIDを取得
     $projectId = $pdo->lastInsertId();

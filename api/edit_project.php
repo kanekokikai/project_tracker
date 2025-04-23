@@ -10,29 +10,33 @@ if (!isAuthenticated()) {
     exit;
 }
 
-// POSTリクエストの確認
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => '不正なリクエストメソッド']);
-    exit;
+// JSONリクエストを取得
+$data = json_decode(file_get_contents('php://input'), true);
+
+// データが無効な場合
+if (!$data) {
+    // 従来のPOSTリクエストを試行
+    $data = $_POST;
 }
 
 // 必要なパラメータの確認
-if (!isset($_POST['project_id']) || !isset($_POST['name']) || empty($_POST['name'])) {
+if (empty($data['project_id']) || empty($data['name'])) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => '必要なパラメータがありません']);
     exit;
 }
 
-$projectId = $_POST['project_id'];
-$newName = $_POST['name'];
+$projectId = $data['project_id'];
+$newName = $data['name'];
 
-$teamMembers = isset($_POST['team_members']) ? $_POST['team_members'] : '[]';
+$teamMembers = isset($data['team_members']) ? $data['team_members'] : '[]';
+// 部署情報を取得
+$department = isset($data['department']) ? $data['department'] : '選択なし';
 
 try {
-    // プロジェクト名を更新
-    $stmt = $pdo->prepare("UPDATE projects SET name = ?, team_members = ?, updated_at = NOW() WHERE id = ?");
-    $stmt->execute([$newName, $teamMembers, $projectId]);
+    // プロジェクト名と部署を更新
+    $stmt = $pdo->prepare("UPDATE projects SET name = ?, team_members = ?, department = ?, updated_at = NOW() WHERE id = ?");
+    $stmt->execute([$newName, $teamMembers, $department, $projectId]);
         
     header('Content-Type: application/json');
     echo json_encode(['success' => true]);

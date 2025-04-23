@@ -2612,3 +2612,20 @@ input:checked + .toggle-slider:before {
   opacity: 1;
   background-color: rgba(0, 0, 0, 0.05);
 }
+
+/* 部署バッジのスタイル */
+.department-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin-left: 8px;
+  font-size: 0.75rem;
+  background-color: #f0f0f0;
+  color: #505050;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+}
+
+/* 部署フィルターのスタイル */
+.filter-wrapper {
+  margin-left: 10px;
+}

@@ -22,13 +22,35 @@ $statusOptions = [
     "中止"
 ];
 
+// 部署の選択肢を定義
+$departmentOptions = [
+    "選択なし",
+    "営業",
+    "フロント",
+    "工場",
+    "品管",
+    "経理",
+    "総務",
+    "運送"
+];
+
 
 // 最新の履歴を持つプロジェクト順に親プロジェクトを取得
 try {
+// 部署フィルタが指定されているかチェック
+$departmentFilter = isset($_GET['department']) ? $_GET['department'] : '選択なし';
+
+// 'all'は全部署を表示するための特別な値
+$departmentCondition = '';
+if ($departmentFilter && $departmentFilter !== 'all') {
+    $departmentCondition = " AND p.department = " . $pdo->quote($departmentFilter);
+} 
+// 'all'の場合は条件なし（すべて表示）
+
     // まず、親プロジェクトとその子プロジェクトの最新履歴を取得
     // より互換性のあるクエリを使用
     $stmt = $pdo->query("
-        SELECT p.id, p.name, p.status, p.updated_at, p.team_members,
+        SELECT p.id, p.name, p.status, p.updated_at, p.team_members, p.department,
                IFNULL(
                    (SELECT MAX(h.created_at)
                     FROM project_history h
@@ -38,14 +60,29 @@ try {
                    ), '1900-01-01'
                ) as latest_history_date
         FROM projects p
-        WHERE p.parent_id IS NULL
+        WHERE p.parent_id IS NULL" . $departmentCondition . "
         ORDER BY latest_history_date DESC, p.updated_at DESC
     ");
     $parentProjects = $stmt->fetchAll();
 } catch (PDOException $e) {
     // エラーが発生した場合は、より単純なクエリを試す
     error_log('Advanced query failed: ' . $e->getMessage());
-    $stmt = $pdo->query("SELECT id, name, status, updated_at, team_members FROM projects WHERE parent_id IS NULL ORDER BY updated_at DESC");
+    
+    // 部署フィルタの基本条件
+    $departmentFilter = isset($_GET['department']) ? $_GET['department'] : '';
+    $departmentCondition = '';
+    if ($departmentFilter && $departmentFilter !== 'all') {
+        if ($departmentFilter === '選択なし') {
+            $departmentCondition = " AND (p.department IS NULL OR p.department = '' OR p.department = '選択なし')";
+        } else {
+            $departmentCondition = " AND p.department = " . $pdo->quote($departmentFilter);
+        }
+    } else if (!$departmentFilter) {
+        // フィルタなしの場合は「選択なし」のプロジェクトのみ表示
+        $departmentCondition = " AND (p.department IS NULL OR p.department = '' OR p.department = '選択なし')";
+    }
+
+    $stmt = $pdo->query("SELECT id, name, status, updated_at, team_members, department FROM projects p WHERE p.parent_id IS NULL" . $departmentCondition . " ORDER BY updated_at DESC");
     $parentProjects = $stmt->fetchAll();
 }
 
@@ -115,6 +152,20 @@ include 'includes/header.php';
         </div>
     </div>
     
+    <!-- 部署フィルターを先に表示 -->
+    <div class="filter-wrapper">
+        <select id="departmentFilter" class="form-control" onchange="filterByDepartment(this.value)">
+            <option value="選択なし">選択なし</option>
+            <option value="all">すべての部署</option>
+            <?php foreach ($departmentOptions as $department): ?>
+                <?php if ($department !== '選択なし'): ?>
+                    <option value="<?= $department ?>"><?= $department ?></option>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    
+    <!-- ステータスフィルターを後に表示 -->
     <div class="filter-wrapper">
         <select id="statusFilter" class="form-control" onchange="filterByStatus(this.value)">
             <option value="all">すべてのステータス</option>
@@ -155,10 +206,16 @@ include 'includes/header.php';
         } 
         ?>
     </span>
+    
+    <!-- 部署バッジを追加 -->
+    <?php if (!empty($project['department']) && $project['department'] !== '選択なし'): ?>
+        <span class="department-badge"><?= htmlspecialchars($project['department']) ?></span>
+    <?php endif; ?>
 
     <i class="fas fa-plus-circle action-icon add-sub-project" onclick="openSubProjectModal('<?= $project['id'] ?>')" data-tooltip="サブプロジェクト追加"></i>
     <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $project['id'] ?>)" data-tooltip="コメント追加"></i>
 </h2>
+
 
                 </div>
 <!-- 親プロジェクトのボタン部分を修正 -->
@@ -254,6 +311,7 @@ include 'includes/header.php';
         } 
         ?>
     </span>
+    
 
     <span class="toggle-history" data-project-id="<?= $childProject['id'] ?>" 
   onclick="
@@ -268,6 +326,8 @@ include 'includes/header.php';
 </span>
     <i class="fas fa-comment action-icon" onclick="openProgressModal(<?= $childProject['id'] ?>)" data-tooltip="コメント追加"></i>
 </h3>
+
+
 
 <!-- 子プロジェクトのボタン部分 -->
 <div class="project-actions">
@@ -361,20 +421,30 @@ include 'includes/header.php';
     <div class="modal-content">
         <h3>新規プロジェクト追加</h3>
         <form id="addProjectForm">
-            <div class="form-group">
-                <label for="projectName">プロジェクト名</label>
-                <input type="text" id="projectName" name="name" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="projectAuthor">作成者</label>
-                <input type="text" id="projectAuthor" name="author" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label for="teamMemberInput">チームメンバー</label>
-                <div id="teamMemberTags" class="team-member-tags"></div>
-                <input type="text" id="teamMemberInput" class="form-control" placeholder="名前を入力してEnterで追加">
-                <input type="hidden" id="teamMembers" name="team_members" value="">
-            </div>
+        <div class="form-group">
+    <label for="projectName">プロジェクト名</label>
+    <input type="text" id="projectName" name="name" class="form-control" required>
+</div>
+<div class="form-group">
+    <label for="projectAuthor">作成者</label>
+    <input type="text" id="projectAuthor" name="author" class="form-control" required>
+</div>
+<!-- 部署選択ドロップダウンを追加 -->
+<div class="form-group">
+    <label for="projectDepartment">部署</label>
+    <select id="projectDepartment" name="department" class="form-control">
+        <?php foreach ($departmentOptions as $department): ?>
+            <option value="<?= $department ?>"><?= $department ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
+<div class="form-group">
+    <label for="teamMemberInput">チームメンバー</label>
+    <div id="teamMemberTags" class="team-member-tags"></div>
+    <input type="text" id="teamMemberInput" class="form-control" placeholder="名前を入力してEnterで追加">
+    <input type="hidden" id="teamMembers" name="team_members" value="">
+</div>
+
 
             <div class="form-group">
                 <button type="submit" class="btn btn-primary">追加</button>
@@ -514,6 +584,15 @@ include 'includes/header.php';
                 <input type="text" id="editProjectName" name="name" class="form-control" required>
             </div>
 
+<!-- 部署選択ドロップダウンを追加 -->
+<div class="form-group">
+    <label for="editProjectDepartment">部署</label>
+    <select id="editProjectDepartment" name="department" class="form-control">
+        <?php foreach ($departmentOptions as $department): ?>
+            <option value="<?= $department ?>"><?= $department ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>            
 
 <div class="form-group">
     <label for="editTeamMemberInput">チームメンバー</label>
