@@ -2624,8 +2624,3 @@ input:checked + .toggle-slider:before {
   border-radius: 12px;
   border: 1px solid #ddd;
 }
-
-/* 部署フィルターのスタイル */
-.filter-wrapper {
-  margin-left: 10px;
-}

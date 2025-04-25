@@ -1209,72 +1209,6 @@ function toggleContent(contentId) {
     }
 }
 
-// プロジェクト名編集モーダルの関数
-function openEditProjectModal(projectId, projectName) {
-    console.log("プロジェクト編集モーダルを開きます: ID=", projectId);
-    
-    // 基本情報を設定
-    document.getElementById('editProjectId').value = projectId;
-    document.getElementById('editProjectName').value = projectName;
-    
-    // APIでプロジェクト情報を取得
-    fetch(`api/get_project_details.php?project_id=${projectId}`)
-      .then(response => response.json())
-      .then(data => {
-        console.log("取得したプロジェクト情報:", data);
-        
-        // チームメンバー情報を取得して表示
-        if (data.success && data.project && data.project.team_members) {
-          try {
-            const members = JSON.parse(data.project.team_members);
-            console.log("メンバー:", members);
-            
-            // hidden入力にチームメンバー情報をセット
-            document.getElementById('editTeamMembers').value = data.project.team_members;
-            
-            // チームメンバータグを表示
-            const tagsContainer = document.getElementById('editTeamMemberTags');
-            tagsContainer.innerHTML = '';
-            
-            // 各メンバーのタグを生成
-            if (Array.isArray(members) && members.length > 0) {
-              members.forEach((member, index) => {
-                const tag = document.createElement('div');
-                tag.className = 'team-member-tag';
-                tag.textContent = member;
-                
-                // 削除ボタンを追加
-                const deleteBtn = document.createElement('span');
-                deleteBtn.className = 'delete-tag';
-                deleteBtn.textContent = '×';
-                deleteBtn.setAttribute('data-index', index);
-                deleteBtn.onclick = function() {
-                  // メンバーを削除
-                  const idx = parseInt(this.getAttribute('data-index'));
-                  const members = JSON.parse(document.getElementById('editTeamMembers').value);
-                  members.splice(idx, 1);
-                  document.getElementById('editTeamMembers').value = JSON.stringify(members);
-                  this.parentElement.remove();
-                  updateDataIndexes('editTeamMemberTags');
-                };
-                
-                tag.appendChild(deleteBtn);
-                tagsContainer.appendChild(tag);
-              });
-            }
-          } catch (e) {
-            console.error('JSONパースエラー:', e);
-          }
-        }
-      })
-      .catch(error => console.error('データ取得エラー:', error));
-    
-    // モーダルを表示
-    document.getElementById('editProjectModal').style.display = 'block';
-  }
-
-
-
 
 // 作成者を自動的にチームメンバーに追加する関数
 function addAuthorToTeam() {
@@ -1555,3 +1489,115 @@ document.addEventListener('DOMContentLoaded', function() {
     // サイドバー初期化
     setTimeout(initSidebar, 500);
 });
+
+
+// メンバータグを追加する独立した関数
+function addMemberTag(memberName, index, containerID, hiddenInputID) {
+    const container = document.getElementById(containerID);
+    const hiddenInput = document.getElementById(hiddenInputID);
+    
+    // タグ要素を作成
+    const tag = document.createElement('div');
+    tag.className = 'team-member-tag';
+    tag.innerHTML = memberName;
+    
+    // 削除ボタンを作成
+    const deleteBtn = document.createElement('span');
+    deleteBtn.className = 'delete-tag';
+    deleteBtn.textContent = '×';
+    deleteBtn.setAttribute('data-index', index);
+    
+    // 削除ボタンのクリックイベント
+    deleteBtn.onclick = function() {
+        try {
+            console.log('削除ボタンがクリックされました。インデックス:', index);
+            // 現在のメンバーリストを取得
+            let members = JSON.parse(hiddenInput.value);
+            
+            // メンバーを削除
+            members.splice(index, 1);
+            
+            // 更新した値をhiddenInputに設定
+            hiddenInput.value = JSON.stringify(members);
+            
+            // DOMから要素を削除
+            this.parentElement.remove();
+            
+            // インデックスを更新
+            updateTagIndices(containerID);
+        } catch (e) {
+            console.error('削除処理中にエラーが発生しました:', e);
+        }
+    };
+    
+    // 削除ボタンをタグに追加
+    tag.appendChild(deleteBtn);
+    
+    // タグをコンテナに追加
+    container.appendChild(tag);
+}
+
+// タグのdata-indexを更新する関数
+function updateTagIndices(containerID) {
+    const container = document.getElementById(containerID);
+    const tags = container.querySelectorAll('.delete-tag');
+    
+    tags.forEach((tag, index) => {
+        tag.setAttribute('data-index', index);
+    });
+}
+function openEditProjectModalNew(projectId, projectName) {
+    console.log("新しい編集モーダルを開きます: ID=", projectId);
+    
+    // 基本情報を設定
+    document.getElementById('editProjectId').value = projectId;
+    document.getElementById('editProjectName').value = projectName;
+    
+    // モーダルを表示（先に表示する）
+    document.getElementById('editProjectModal').style.display = 'block';
+    
+    // APIでプロジェクト情報を取得
+    fetchWithCache(`api/get_project_details.php?project_id=${projectId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success && data.project) {
+            // 部署情報があれば設定
+            if (data.project.department) {
+                const departmentSelect = document.getElementById('editProjectDepartment');
+                if (departmentSelect) {
+                    for(let i = 0; i < departmentSelect.options.length; i++) {
+                        if(departmentSelect.options[i].value === data.project.department) {
+                            departmentSelect.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // チームメンバー情報を取得して表示
+            if (data.project.team_members) {
+                try {
+                    // 完全に別の実装を使用
+                    const tagsContainer = document.getElementById('editTeamMemberTags');
+                    tagsContainer.innerHTML = ''; // 既存のタグをクリア
+                    
+                    // メンバーを解析
+                    const members = JSON.parse(data.project.team_members);
+                    
+                    // hidden入力に現在の状態を設定
+                    document.getElementById('editTeamMembers').value = JSON.stringify(members);
+                    
+                    // 各メンバーを直接手動で追加
+                    members.forEach((member, index) => {
+                        addMemberTag(member, index, 'editTeamMemberTags', 'editTeamMembers');
+                    });
+                } catch (e) {
+                    console.error('チームメンバーの処理中にエラーが発生しました:', e);
+                }
+            }
+        }
+      })
+      .catch(error => {
+          console.error('データ取得エラー:', error);
+      });
+}

@@ -228,7 +228,7 @@ include 'includes/header.php';
     </span>
     <i class="fas fa-book-open action-icon" onclick="openHistoryModal(<?= $project['id'] ?>)" data-tooltip="すべての履歴"></i>
     <i class="fas fa-trash-alt action-icon delete-icon" onclick="confirmDelete(<?= $project['id'] ?>)" data-tooltip="削除"></i>
-    <i class="fas fa-edit action-icon" onclick="openEditProjectModal(<?= $project['id'] ?>, '<?= htmlspecialchars(addslashes($project['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
+    <i class="fas fa-edit action-icon" onclick="openEditProjectModalNew(<?= $project['id'] ?>, '<?= htmlspecialchars(addslashes($project['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
 </div>
 
 
@@ -339,7 +339,7 @@ include 'includes/header.php';
     </span>
     <i class="fas fa-book-open action-icon" onclick="openHistoryModal(<?= $childProject['id'] ?>)" data-tooltip="すべての履歴"></i>
     <i class="fas fa-trash-alt action-icon delete-icon" onclick="confirmDelete(<?= $childProject['id'] ?>)" data-tooltip="削除"></i>
-    <i class="fas fa-edit action-icon" onclick="openEditProjectModal(<?= $childProject['id'] ?>, '<?= htmlspecialchars(addslashes($childProject['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
+    <i class="fas fa-edit action-icon" onclick="openEditProjectModalNew(<?= $childProject['id'] ?>, '<?= htmlspecialchars(addslashes($childProject['name'])) ?>')" data-tooltip="プロジェクト名編集"></i>
 </div>
 
 
