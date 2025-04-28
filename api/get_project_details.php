@@ -14,8 +14,8 @@ if (!$projectId) {
 }
 
 try {
-    // プロジェクト情報の取得
-    $stmt = $pdo->prepare("SELECT id, name, status, team_members FROM projects WHERE id = ?");
+    // プロジェクト情報の取得 - department と parent_id カラムを追加
+    $stmt = $pdo->prepare("SELECT id, name, status, team_members, department, parent_id FROM projects WHERE id = ?");
     $stmt->execute([$projectId]);
     $project = $stmt->fetch(PDO::FETCH_ASSOC);
     
@@ -28,7 +28,9 @@ try {
     $project['debug_info'] = [
         'has_team_members' => isset($project['team_members']),
         'team_members_type' => gettype($project['team_members']),
-        'team_members_raw' => $project['team_members']
+        'team_members_raw' => $project['team_members'],
+        'has_department' => isset($project['department']),
+        'department_value' => $project['department']
     ];
     
     echo json_encode(['success' => true, 'project' => $project]);

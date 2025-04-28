@@ -1570,6 +1570,10 @@ function openEditProjectModalNew(projectId, projectName) {
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName;
     
+    // 編集前にフォームをリセット
+    document.getElementById('editTeamMemberTags').innerHTML = '';
+    document.getElementById('editTeamMembers').value = '[]';
+    
     // 部署セクションを直接取得
     const departmentSection = document.getElementById('editProjectDepartment').parentElement;
     
@@ -1593,15 +1597,19 @@ function openEditProjectModalNew(projectId, projectName) {
       .then(response => response.json())
       .then(data => {
         if (data.success && data.project) {
-            // 部署情報があれば設定（親プロジェクトの場合のみ）
-            if (!isSubProject && data.project.department) {
+            console.log("プロジェクトデータ取得:", data.project);
+            
+            // 親プロジェクトの場合、部署データを設定
+            if (!isSubProject) {
                 const departmentSelect = document.getElementById('editProjectDepartment');
                 if (departmentSelect) {
-                    for(let i = 0; i < departmentSelect.options.length; i++) {
-                        if(departmentSelect.options[i].value === data.project.department) {
-                            departmentSelect.selectedIndex = i;
-                            break;
-                        }
+                    // 部署情報があれば設定
+                    if (data.project.department) {
+                        console.log("部署情報を設定:", data.project.department);
+                        departmentSelect.value = data.project.department;
+                    } else {
+                        console.log("部署情報がありません、デフォルト値を設定");
+                        departmentSelect.value = "選択なし";
                     }
                 }
             }
@@ -1609,12 +1617,13 @@ function openEditProjectModalNew(projectId, projectName) {
             // チームメンバー情報を取得して表示
             if (data.project.team_members) {
                 try {
-                    // 完全に別の実装を使用
+                    // チームメンバータグをクリア
                     const tagsContainer = document.getElementById('editTeamMemberTags');
                     tagsContainer.innerHTML = ''; // 既存のタグをクリア
                     
                     // メンバーを解析
                     const members = JSON.parse(data.project.team_members);
+                    console.log(`プロジェクト ${projectId} のチームメンバー:`, members);
                     
                     // hidden入力に現在の状態を設定
                     document.getElementById('editTeamMembers').value = JSON.stringify(members);
@@ -1626,7 +1635,13 @@ function openEditProjectModalNew(projectId, projectName) {
                 } catch (e) {
                     console.error('チームメンバーの処理中にエラーが発生しました:', e);
                 }
+            } else {
+                // チームメンバーデータがない場合は空の配列を設定
+                document.getElementById('editTeamMembers').value = '[]';
+                document.getElementById('editTeamMemberTags').innerHTML = '';
             }
+        } else {
+            console.error("プロジェクト情報の取得に失敗:", data);
         }
       })
       .catch(error => {
