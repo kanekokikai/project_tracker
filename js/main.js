@@ -920,27 +920,42 @@ if (editProjectForm) {
         e.preventDefault();
         const formData = new FormData(this);
         
-        fetchWithCache('api/edit_project.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        // サブプロジェクトかどうかを確認するため、プロジェクト情報を取得
+        const projectId = document.getElementById('editProjectId').value;
+        
+        fetchWithCache(`api/get_project_details.php?project_id=${projectId}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.success && data.project) {
+                // サブプロジェクトの場合、部署情報を送信データから削除
+                if (data.project.parent_id !== null) {
+                    formData.delete('department');
+                }
+                
+                // 編集リクエストを送信
+                return fetchWithCache('api/edit_project.php', {
+                    method: 'POST',
+                    body: formData
+                });
+            }
+          })
+          .then(response => {
+            if (response) return response.json();
+          })
+          .then(data => {
+            if (data && data.success) {
                 alert('プロジェクトが更新されました');
                 location.reload();
-            } else {
+            } else if (data) {
                 alert('エラーが発生しました: ' + data.message);
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('プロジェクトの更新に失敗しました');
-        });
+          })
+          .catch(error => {
+              console.error('Error:', error);
+              alert('プロジェクトの更新に失敗しました');
+          });
     });
 }
-
-
 
 
     // トグルボタンのイベント設定
@@ -1546,14 +1561,31 @@ function updateTagIndices(containerID) {
         tag.setAttribute('data-index', index);
     });
 }
+
+
 function openEditProjectModalNew(projectId, projectName) {
-    console.log("新しい編集モーダルを開きます: ID=", projectId);
+    console.log("編集モーダルを開きます: ID=", projectId);
     
     // 基本情報を設定
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName;
     
-    // モーダルを表示（先に表示する）
+    // 部署セクションを直接取得
+    const departmentSection = document.getElementById('editProjectDepartment').parentElement;
+    
+    // 先にプロジェクトがサブプロジェクトか判定（親プロジェクトの場合はparent_idがnull）
+    const projectCard = document.querySelector(`.attachment-icon[data-project-id="${projectId}"]`).closest('.project-card');
+    const isSubProject = projectCard && projectCard.classList.contains('child-project');
+    
+    // サブプロジェクトの場合は部署選択を非表示
+    if (isSubProject) {
+        departmentSection.style.display = 'none';
+    } else {
+        // 親プロジェクトの場合は表示
+        departmentSection.style.display = 'block';
+    }
+    
+    // モーダルを表示
     document.getElementById('editProjectModal').style.display = 'block';
     
     // APIでプロジェクト情報を取得
@@ -1561,8 +1593,8 @@ function openEditProjectModalNew(projectId, projectName) {
       .then(response => response.json())
       .then(data => {
         if (data.success && data.project) {
-            // 部署情報があれば設定
-            if (data.project.department) {
+            // 部署情報があれば設定（親プロジェクトの場合のみ）
+            if (!isSubProject && data.project.department) {
                 const departmentSelect = document.getElementById('editProjectDepartment');
                 if (departmentSelect) {
                     for(let i = 0; i < departmentSelect.options.length; i++) {
