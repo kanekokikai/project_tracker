@@ -15,7 +15,7 @@ class ProjectController extends Controller
 {
     public function index(Request $request): View
     {
-        $departmentFilter = $request->query('department', '選択なし');
+        $departmentFilter = $request->query('department', 'all');
 
         $query = Project::query()
             ->whereNull('parent_id')

@@ -7,8 +7,8 @@ Write-Host "========================================"
 Write-Host " Release: git push + local WinSCP deploy"
 Write-Host "========================================"
 Write-Host ""
-Write-Host "NOTE: GitHub Actions FTP often times out from CI."
-Write-Host "This script pushes code to GitHub, then deploys from your PC."
+Write-Host "NOTE: Deploys from your PC via WinSCP (fast sync)."
+Write-Host "GitHub is for source backup only."
 Write-Host ""
 
 git rev-parse --is-inside-work-tree 2>$null | Out-Null
