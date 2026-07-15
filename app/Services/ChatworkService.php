@@ -33,7 +33,7 @@ class ChatworkService
         $message .= "コメント内容:\n{$content}";
 
         if ($projectUrl !== '') {
-            $message .= "\n\n{$projectUrl}";
+            $message .= "\n\n▼プロジェクトを確認\n{$projectUrl}";
         }
 
         $this->send($teamMembers, $message);

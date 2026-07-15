@@ -91,13 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function apiJson(url, options = {}) {
         const response = await fetch(url, {
             method: options.method || 'GET',
-            headers: {
-                Accept: 'application/json',
-                'X-CSRF-TOKEN': getCsrfToken(),
-                ...(options.body ? { 'Content-Type': 'application/json' } : {}),
-            },
+            credentials: 'same-origin',
+            headers: csrfHeaders(options.body ? { 'Content-Type': 'application/json' } : {}),
             body: options.body ? JSON.stringify(options.body) : undefined,
         });
+
+        if (response.status === 419) {
+            handleSessionExpired();
+            throw new Error('セッションの有効期限が切れました');
+        }
 
         const data = await response.json().catch(() => ({}));
 

@@ -1,9 +1,26 @@
 function getAppBaseUrl() {
-    return document.querySelector('meta[name="app-url"]')?.content || '';
+    const meta = document.querySelector('meta[name="app-url"]')?.content || '';
+
+    if (!meta) {
+        return '';
+    }
+
+    try {
+        const resolved = new URL(meta, window.location.origin);
+
+        // Prefer same-origin relative base so cookies always accompany fetch/XHR.
+        if (resolved.origin === window.location.origin) {
+            return resolved.pathname.replace(/\/$/, '');
+        }
+    } catch (error) {
+        // Fall through to absolute meta value.
+    }
+
+    return meta.replace(/\/$/, '');
 }
 
 function appUrl(path = '') {
-    const base = getAppBaseUrl().replace(/\/$/, '');
+    const base = getAppBaseUrl();
     const normalized = String(path || '');
 
     if (!normalized) {
@@ -17,7 +34,67 @@ function appUrl(path = '') {
     return `${base}/${normalized.replace(/^\//, '')}`;
 }
 
+function getCookie(name) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const match = document.cookie.match(new RegExp(`(?:^|; )${escaped}=([^;]*)`));
+
+    return match ? decodeURIComponent(match[1]) : '';
+}
+
+/**
+ * Prefer the XSRF-TOKEN cookie (always aligned with the session cookie).
+ * Meta csrf-token can go stale after login / long-lived tabs.
+ */
+function getCsrfToken() {
+    return getCookie('XSRF-TOKEN')
+        || document.querySelector('meta[name="csrf-token"]')?.content
+        || '';
+}
+
+function csrfHeaders(extra = {}) {
+    const headers = {
+        Accept: 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        ...extra,
+    };
+
+    const xsrf = getCookie('XSRF-TOKEN');
+
+    if (xsrf) {
+        headers['X-XSRF-TOKEN'] = xsrf;
+    } else {
+        const metaToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        if (metaToken) {
+            headers['X-CSRF-TOKEN'] = metaToken;
+        }
+    }
+
+    return headers;
+}
+
+function updateCsrfMeta(token) {
+    if (!token) {
+        return;
+    }
+
+    const meta = document.querySelector('meta[name="csrf-token"]');
+
+    if (meta) {
+        meta.content = token;
+    }
+}
+
+function handleSessionExpired(message) {
+    alert(message || 'セッションの有効期限が切れました。ページを再読み込みします。');
+    window.location.reload();
+}
+
 window.appUrl = appUrl;
+window.getCsrfToken = getCsrfToken;
+window.csrfHeaders = csrfHeaders;
+window.updateCsrfMeta = updateCsrfMeta;
+window.handleSessionExpired = handleSessionExpired;
 
 document.addEventListener('DOMContentLoaded', () => {
     const authForm = document.getElementById('authForm');
@@ -44,17 +121,22 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(appUrl('/login'), {
                 method: 'POST',
-                headers: {
-                    Accept: 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                },
+                credentials: 'same-origin',
+                headers: csrfHeaders(),
                 body: formData,
             });
 
             const data = await response.json().catch(() => ({}));
 
+            if (response.status === 419) {
+                handleSessionExpired();
+                return;
+            }
+
             if (response.ok && data.success) {
-                hideAuthModal();
+                updateCsrfMeta(data.csrf_token);
+                // Reload so every subsequent request uses a fresh meta + cookies.
+                window.location.reload();
                 return;
             }
 
@@ -64,10 +146,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.content || '';
-}
 
 function showAuthModal(message = '') {
     const authModal = document.getElementById('authModal');

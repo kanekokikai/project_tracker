@@ -11,6 +11,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Xserver など SSL 終端プロキシ配下でも HTTPS / 正しいホストを認識させる
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'app.auth' => \App\Http\Middleware\EnsureAppAuthenticated::class,
         ]);

@@ -401,6 +401,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
+                if (xhr.status === 419) {
+                    if (typeof window.handleSessionExpired === 'function') {
+                        window.handleSessionExpired();
+                    } else {
+                        alert('セッションの有効期限が切れました。ページを再読み込みします。');
+                        window.location.reload();
+                    }
+
+                    reject(new Error('セッションの有効期限が切れました'));
+                    return;
+                }
+
                 if (xhr.status === 401) {
                     if (typeof window.showAuthModal === 'function') {
                         window.showAuthModal(response.message || 'ログインが必要です');
@@ -423,8 +435,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             xhr.open('POST', appUrl(url));
-            xhr.setRequestHeader('X-CSRF-TOKEN', getCsrfToken());
-            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.withCredentials = true;
+
+            const headers = typeof window.csrfHeaders === 'function'
+                ? window.csrfHeaders()
+                : { Accept: 'application/json', 'X-CSRF-TOKEN': (typeof getCsrfToken === 'function' ? getCsrfToken() : '') };
+
+            Object.entries(headers).forEach(([key, value]) => {
+                if (value) {
+                    xhr.setRequestHeader(key, value);
+                }
+            });
+
             xhr.send(formData);
         });
     }

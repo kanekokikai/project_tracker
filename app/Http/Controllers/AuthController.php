@@ -25,12 +25,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        $request->session()->regenerate();
         $request->session()->put('app_authenticated', true);
         $request->session()->put('auth_time', time());
 
         return response()->json([
             'success' => true,
             'message' => '認証に成功しました',
+            'csrf_token' => csrf_token(),
         ]);
     }
 

@@ -334,21 +334,28 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-function getCsrfToken() {
-    return document.querySelector('meta[name="csrf-token"]')?.content || '';
-}
-
 async function apiRequest(url, options = {}) {
     const headers = {
-        Accept: 'application/json',
-        'X-CSRF-TOKEN': getCsrfToken(),
+        ...(typeof window.csrfHeaders === 'function' ? window.csrfHeaders() : {}),
         ...(options.headers || {}),
     };
 
     const response = await fetch(appUrl(url), {
+        credentials: 'same-origin',
         ...options,
         headers,
     });
+
+    if (response.status === 419) {
+        if (typeof window.handleSessionExpired === 'function') {
+            window.handleSessionExpired();
+        } else {
+            alert('セッションの有効期限が切れました。ページを再読み込みします。');
+            window.location.reload();
+        }
+
+        throw new Error('セッションの有効期限が切れました');
+    }
 
     const data = await response.json().catch(() => ({}));
 
