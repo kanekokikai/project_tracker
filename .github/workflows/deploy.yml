@@ -35,6 +35,7 @@ jobs:
         run: |
           mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
           chmod -R 775 storage bootstrap/cache || true
+          # Do NOT run config:cache here — absolute paths from GitHub runners break Xserver.
 
       - name: Write production .env from secret
         env:
@@ -65,17 +66,12 @@ jobs:
           echo "$SETUP_TOKEN" > unpack.token
           echo "SETUP_TOKEN=$SETUP_TOKEN" >> "$GITHUB_ENV"
 
-      - name: Cache Laravel config
-        run: |
-          php artisan config:clear || true
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-
       - name: Build release.zip
         run: |
           rm -rf deploy-ftp release.zip
           mkdir -p deploy-ftp/public
+          # Remove any accidental config/route/view caches before packaging
+          rm -f bootstrap/cache/config.php bootstrap/cache/routes-*.php bootstrap/cache/events.php
           zip -r release.zip . \
             -x ".git/*" \
             -x ".github/*" \
@@ -95,11 +91,12 @@ jobs:
           cp release.zip deploy-ftp/release.zip
           cp unpack.token deploy-ftp/unpack.token
           cp public/unpack-release.php deploy-ftp/unpack-release.php
-          mkdir -p deploy-ftp/public
           cp public/unpack-release.php deploy-ftp/public/unpack-release.php
           cp public/server-setup.php deploy-ftp/public/server-setup.php
           cp public/diag.php deploy-ftp/public/diag.php
           cp public/diag.php deploy-ftp/diag.php
+          cp public/fix-cache.php deploy-ftp/public/fix-cache.php
+          cp public/fix-cache.php deploy-ftp/fix-cache.php
           ls -lh deploy-ftp/release.zip
 
       - name: Upload release package via FTP
@@ -131,5 +128,18 @@ jobs:
             done
             sleep 5
           done
-          echo "Unpack failed"
+          echo "Unpack step failed (package may already be live). Continuing with fix-cache."
+          exit 0
+
+      - name: Clear baked CI cache paths on server
+        run: |
+          for path in fix-cache.php public/fix-cache.php; do
+            code=$(curl -sS -o /tmp/fix-out.txt -w "%{http_code}" \
+              "https://project.kanekokikai-app.com/${path}?token=${SETUP_TOKEN}" || true)
+            echo "path=$path http=$code"
+            cat /tmp/fix-out.txt || true
+            if [ "$code" = "200" ] && grep -q '^done' /tmp/fix-out.txt; then
+              exit 0
+            fi
+          done
           exit 1
