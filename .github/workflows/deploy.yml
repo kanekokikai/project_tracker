@@ -97,6 +97,9 @@ jobs:
           cp public/unpack-release.php deploy-ftp/unpack-release.php
           mkdir -p deploy-ftp/public
           cp public/unpack-release.php deploy-ftp/public/unpack-release.php
+          cp public/server-setup.php deploy-ftp/public/server-setup.php
+          cp public/diag.php deploy-ftp/public/diag.php
+          cp public/diag.php deploy-ftp/diag.php
           ls -lh deploy-ftp/release.zip
 
       - name: Upload release package via FTP

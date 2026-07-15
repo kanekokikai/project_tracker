@@ -1,33 +1,43 @@
 <?php
 /**
  * 本番初回のみ: マイグレーション実行用。
- * 使い方:
- *   1. 本番 .env に APP_SETUP_TOKEN=長い乱数 を入れる
- *   2. ブラウザで https://ドメイン/server-setup.php?token=その値 を開く
- *   3. 成功したら必ずこのファイルをサーバから削除する（または APP_SETUP_TOKEN を空にする）
+ * 使い方: /server-setup.php?token=（.env の APP_SETUP_TOKEN）
+ * 成功後にこのファイルを削除し、APP_SETUP_TOKEN を空にしてください。
  */
 
 declare(strict_types=1);
 
-use Illuminate\Contracts\Console\Kernel;
-
-$token = $_GET['token'] ?? '';
-
-require __DIR__ . '/../vendor/autoload.php';
-
-$app = require __DIR__ . '/../bootstrap/app.php';
-$kernel = $app->make(Kernel::class);
-$kernel->bootstrap();
-
-$expected = (string) env('APP_SETUP_TOKEN', '');
-
 header('Content-Type: text/plain; charset=UTF-8');
 
-if ($expected === '' || ! hash_equals($expected, (string) $token)) {
+$token = (string) ($_GET['token'] ?? '');
+$root = dirname(__DIR__);
+$envFile = $root . DIRECTORY_SEPARATOR . '.env';
+
+$expected = '';
+if (is_file($envFile)) {
+    foreach (file($envFile, FILE_IGNORE_NEW_LINES) as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        if (str_starts_with($line, 'APP_SETUP_TOKEN=')) {
+            $expected = trim(substr($line, strlen('APP_SETUP_TOKEN=')), " \t\"'");
+            break;
+        }
+    }
+}
+
+if ($expected === '' || $token === '' || ! hash_equals($expected, $token)) {
     http_response_code(403);
     echo "Forbidden\n";
     exit;
 }
+
+require $root . '/vendor/autoload.php';
+
+$app = require $root . '/bootstrap/app.php';
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
 
 $exitCode = $kernel->call('migrate', ['--force' => true]);
 echo $kernel->output();
