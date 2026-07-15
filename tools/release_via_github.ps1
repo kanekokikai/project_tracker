@@ -4,21 +4,22 @@ Set-Location (Split-Path -Parent $PSScriptRoot)
 
 Write-Host ""
 Write-Host "========================================"
-Write-Host " GitHub release (push -> Actions -> Xserver)"
-Write-Host " Laravel: project_tracker_v2"
+Write-Host " Release: git push + local WinSCP deploy"
 Write-Host "========================================"
+Write-Host ""
+Write-Host "NOTE: GitHub Actions FTP often times out from CI."
+Write-Host "This script pushes code to GitHub, then deploys from your PC."
 Write-Host ""
 
 git rev-parse --is-inside-work-tree 2>$null | Out-Null
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Not a git repository. Run: git init"
+    Write-Host "Not a git repository."
     exit 1
 }
 
 $remote = git remote get-url origin 2>$null
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($remote)) {
     Write-Host "origin remote is missing."
-    Write-Host "Example: git remote add origin https://github.com/kanekokikai/project_tracker.git"
     exit 1
 }
 
@@ -31,19 +32,9 @@ Write-Host ""
 $status = git status --porcelain
 $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 
-if ([string]::IsNullOrWhiteSpace($status)) {
-    Write-Host "No local changes."
-    Write-Host "Push current branch to trigger Actions? (y/N)"
-    $ans = Read-Host
-    if ($ans -ne "y" -and $ans -ne "Y") {
-        Write-Host "Actions: https://github.com/kanekokikai/project_tracker/actions"
-        exit 0
-    }
-} else {
+if (-not [string]::IsNullOrWhiteSpace($status)) {
     Write-Host "Excluded automatically:"
-    Write-Host "  - .env / .env.backup"
-    Write-Host "  - public/uploads"
-    Write-Host "  - vendor / node_modules (built in CI)"
+    Write-Host "  - .env / deploy.config.bat / uploads / vendor"
     Write-Host ""
 
     $msg = Read-Host "Commit message"
@@ -52,12 +43,16 @@ if ([string]::IsNullOrWhiteSpace($status)) {
         exit 1
     }
 
-    Write-Host ""
     Write-Host "Staging..."
     git add -A
     git reset -- .env 2>$null | Out-Null
     git reset -- .env.backup 2>$null | Out-Null
+    git reset -- deploy.config.bat 2>$null | Out-Null
+    git reset -- tools/PRODUCTION_ENV.secret.txt 2>$null | Out-Null
     git reset -- public/uploads/project_files 2>$null | Out-Null
+    git reset -- release.zip 2>$null | Out-Null
+    git reset -- deploy-ftp 2>$null | Out-Null
+    git reset -- unpack.token 2>$null | Out-Null
 
     $cached = git diff --cached --name-only
     if ([string]::IsNullOrWhiteSpace($cached)) {
@@ -71,32 +66,33 @@ if ([string]::IsNullOrWhiteSpace($status)) {
         Write-Host "Commit failed."
         exit 1
     }
+} else {
+    Write-Host "No local code changes to commit."
 }
 
 if ($branch -ne "main") {
-    Write-Host ""
-    Write-Host "Current branch is '$branch' (Actions deploys only main)."
-    Write-Host "Continue push to '$branch'? (y/N)"
+    Write-Host "Current branch is '$branch'."
+    Write-Host "Continue? (y/N)"
     $ok = Read-Host
-    if ($ok -ne "y" -and $ok -ne "Y") {
-        exit 1
-    }
+    if ($ok -ne "y" -and $ok -ne "Y") { exit 1 }
 }
 
-Write-Host "Push to GitHub..."
+Write-Host "Push to GitHub (source backup)..."
 git push -u origin HEAD
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Push failed. See RELEASE.md if histories conflict."
+    Write-Host "Push failed."
     exit 1
 }
 
 Write-Host ""
-Write-Host "========================================"
-Write-Host " Push OK. GitHub Actions will deploy."
-Write-Host "========================================"
-Write-Host "Actions: https://github.com/kanekokikai/project_tracker/actions"
-Write-Host "Site:    https://project.kanekokikai-app.com/"
-Write-Host ""
+Write-Host "Starting local WinSCP deploy..."
+& powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "deploy_to_xserver.ps1")
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Local deploy failed."
+    exit 1
+}
 
-Start-Process "https://github.com/kanekokikai/project_tracker/actions"
+Write-Host ""
+Write-Host "All done."
+Start-Process "https://project.kanekokikai-app.com/"
 exit 0

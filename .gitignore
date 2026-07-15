@@ -29,3 +29,7 @@ database/*.local.sql
 database/project_tracker_local.sql
 tools/PRODUCTION_ENV.secret.txt
 tools/winscp/
+release.zip
+deploy-ftp/
+unpack.token
+.env.production.release

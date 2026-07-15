@@ -99,8 +99,12 @@ Laravel では `public/uploads/project_files/` です。
 
 1. `project_tracker_v2` で開発
 2. `release_via_github.bat` をダブルクリック
-3. コミットメッセージを入力 → push
-4. https://github.com/kanekokikai/project_tracker/actions で成功を確認
+3. コミットメッセージを入力
+4. GitHubへpushされたあと、**このPCからWinSCPで本番へアップロード**されます
+5. https://project.kanekokikai-app.com/ を確認
+
+> GitHub Actions の FTP は Xserver へつながりにくいため、本番反映はローカル WinSCP 方式です。
+> コード履歴は GitHub に残ります。FTP設定は `deploy.config.bat`、本番envは `tools\PRODUCTION_ENV.secret.txt` です。
 
 ---
 
