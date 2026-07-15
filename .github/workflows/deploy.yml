@@ -26,6 +26,10 @@ jobs:
       - name: Install Composer dependencies
         run: composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction
 
+      - name: Prune vendor extras
+        run: |
+          find vendor -type d \( -name tests -o -name Tests -o -name docs -o -name .git \) -prune -exec rm -rf {} + 2>/dev/null || true
+
       - name: Ensure storage directories
         run: |
           mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache
@@ -50,11 +54,8 @@ jobs:
                 $env .= "\nAPP_KEY=" . $key . "\n";
               }
               file_put_contents(".env", $env);
-              fwrite(STDERR, "Generated APP_KEY. Update PRODUCTION_ENV secret with the same key.\n");
             }
           '
-          echo "=== .env keys (values hidden) ==="
-          grep -E '^[A-Z0-9_]+=' .env | cut -d= -f1 || true
 
       - name: Cache Laravel config
         run: |
@@ -70,8 +71,11 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           protocol: ftps
+          security: loose
+          timeout: 600000
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
+          log-level: verbose
           exclude: |
             **/.git*
             **/.git*/**
@@ -79,6 +83,8 @@ jobs:
             **/.github*/**
             **/node_modules/**
             **/tests/**
+            **/Tests/**
+            **/docs/**
             **/phpunit.xml
             **/.env.example
             **/.env.production.example
@@ -87,7 +93,8 @@ jobs:
             **/*.md
             **/RELEASE.md
             release_via_github.bat
-            tools/release_via_github.ps1
-            tools/winscp/**
+            tools/**
             database/*.sql
             **/*.local.sql
+            **/.DS_Store
+            **/Thumbs.db
