@@ -1,5 +1,4 @@
 $ErrorActionPreference = "Stop"
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Set-Location (Split-Path -Parent $PSScriptRoot)
 
@@ -18,8 +17,8 @@ if ($LASTEXITCODE -ne 0) {
 
 $remote = git remote get-url origin 2>$null
 if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($remote)) {
-    Write-Host "origin が未設定です。"
-    Write-Host "例: git remote add origin https://github.com/kanekokikai/project_tracker.git"
+    Write-Host "origin remote is missing."
+    Write-Host "Example: git remote add origin https://github.com/kanekokikai/project_tracker.git"
     exit 1
 }
 
@@ -44,7 +43,7 @@ if ([string]::IsNullOrWhiteSpace($status)) {
     Write-Host "Excluded automatically:"
     Write-Host "  - .env / .env.backup"
     Write-Host "  - public/uploads"
-    Write-Host "  - vendor / node_modules (CIで構築)"
+    Write-Host "  - vendor / node_modules (built in CI)"
     Write-Host ""
 
     $msg = Read-Host "Commit message"
@@ -87,8 +86,7 @@ if ($branch -ne "main") {
 Write-Host "Push to GitHub..."
 git push -u origin HEAD
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Push failed."
-    Write-Host "初回で履歴が衝突する場合は RELEASE.md の『初回Git接続』を確認してください。"
+    Write-Host "Push failed. See RELEASE.md if histories conflict."
     exit 1
 }
 
@@ -98,8 +96,6 @@ Write-Host " Push OK. GitHub Actions will deploy."
 Write-Host "========================================"
 Write-Host "Actions: https://github.com/kanekokikai/project_tracker/actions"
 Write-Host "Site:    https://project.kanekokikai-app.com/"
-Write-Host ""
-Write-Host "初回のみ: RELEASE.md のサーバ作業（PHP 8.2 / uploads移動 / migrate）を実施。"
 Write-Host ""
 
 Start-Process "https://github.com/kanekokikai/project_tracker/actions"

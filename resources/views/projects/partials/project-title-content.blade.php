@@ -1,7 +1,6 @@
-<span class="attachment-icon"
+<span @class(['attachment-icon', 'has-attachments' => $project->attachments_count > 0])
       data-action="open-attachments"
       data-project-id="{{ $project->id }}"
-      @class(['has-attachments' => $project->attachments_count > 0])
       role="button"
       tabindex="0"
       aria-label="添付ファイル">
