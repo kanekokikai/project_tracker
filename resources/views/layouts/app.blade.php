@@ -71,10 +71,16 @@
     </main>
 
     @stack('modals')
+
+    <button type="button" class="back-to-top" id="backToTop" aria-label="ページ上部へ戻る" title="上部へ戻る" aria-hidden="true" tabindex="-1">
+        <i class="fas fa-chevron-up" aria-hidden="true"></i>
+    </button>
+
     <script src="{{ asset('js/auth.js') }}?v={{ filemtime(public_path('js/auth.js')) }}"></script>
     @unless (!empty($hideSidebar))
         <script src="{{ asset('js/sidebar.js') }}?v={{ filemtime(public_path('js/sidebar.js')) }}"></script>
     @endunless
+    <script src="{{ asset('js/back-to-top.js') }}?v={{ filemtime(public_path('js/back-to-top.js')) }}"></script>
     @stack('scripts')
 </body>
 </html>
