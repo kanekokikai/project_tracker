@@ -21,8 +21,8 @@
 
         <div class="filter-wrapper">
             <select id="departmentFilter" class="form-control">
-                <option value="選択なし" @selected($departmentFilter === '選択なし')>選択なし</option>
                 <option value="all" @selected($departmentFilter === 'all')>すべての部署</option>
+                <option value="選択なし" @selected($departmentFilter === '選択なし')>選択なし</option>
                 @foreach ($departments as $department)
                     @if ($department !== '選択なし')
                         <option value="{{ $department }}" @selected($departmentFilter === $department)>{{ $department }}</option>
