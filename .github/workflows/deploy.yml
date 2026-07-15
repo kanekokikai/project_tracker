@@ -9,6 +9,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +20,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: "8.2"
-          extensions: mbstring, pdo_mysql, openssl, tokenizer, xml, ctype, json, bcmath, fileinfo
+          extensions: mbstring, pdo_mysql, openssl, tokenizer, xml, ctype, json, bcmath, fileinfo, zip
           coverage: none
           tools: composer:v2
 
@@ -28,7 +29,7 @@ jobs:
 
       - name: Prune vendor extras
         run: |
-          find vendor -type d \( -name tests -o -name Tests -o -name docs -o -name .git \) -prune -exec rm -rf {} + 2>/dev/null || true
+          find vendor -type d \( -iname tests -o -iname docs -o -name .git \) -prune -exec rm -rf {} + 2>/dev/null || true
 
       - name: Ensure storage directories
         run: |
@@ -56,6 +57,13 @@ jobs:
               file_put_contents(".env", $env);
             }
           '
+          SETUP_TOKEN=$(grep -E '^APP_SETUP_TOKEN=' .env | head -n1 | cut -d= -f2- | tr -d '\r')
+          if [ -z "$SETUP_TOKEN" ]; then
+            echo "APP_SETUP_TOKEN missing in PRODUCTION_ENV"
+            exit 1
+          fi
+          echo "$SETUP_TOKEN" > unpack.token
+          echo "SETUP_TOKEN=$SETUP_TOKEN" >> "$GITHUB_ENV"
 
       - name: Cache Laravel config
         run: |
@@ -64,7 +72,34 @@ jobs:
           php artisan route:cache
           php artisan view:cache
 
-      - name: Deploy via FTP
+      - name: Build release.zip
+        run: |
+          rm -rf deploy-ftp release.zip
+          mkdir -p deploy-ftp/public
+          zip -r release.zip . \
+            -x ".git/*" \
+            -x ".github/*" \
+            -x "node_modules/*" \
+            -x "tests/*" \
+            -x "deploy-ftp/*" \
+            -x "public/uploads/project_files/*" \
+            -x "uploads/*" \
+            -x "*.md" \
+            -x "tools/*" \
+            -x "release_via_github.bat" \
+            -x "database/*.sql" \
+            -x ".env.example" \
+            -x ".env.production.example" \
+            -x "phpunit.xml" \
+            -x "release.zip"
+          cp release.zip deploy-ftp/release.zip
+          cp unpack.token deploy-ftp/unpack.token
+          cp public/unpack-release.php deploy-ftp/unpack-release.php
+          mkdir -p deploy-ftp/public
+          cp public/unpack-release.php deploy-ftp/public/unpack-release.php
+          ls -lh deploy-ftp/release.zip
+
+      - name: Upload release package via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -73,28 +108,25 @@ jobs:
           protocol: ftps
           security: loose
           timeout: 600000
+          local-dir: ./deploy-ftp/
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
           dangerous-clean-slate: false
-          log-level: verbose
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/.github*
-            **/.github*/**
-            **/node_modules/**
-            **/tests/**
-            **/Tests/**
-            **/docs/**
-            **/phpunit.xml
-            **/.env.example
-            **/.env.production.example
-            **/public/uploads/**
-            **/uploads/**
-            **/*.md
-            **/RELEASE.md
-            release_via_github.bat
-            tools/**
-            database/*.sql
-            **/*.local.sql
-            **/.DS_Store
-            **/Thumbs.db
+          log-level: standard
+
+      - name: Unpack on server
+        run: |
+          echo "Triggering unpack..."
+          for i in 1 2 3 4 5; do
+            for path in unpack-release.php public/unpack-release.php; do
+              code=$(curl -sS -o /tmp/unpack-out.txt -w "%{http_code}" \
+                "https://project.kanekokikai-app.com/${path}?token=${SETUP_TOKEN}" || true)
+              echo "attempt=$i path=$path http=$code"
+              cat /tmp/unpack-out.txt || true
+              if [ "$code" = "200" ] && grep -q '^OK' /tmp/unpack-out.txt; then
+                exit 0
+              fi
+            done
+            sleep 5
+          done
+          echo "Unpack failed"
+          exit 1
