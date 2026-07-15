@@ -1,6 +1,6 @@
 <?php
 /**
- * 一時診断用。確認後に削除してください。
+ * 一時診断用。確認後に削除。
  * /diag.php?token=APP_SETUP_TOKEN
  */
 
@@ -35,34 +35,30 @@ echo "php=" . PHP_VERSION . "\n";
 echo "root={$root}\n";
 echo "env_exists=" . (is_file($envFile) ? 'yes' : 'no') . "\n";
 echo "vendor=" . (is_file($root . '/vendor/autoload.php') ? 'yes' : 'no') . "\n";
-echo "storage_writable=" . (is_writable($root . '/storage') ? 'yes' : 'no') . "\n";
-echo "bootstrap_cache_writable=" . (is_writable($root . '/bootstrap/cache') ? 'yes' : 'no') . "\n";
 
-foreach ([
-    'storage',
-    'storage/framework',
-    'storage/framework/cache',
-    'storage/framework/sessions',
-    'storage/framework/views',
-    'storage/logs',
-    'bootstrap/cache',
-] as $rel) {
-    $path = $root . '/' . $rel;
-    if (! is_dir($path)) {
-        @mkdir($path, 0777, true);
-    }
-    @chmod($path, 0777);
-    echo "path {$rel} exists=" . (is_dir($path) ? 'yes' : 'no') . " writable=" . (is_writable($path) ? 'yes' : 'no') . "\n";
+$log = $root . '/storage/logs/laravel.log';
+echo "log_exists=" . (is_file($log) ? 'yes' : 'no') . "\n";
+if (is_file($log)) {
+    $lines = file($log);
+    $tail = array_slice($lines, -80);
+    echo "---- laravel.log (tail) ----\n";
+    echo implode('', $tail);
+    echo "---- end log ----\n";
 }
 
 try {
     require $root . '/vendor/autoload.php';
     $app = require $root . '/bootstrap/app.php';
     $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
-    echo "laravel_boot=ok\n";
-    echo "app_env=" . $app->environment() . "\n";
+    $request = Illuminate\Http\Request::create('/', 'GET');
+    $response = $kernel->handle($request);
+    echo "home_status=" . $response->getStatusCode() . "\n";
+    $content = $response->getContent();
+    echo "home_body_start=\n";
+    echo substr(strip_tags($content), 0, 500) . "\n";
+    $kernel->terminate($request, $response);
 } catch (Throwable $e) {
-    echo "laravel_boot=FAIL\n";
+    echo "request_FAIL\n";
     echo $e::class . ': ' . $e->getMessage() . "\n";
     echo $e->getFile() . ':' . $e->getLine() . "\n";
     echo $e->getTraceAsString() . "\n";
