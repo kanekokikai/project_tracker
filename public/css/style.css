@@ -1797,7 +1797,7 @@ body.is-authenticated .blur-content {
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  width: calc(100% + 1.1rem);
+  width: calc(100% + 1.4rem);
   margin: 0.25rem -0.55rem -0.35rem -0.85rem;
   padding: 0.45rem 0.5rem 0.5rem;
   border: none;
