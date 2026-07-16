@@ -1796,44 +1796,47 @@ body.is-authenticated .blur-content {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   width: calc(100% + 1.1rem);
-  margin: 0.1rem -0.55rem -0.35rem -0.85rem;
-  padding: 0.35rem 0.5rem 0.4rem;
+  margin: 0.25rem -0.55rem -0.35rem -0.85rem;
+  padding: 0.45rem 0.5rem 0.5rem;
   border: none;
+  border-top: 1px solid rgba(0, 113, 227, 0.18);
   border-radius: 0 0 var(--apple-radius-sm) var(--apple-radius-sm);
-  background: linear-gradient(180deg, transparent, rgba(29, 29, 31, 0.035));
-  color: var(--apple-secondary);
+  background: linear-gradient(180deg, rgba(0, 113, 227, 0.04), rgba(0, 113, 227, 0.1));
+  color: var(--apple-primary);
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .history-expand-hint:hover {
-  background: linear-gradient(180deg, transparent, rgba(29, 29, 31, 0.06));
-  color: #6e6e73;
+  background: linear-gradient(180deg, rgba(0, 113, 227, 0.08), rgba(0, 113, 227, 0.16));
+  border-top-color: rgba(0, 113, 227, 0.28);
+  color: #005bb5;
 }
 
 .history-expand-chevron {
   display: block;
-  width: 8px;
-  height: 8px;
-  border-right: 1.5px solid currentColor;
-  border-bottom: 1.5px solid currentColor;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
   transform: rotate(45deg);
-  opacity: 0.55;
+  opacity: 0.85;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
 .history-expand-hint:hover .history-expand-chevron {
-  opacity: 0.8;
+  opacity: 1;
 }
 
 .history-expand-count {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
   letter-spacing: 0.02em;
-  opacity: 0.7;
+  opacity: 1;
   line-height: 1;
 }
 

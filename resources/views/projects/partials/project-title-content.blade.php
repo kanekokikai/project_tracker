@@ -34,10 +34,13 @@
 @endif
 
 @if ($isChild)
+    @php
+        $historyCollapsed = ! in_array($project->status, \App\Models\Project::ACTIVE_STATUSES, true);
+    @endphp
     <span class="toggle-history"
           data-project-id="{{ $project->id }}"
-          data-initial-state="{{ $project->status === '完了' ? 'collapsed' : 'expanded' }}">
-        {{ $project->status === '完了' ? '▶' : '▼' }}
+          data-initial-state="{{ $historyCollapsed ? 'collapsed' : 'expanded' }}">
+        {{ $historyCollapsed ? '▶' : '▼' }}
     </span>
 @endif
 

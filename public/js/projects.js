@@ -768,11 +768,15 @@ function matchesStatusFilter(cardStatus, filterValue) {
 function filterByStatus(status) {
     document.querySelectorAll('.parent-project').forEach((parentCard) => {
         const childCards = parentCard.querySelectorAll('.child-project');
-        let parentVisible = matchesStatusFilter(parentCard.dataset.status, status);
+        const parentMatches = matchesStatusFilter(parentCard.dataset.status, status);
+        let parentVisible = parentMatches;
         let visibleChildCount = 0;
 
+        // 親が稼働中のときは、子は完了・保留・中止も含めてすべて表示
+        const showAllChildren = status === 'active' && parentMatches;
+
         childCards.forEach((childCard) => {
-            const childVisible = matchesStatusFilter(childCard.dataset.status, status);
+            const childVisible = showAllChildren || matchesStatusFilter(childCard.dataset.status, status);
             childCard.style.display = childVisible ? 'block' : 'none';
 
             if (childVisible) {
@@ -877,10 +881,11 @@ function applyCurrentStatusFilter(parentCard) {
     }
 
     const parentMatches = matchesStatusFilter(parentCard.dataset.status, status);
+    const showAllChildren = status === 'active' && parentMatches;
     let visibleChildCount = 0;
 
     parentCard.querySelectorAll('.child-project').forEach((childCard) => {
-        const childVisible = matchesStatusFilter(childCard.dataset.status, status);
+        const childVisible = showAllChildren || matchesStatusFilter(childCard.dataset.status, status);
         childCard.style.display = childVisible ? 'block' : 'none';
 
         if (childVisible) {

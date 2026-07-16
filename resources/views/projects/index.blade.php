@@ -70,7 +70,7 @@
                                     'histories' => $childProject->histories,
                                     'contentPrefix' => 'content-child',
                                     'historyId' => $childProject->id,
-                                    'collapsed' => $childProject->status === '完了',
+                                    'collapsed' => ! in_array($childProject->status, \App\Models\Project::ACTIVE_STATUSES, true),
                                 ])
                             @endif
                         </div>
