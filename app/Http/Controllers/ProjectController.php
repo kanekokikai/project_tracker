@@ -59,7 +59,74 @@ class ProjectController extends Controller
             'statuses' => Project::STATUSES,
             'departments' => Project::DEPARTMENTS,
             'departmentFilter' => $departmentFilter,
+            'departmentCounts' => $this->departmentCounts(),
+            'statusCounts' => $this->statusCounts($parents),
         ]);
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function departmentCounts(): array
+    {
+        $parents = Project::query()
+            ->whereNull('parent_id')
+            ->get(['department']);
+
+        $counts = ['all' => $parents->count()];
+
+        foreach (Project::DEPARTMENTS as $department) {
+            if ($department === '選択なし') {
+                $counts[$department] = $parents->filter(function (Project $project) {
+                    return $project->department === null
+                        || $project->department === ''
+                        || $project->department === '選択なし';
+                })->count();
+                continue;
+            }
+
+            $counts[$department] = $parents->where('department', $department)->count();
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, Project>  $parents
+     * @return array<string, int>
+     */
+    private function statusCounts($parents): array
+    {
+        $counts = array_fill_keys(Project::STATUSES, 0);
+        $counts['all'] = 0;
+        $counts['active'] = 0;
+
+        foreach ($parents as $parent) {
+            $this->tallyStatusCount($counts, $parent->status);
+
+            foreach ($parent->children as $child) {
+                $this->tallyStatusCount($counts, $child->status);
+            }
+        }
+
+        return $counts;
+    }
+
+    /**
+     * @param  array<string, int>  $counts
+     */
+    private function tallyStatusCount(array &$counts, ?string $status): void
+    {
+        if ($status === null || ! array_key_exists($status, $counts)) {
+            return;
+        }
+
+        $counts[$status]++;
+        $counts['all']++;
+
+        if (in_array($status, Project::ACTIVE_STATUSES, true)) {
+            $counts['active']++;
+        }
     }
 
     public function updateStatus(Request $request, Project $project): JsonResponse

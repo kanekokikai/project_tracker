@@ -10,6 +10,8 @@ class Project extends Model
 {
     public const STATUSES = ['未着手', '進行中', 'レビュー中', '保留中', '完了', '中止'];
 
+    public const ACTIVE_STATUSES = ['未着手', '進行中', 'レビュー中'];
+
     public const DEPARTMENTS = ['選択なし', '営業', 'フロント', '工場', '品管', '経理', '総務', '運送'];
 
     protected $fillable = [

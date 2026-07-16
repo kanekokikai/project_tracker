@@ -21,11 +21,11 @@
 
         <div class="filter-wrapper">
             <select id="departmentFilter" class="form-control">
-                <option value="all" @selected($departmentFilter === 'all')>すべての部署</option>
-                <option value="選択なし" @selected($departmentFilter === '選択なし')>選択なし</option>
+                <option value="all" @selected($departmentFilter === 'all')>すべての部署 ({{ $departmentCounts['all'] ?? 0 }})</option>
+                <option value="選択なし" @selected($departmentFilter === '選択なし')>選択なし ({{ $departmentCounts['選択なし'] ?? 0 }})</option>
                 @foreach ($departments as $department)
                     @if ($department !== '選択なし')
-                        <option value="{{ $department }}" @selected($departmentFilter === $department)>{{ $department }}</option>
+                        <option value="{{ $department }}" @selected($departmentFilter === $department)>{{ $department }} ({{ $departmentCounts[$department] ?? 0 }})</option>
                     @endif
                 @endforeach
             </select>
@@ -33,9 +33,10 @@
 
         <div class="filter-wrapper">
             <select id="statusFilter" class="form-control">
-                <option value="all">すべてのステータス</option>
+                <option value="active" selected>稼働中 ({{ $statusCounts['active'] ?? 0 }})</option>
+                <option value="all">すべてのステータス ({{ $statusCounts['all'] ?? 0 }})</option>
                 @foreach ($statuses as $status)
-                    <option value="{{ $status }}">{{ $status }}</option>
+                    <option value="{{ $status }}">{{ $status }} ({{ $statusCounts[$status] ?? 0 }})</option>
                 @endforeach
             </select>
         </div>

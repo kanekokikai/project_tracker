@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusFilter.addEventListener('change', (event) => {
             filterByStatus(event.target.value);
         });
+        filterByStatus(statusFilter.value);
     }
 
     if (memberSearch && clearSearch && searchModeToggle) {
@@ -752,14 +753,26 @@ async function confirmDeleteHistory(historyId) {
     }
 }
 
+function matchesStatusFilter(cardStatus, filterValue) {
+    if (filterValue === 'all') {
+        return true;
+    }
+
+    if (filterValue === 'active') {
+        return ['未着手', '進行中', 'レビュー中'].includes(cardStatus);
+    }
+
+    return cardStatus === filterValue;
+}
+
 function filterByStatus(status) {
     document.querySelectorAll('.parent-project').forEach((parentCard) => {
         const childCards = parentCard.querySelectorAll('.child-project');
-        let parentVisible = status === 'all' || parentCard.dataset.status === status;
+        let parentVisible = matchesStatusFilter(parentCard.dataset.status, status);
         let visibleChildCount = 0;
 
         childCards.forEach((childCard) => {
-            const childVisible = status === 'all' || childCard.dataset.status === status;
+            const childVisible = matchesStatusFilter(childCard.dataset.status, status);
             childCard.style.display = childVisible ? 'block' : 'none';
 
             if (childVisible) {
@@ -863,13 +876,21 @@ function applyCurrentStatusFilter(parentCard) {
         return;
     }
 
-    const parentVisible = parentCard.dataset.status === status;
+    const parentMatches = matchesStatusFilter(parentCard.dataset.status, status);
+    let visibleChildCount = 0;
 
     parentCard.querySelectorAll('.child-project').forEach((childCard) => {
-        if (!parentVisible) {
-            childCard.style.display = childCard.dataset.status === status ? 'block' : 'none';
+        const childVisible = matchesStatusFilter(childCard.dataset.status, status);
+        childCard.style.display = childVisible ? 'block' : 'none';
+
+        if (childVisible) {
+            visibleChildCount += 1;
         }
     });
+
+    if (!parentMatches && visibleChildCount === 0) {
+        parentCard.style.display = 'none';
+    }
 }
 
 function isElementVisible(element) {
