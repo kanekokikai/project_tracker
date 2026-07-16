@@ -1,4 +1,7 @@
-<div class="project-header">
+<div @class([
+    'project-header',
+    'has-child-history' => $isChild && $project->histories->isNotEmpty(),
+])>
     <div class="title-section">
         @if ($isChild)
             <h3 class="project-title">

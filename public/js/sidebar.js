@@ -163,15 +163,8 @@ function navigateToProjectFromUrl() {
 
         window.scrollTo({ top, behavior: 'smooth' });
 
-        const historyContent = document.getElementById(`history-content-${projectId}`);
-        const toggleButton = document.querySelector(`.toggle-history[data-project-id="${projectId}"]`);
-
-        if (historyContent && (historyContent.classList.contains('collapsed') || historyContent.style.display === 'none')) {
-            historyContent.classList.remove('collapsed');
-            historyContent.style.removeProperty('display');
-            if (toggleButton) {
-                toggleButton.textContent = '▼';
-            }
+        if (typeof expandChildProjectHistory === 'function') {
+            expandChildProjectHistory(projectId);
         }
 
         targetProject.classList.add('highlight-project');

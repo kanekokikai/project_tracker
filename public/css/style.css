@@ -376,6 +376,14 @@ select.form-control:focus {
   background: linear-gradient(180deg, #f8fafb 0%, #dde4eb 100%);
 }
 
+.child-project > .project-header.has-child-history {
+  cursor: pointer;
+}
+
+.child-project > .project-header.has-child-history .project-name {
+  cursor: pointer;
+}
+
 .project-title {
   margin: 0;
   font-weight: 500;
