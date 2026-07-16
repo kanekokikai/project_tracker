@@ -46,9 +46,9 @@ body {
 .app-logo {
   height: 34px;
   width: auto;
-  vertical-align: middle;
   margin-right: 12px;
   flex-shrink: 0;
+  transform: translateY(-2px);
 }
 
 .header-content {
@@ -377,9 +377,14 @@ select.form-control:focus {
   background: linear-gradient(180deg, #faf7f1 0%, #e7dfd2 100%);
 }
 
+.parent-project > .project-header:hover {
+  z-index: 10;
+}
+
 .child-project > .project-header:hover {
   border-color: #7d8894;
   background: linear-gradient(180deg, #f8fafb 0%, #dde4eb 100%);
+  z-index: 10;
 }
 
 .child-project > .project-header.has-child-history {
