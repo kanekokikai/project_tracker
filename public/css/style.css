@@ -108,7 +108,13 @@ body {
   right: auto;
 }
 
-.header-nav-link {
+.header-nav-link,
+.logout-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  line-height: 1;
   color: var(--apple-secondary);
   text-decoration: none;
   font-size: 0.82rem;
@@ -670,6 +676,7 @@ body.is-authenticated .blur-content {
   position: static;
   margin: 0;
   display: inline-flex;
+  align-items: center;
 }
 
 .logout-link {
@@ -677,15 +684,7 @@ body.is-authenticated .blur-content {
   transform: none;
   background: none;
   border: none;
-  color: var(--apple-secondary);
-  text-decoration: none;
-  font-size: 0.82rem;
-  font-weight: 600;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
   cursor: pointer;
-  transition: var(--apple-transition);
-  white-space: nowrap;
 }
 
 .logout-link:hover {
