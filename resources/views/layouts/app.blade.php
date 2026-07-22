@@ -33,6 +33,24 @@
         <div class="sidebar-overlay"></div>
     @endunless
 
+    @unless (!empty($hideSidebar))
+        <aside class="activity-log-panel" id="activityLogPanel" aria-label="ログ" aria-hidden="true">
+            <div class="activity-log-header">
+                <div class="activity-log-header-title">
+                    <i class="fas fa-stream" aria-hidden="true"></i>
+                    <h2>ログ</h2>
+                </div>
+                <button type="button" class="activity-log-close" id="activityLogClose" aria-label="ログを閉じる" title="閉じる">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="activity-log-content" id="activityLogContent">
+                <p class="activity-log-empty">読み込み中...</p>
+            </div>
+        </aside>
+        <div class="activity-log-overlay" id="activityLogOverlay"></div>
+    @endunless
+
     <header class="header">
         @unless (!empty($hideSidebar))
             <button type="button" class="sidebar-toggle" aria-label="プロジェクト一覧を開く" title="プロジェクト一覧" aria-expanded="false">
@@ -51,6 +69,12 @@
                 </span>
             </h1>
             <nav class="header-actions" aria-label="アカウント">
+                @unless (!empty($hideSidebar))
+                    <button type="button" class="activity-log-toggle" id="activityLogToggle" aria-label="ログを開く" title="ログ" aria-expanded="false" aria-controls="activityLogPanel">
+                        <i class="fas fa-stream" aria-hidden="true"></i>
+                        <span class="activity-log-toggle-label">ログ</span>
+                    </button>
+                @endunless
                 @if (!empty($isChatworkAdmin))
                     <a href="{{ route('projects.index') }}" class="header-nav-link">一覧へ戻る</a>
                 @else
@@ -79,6 +103,7 @@
     <script src="{{ asset('js/auth.js') }}?v={{ filemtime(public_path('js/auth.js')) }}"></script>
     @unless (!empty($hideSidebar))
         <script src="{{ asset('js/sidebar.js') }}?v={{ filemtime(public_path('js/sidebar.js')) }}"></script>
+        <script src="{{ asset('js/activity-log.js') }}?v={{ filemtime(public_path('js/activity-log.js')) }}"></script>
     @endunless
     <script src="{{ asset('js/back-to-top.js') }}?v={{ filemtime(public_path('js/back-to-top.js')) }}"></script>
     @stack('scripts')

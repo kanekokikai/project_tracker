@@ -3365,3 +3365,256 @@ input#editTeamMemberInput {
   }
 }
 
+/* 最近の動きパネル */
+.activity-log-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: inherit;
+  line-height: 1;
+  color: var(--apple-secondary);
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  transition: var(--apple-transition);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.activity-log-toggle:hover,
+.activity-log-toggle[aria-expanded="true"] {
+  color: var(--apple-primary);
+  background: rgba(0, 113, 227, 0.08);
+}
+
+.activity-log-toggle i {
+  font-size: 0.9rem;
+}
+
+.activity-log-panel {
+  position: fixed;
+  right: -360px;
+  top: 64px;
+  width: 360px;
+  max-width: calc(100vw - 16px);
+  height: calc(100% - 64px);
+  background-color: #f5f5f7;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.08);
+  z-index: 120;
+  transition: right 0.3s ease;
+  overflow: hidden;
+  border-left: 1px solid #e0e0e0;
+  border-radius: 10px 0 0 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.activity-log-panel.active {
+  right: 0;
+}
+
+.activity-log-overlay {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 64px);
+  background-color: rgba(0, 0, 0, 0.28);
+  z-index: 110;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.activity-log-overlay.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.activity-log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background-color: #dceee3;
+  color: #333;
+  border-radius: 10px 0 0 0;
+  flex-shrink: 0;
+}
+
+.activity-log-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.activity-log-header-title > i {
+  color: #2f6f4e;
+}
+
+.activity-log-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.activity-log-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #666;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.activity-log-close:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #222;
+}
+
+.activity-log-content {
+  padding: 12px 14px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.activity-log-empty {
+  margin: 1.5rem 0.5rem;
+  text-align: center;
+  color: var(--apple-secondary);
+  font-size: 0.92rem;
+}
+
+.activity-log-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activity-log-item {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(210, 210, 215, 0.7);
+}
+
+.activity-log-item.is-clickable {
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.activity-log-item.is-clickable:hover {
+  background: #fff;
+  border-color: rgba(0, 113, 227, 0.28);
+  transform: translateY(-1px);
+}
+
+.activity-log-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-primary);
+  flex-shrink: 0;
+}
+
+.activity-log-item.type-project_deleted .activity-log-icon,
+.activity-log-item.type-attachment_removed .activity-log-icon,
+.activity-log-item.type-comment_deleted .activity-log-icon {
+  background: rgba(255, 59, 48, 0.1);
+  color: var(--apple-error);
+}
+
+.activity-log-item.type-status_changed .activity-log-icon {
+  background: rgba(255, 149, 0, 0.12);
+  color: var(--apple-warning);
+}
+
+.activity-log-item.type-project_renamed .activity-log-icon,
+.activity-log-item.type-members_changed .activity-log-icon,
+.activity-log-item.type-department_changed .activity-log-icon {
+  background: rgba(0, 113, 227, 0.1);
+  color: var(--apple-primary);
+}
+
+.activity-log-item.type-attachment_added .activity-log-icon {
+  background: rgba(76, 175, 80, 0.12);
+  color: var(--apple-success);
+}
+
+.activity-log-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.activity-log-author {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--apple-dark);
+}
+
+.activity-log-time {
+  font-size: 0.75rem;
+  color: var(--apple-secondary);
+  white-space: nowrap;
+}
+
+.activity-log-message {
+  font-size: 0.88rem;
+  color: var(--apple-medium);
+  line-height: 1.4;
+}
+
+.activity-log-project {
+  margin-top: 4px;
+  font-size: 0.78rem;
+  color: var(--apple-secondary);
+}
+
+.project-card.activity-log-highlight,
+.child-project.activity-log-highlight {
+  outline: 2px solid rgba(0, 113, 227, 0.55);
+  outline-offset: 3px;
+  transition: outline-color 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .activity-log-toggle-label {
+    display: none;
+  }
+
+  .activity-log-panel {
+    width: min(100vw, 400px);
+    right: -100%;
+    border-radius: 0;
+  }
+
+  .activity-log-header {
+    border-radius: 0;
+  }
+}
+

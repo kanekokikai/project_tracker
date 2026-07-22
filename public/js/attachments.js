@@ -202,7 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
             newConfirmBtn.textContent = '削除中...';
 
             try {
-                const response = await apiRequest(`/attachments/${attachmentId}`, {
+                const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+                const query = author ? `?author=${encodeURIComponent(author)}` : '';
+                const response = await apiRequest(`/attachments/${attachmentId}${query}`, {
                     method: 'DELETE',
                 });
 
@@ -326,6 +328,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const projectId = document.getElementById('project-id-input').value;
             const formData = new FormData(uploadForm);
+            const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+
+            if (author) {
+                formData.append('author', author);
+            }
 
             uploadBtn.disabled = true;
             progressBar.style.display = 'block';

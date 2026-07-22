@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\Project;
 use App\Models\ProjectHistory;
+use App\Services\ActivityLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +15,8 @@ use Illuminate\View\View;
 
 class ProjectController extends Controller
 {
+    public function __construct(private ActivityLogger $activityLogger) {}
+
     public function index(Request $request): View
     {
         $departmentFilter = $request->query('department', 'all');
@@ -133,15 +137,27 @@ class ProjectController extends Controller
     {
         $validated = $request->validate([
             'status' => ['required', Rule::in(Project::STATUSES)],
+            'author' => ['nullable', 'string', 'max:100'],
         ], [
             'status.required' => 'ステータスを選択してください',
             'status.in' => '無効なステータスです',
         ]);
 
+        $previousStatus = $project->status;
+
         $project->update([
             'status' => $validated['status'],
             'updated_at' => now(),
         ]);
+
+        if ($previousStatus !== $validated['status']) {
+            $this->activityLogger->record(
+                ActivityLog::TYPE_STATUS_CHANGED,
+                $validated['author'] ?? '不明',
+                "ステータスを「{$validated['status']}」に変更",
+                $project,
+            );
+        }
 
         return response()->json([
             'success' => true,
@@ -193,6 +209,13 @@ class ProjectController extends Controller
                 'author' => $validated['author'],
                 'content' => "新規プロジェクト「{$validated['name']}」を作成しました",
             ]);
+
+            $this->activityLogger->record(
+                ActivityLog::TYPE_PROJECT_CREATED,
+                $validated['author'],
+                "プロジェクト「{$validated['name']}」を作成",
+                $project,
+            );
         });
 
         return response()->json([
@@ -226,7 +249,7 @@ class ProjectController extends Controller
         $teamMembers = $this->parseTeamMembers($validated['team_members'] ?? '[]');
 
         DB::transaction(function () use ($validated, $parent, $teamMembers) {
-            Project::query()->create([
+            $child = Project::query()->create([
                 'name' => $validated['name'],
                 'parent_id' => $parent->id,
                 'status' => '未着手',
@@ -240,6 +263,13 @@ class ProjectController extends Controller
             ]);
 
             $parent->update(['updated_at' => now()]);
+
+            $this->activityLogger->record(
+                ActivityLog::TYPE_SUBPROJECT_CREATED,
+                $validated['author'],
+                "サブプロジェクト「{$validated['name']}」を作成",
+                $child,
+            );
         });
 
         return response()->json([
@@ -254,9 +284,15 @@ class ProjectController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'department' => ['nullable', Rule::in(Project::DEPARTMENTS)],
             'team_members' => ['nullable', 'string'],
+            'author' => ['nullable', 'string', 'max:100'],
         ], [
             'name.required' => 'プロジェクト名を入力してください',
         ]);
+
+        $author = $validated['author'] ?? '不明';
+        $previousName = $project->name;
+        $previousDepartment = $project->department ?? '選択なし';
+        $previousMembers = array_values($project->team_members ?? []);
 
         $updateData = [
             'name' => $validated['name'],
@@ -271,6 +307,43 @@ class ProjectController extends Controller
         }
 
         $project->update($updateData);
+        $project->refresh();
+
+        if ($previousName !== $project->name) {
+            $this->activityLogger->record(
+                ActivityLog::TYPE_PROJECT_RENAMED,
+                $author,
+                "タイトルを「{$previousName}」から「{$project->name}」に変更",
+                $project,
+            );
+        }
+
+        $newMembers = array_values($project->team_members ?? []);
+
+        if ($previousMembers !== $newMembers) {
+            $previousLabel = $previousMembers === [] ? 'なし' : implode('、', $previousMembers);
+            $newLabel = $newMembers === [] ? 'なし' : implode('、', $newMembers);
+
+            $this->activityLogger->record(
+                ActivityLog::TYPE_MEMBERS_CHANGED,
+                $author,
+                "メンバーを「{$previousLabel}」から「{$newLabel}」に変更",
+                $project,
+            );
+        }
+
+        if ($project->isParent()) {
+            $newDepartment = $project->department ?? '選択なし';
+
+            if ($previousDepartment !== $newDepartment) {
+                $this->activityLogger->record(
+                    ActivityLog::TYPE_DEPARTMENT_CHANGED,
+                    $author,
+                    "部署を「{$previousDepartment}」から「{$newDepartment}」に変更",
+                    $project,
+                );
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -278,11 +351,26 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function destroy(Project $project): JsonResponse
+    public function destroy(Request $request, Project $project): JsonResponse
     {
-        $projectIds = $this->collectProjectIds($project);
+        $validated = $request->validate([
+            'author' => ['nullable', 'string', 'max:100'],
+        ]);
 
-        DB::transaction(function () use ($project, $projectIds) {
+        $projectIds = $this->collectProjectIds($project);
+        $projectName = $project->name;
+        $isSubProject = ! $project->isParent();
+        $label = $isSubProject ? 'サブプロジェクト' : 'プロジェクト';
+
+        DB::transaction(function () use ($project, $projectIds, $validated, $projectName, $label) {
+            $this->activityLogger->record(
+                ActivityLog::TYPE_PROJECT_DELETED,
+                $validated['author'] ?? '不明',
+                "{$label}「{$projectName}」を削除",
+                null,
+                $projectName,
+            );
+
             $this->deleteAttachmentDirectories($projectIds);
             $project->delete();
         });

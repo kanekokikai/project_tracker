@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
             event.preventDefault();
 
             const formData = new FormData(addProgressForm);
+            rememberAuthorFromForm(formData);
 
             try {
                 const response = await apiRequest('/histories', {
@@ -224,6 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const historyId = document.getElementById('editHistoryId').value;
             const formData = new FormData(editHistoryForm);
             formData.append('_method', 'PUT');
+            rememberAuthorFromForm(formData);
 
             try {
                 const response = await apiRequest(`/histories/${historyId}`, {
@@ -253,9 +255,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
+                const formData = new FormData(addProjectForm);
+                rememberAuthorFromForm(formData);
+
                 const response = await apiRequest('/projects', {
                     method: 'POST',
-                    body: new FormData(addProjectForm),
+                    body: formData,
                 });
 
                 if (response.success) {
@@ -280,9 +285,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
+                const formData = new FormData(addSubProjectForm);
+                rememberAuthorFromForm(formData);
+
                 const response = await apiRequest('/projects/sub', {
                     method: 'POST',
-                    body: new FormData(addSubProjectForm),
+                    body: formData,
                 });
 
                 if (response.success) {
@@ -312,6 +320,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             formData.append('_method', 'PUT');
 
+            const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+            if (author) {
+                formData.append('author', author);
+            }
+
             try {
                 const response = await apiRequest(`/projects/${projectId}`, {
                     method: 'POST',
@@ -335,6 +348,18 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(drawHierarchyConnectors);
     });
 });
+
+function rememberAuthorFromForm(formData) {
+    if (typeof window.setLastAuthor !== 'function' || !formData) {
+        return;
+    }
+
+    const author = formData.get('author');
+
+    if (typeof author === 'string' && author.trim() !== '') {
+        window.setLastAuthor(author);
+    }
+}
 
 async function apiRequest(url, options = {}) {
     const headers = {
@@ -584,7 +609,9 @@ async function confirmDeleteProject(projectId) {
     }
 
     try {
-        const response = await apiRequest(`/projects/${projectId}`, {
+        const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+        const query = author ? `?author=${encodeURIComponent(author)}` : '';
+        const response = await apiRequest(`/projects/${projectId}${query}`, {
             method: 'DELETE',
         });
 
@@ -775,6 +802,11 @@ async function updateProjectStatus(projectId, newStatus) {
     const formData = new FormData();
     formData.append('status', newStatus);
 
+    const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+    if (author) {
+        formData.append('author', author);
+    }
+
     try {
         const response = await apiRequest(`/projects/${projectId}/status`, {
             method: 'POST',
@@ -803,7 +835,9 @@ async function confirmDeleteHistory(historyId) {
     }
 
     try {
-        const response = await apiRequest(`/histories/${historyId}`, {
+        const author = typeof window.getLastAuthor === 'function' ? window.getLastAuthor() : '';
+        const query = author ? `?author=${encodeURIComponent(author)}` : '';
+        const response = await apiRequest(`/histories/${historyId}${query}`, {
             method: 'DELETE',
         });
 
