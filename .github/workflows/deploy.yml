@@ -136,7 +136,25 @@ jobs:
             echo "path=$path http=$code"
             cat /tmp/fix-out.txt || true
             if [ "$code" = "200" ] && grep -q '^done' /tmp/fix-out.txt; then
-              exit 0
+              break
             fi
           done
+
+      - name: Run database migrations on server
+        run: |
+          echo "Running migrations..."
+          for i in 1 2 3 4 5; do
+            for path in server-setup.php public/server-setup.php; do
+              code=$(curl -sS -o /tmp/migrate-out.txt -w "%{http_code}" \
+                "https://project.kanekokikai-app.com/${path}?token=${SETUP_TOKEN}" || true)
+              echo "attempt=$i path=$path http=$code"
+              cat /tmp/migrate-out.txt || true
+              if [ "$code" = "200" ] && (grep -q 'exit_code=0' /tmp/migrate-out.txt || grep -q '^OK' /tmp/migrate-out.txt); then
+                echo "Migration OK"
+                exit 0
+              fi
+            done
+            sleep 3
+          done
+          echo "Migration failed"
           exit 1

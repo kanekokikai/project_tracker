@@ -9,6 +9,7 @@ Write-Host "========================================"
 Write-Host ""
 Write-Host "NOTE: Deploys from your PC via WinSCP (fast sync)."
 Write-Host "GitHub is for source backup only."
+Write-Host "After upload, production migrations run automatically."
 Write-Host ""
 
 git rev-parse --is-inside-work-tree 2>$null | Out-Null

@@ -101,10 +101,12 @@ Laravel では `public/uploads/project_files/` です。
 2. `release_via_github.bat` をダブルクリック
 3. コミットメッセージを入力
 4. GitHubへpushされたあと、**このPCからWinSCPで本番へアップロード**されます
-5. https://project.kanekokikai-app.com/ を確認
+5. **アップロード後に本番マイグレーションも自動実行**されます（`server-setup.php`）
+6. https://project.kanekokikai-app.com/ を確認
 
 > GitHub Actions の FTP は Xserver へつながりにくいため、本番反映はローカル WinSCP 方式です。
 > コード履歴は GitHub に残ります。FTP設定は `deploy.config.bat`、本番envは `tools\PRODUCTION_ENV.secret.txt` です。
+> 新しいテーブル追加があるリリースでも、手動で `server-setup.php` を開く必要はありません。
 
 ---
 
