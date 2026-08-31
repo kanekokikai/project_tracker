@@ -1773,18 +1773,6 @@ body.is-authenticated .blur-content {
   z-index: 1;
 }
 
-.project-history::before {
-  content: "";
-  position: absolute;
-  left: 28px;
-  top: 18px;
-  bottom: 18px;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(0, 113, 227, 0.35), rgba(210, 210, 215, 0.7));
-  border-radius: 2px;
-  pointer-events: none;
-}
-
 .history-item {
   margin-bottom: 0.85rem;
   padding: 0;
@@ -1820,6 +1808,7 @@ body.is-authenticated .blur-content {
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
+  position: relative;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -2115,15 +2104,46 @@ i.mini-btn {
 }
 
 
-/* 繧ｳ繝｡繝ｳ繝医・蜑阪・蜷榊燕繧帝撼陦ｨ遉ｺ縺ｫ縺励√さ繝｡繝ｳ繝磯伜沺繧偵さ繝ｳ繝・Φ繝・↓蜷医ｏ縺帙※隱ｿ謨ｴ */
+/* 名前はアバターに出し、コメント先頭（吹き出し口）に揃える */
 .history-item {
   display: flex;
-  align-items: center; /* 荳ｭ螟ｮ謠・∴縺ｫ螟画峩 */
+  align-items: flex-start;
   flex-wrap: nowrap;
   margin-bottom: 0.4rem;
   padding: 0.25rem 0.5rem;
   background-color: transparent;
   position: relative;
+}
+
+/* 縦線は各コメントのアバター中心から次のアバター中心へ。先頭の上・末尾の下は出さない */
+.history-item:not(:last-of-type)::before {
+  content: "";
+  position: absolute;
+  left: calc(0.5rem + 18px - 1px);
+  top: calc(0.25rem + 18px);
+  bottom: calc(-0.4rem - 0.25rem - 18px);
+  width: 2px;
+  background: rgba(0, 113, 227, 0.28);
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 折りたたみ中は、見えている最後から「他○件」へ線を伸ばす */
+.project-history:not(.history-expanded) .history-item:nth-child(3):not(:last-of-type)::before {
+  bottom: -1.15rem;
+}
+
+.project-history:not(.history-expanded) .history-expand-hint::before {
+  content: "";
+  position: absolute;
+  left: calc(0.85rem + 0.5rem + 18px - 1px);
+  top: 0;
+  width: 2px;
+  height: 0.7rem;
+  background: rgba(0, 113, 227, 0.28);
+  border-radius: 2px;
+  pointer-events: none;
 }
 
 /* history-content-container繧帝撼陦ｨ遉ｺ縺ｫ縺吶ｋ */
@@ -2151,6 +2171,7 @@ i.mini-btn {
 .date-actions {
   flex-shrink: 0;
   margin-left: auto;
+  margin-top: 0.5rem;
   white-space: nowrap;
   display: flex;
   align-items: center;
