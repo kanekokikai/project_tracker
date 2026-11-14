@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\ActivityLog;
 use App\Models\Project;
-use Illuminate\Support\Facades\DB;
 
 class ActivityLogger
 {
@@ -18,35 +17,39 @@ class ActivityLogger
         $resolvedAuthor = trim($author) !== '' ? trim($author) : '不明';
         $resolvedName = $projectName ?? $project?->name;
 
-        return DB::transaction(function () use ($eventType, $resolvedAuthor, $message, $project, $resolvedName) {
-            $log = ActivityLog::query()->create([
-                'event_type' => $eventType,
-                'author' => mb_substr($resolvedAuthor, 0, 100),
-                'message' => mb_substr($message, 0, 500),
-                'project_id' => $project?->id,
-                'project_name' => $resolvedName !== null ? mb_substr($resolvedName, 0, 255) : null,
-            ]);
+        $log = ActivityLog::query()->create([
+            'event_type' => $eventType,
+            'author' => mb_substr($resolvedAuthor, 0, 100),
+            'message' => mb_substr($message, 0, 500),
+            'project_id' => $project?->id,
+            'project_name' => $resolvedName !== null ? mb_substr($resolvedName, 0, 255) : null,
+        ]);
 
-            $this->prune();
+        $this->prune();
 
-            return $log;
-        });
+        return $log;
     }
 
     private function prune(): void
     {
-        $keepIds = ActivityLog::query()
+        $cutoff = ActivityLog::query()
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->limit(ActivityLog::MAX_ENTRIES)
-            ->pluck('id');
+            ->skip(ActivityLog::MAX_ENTRIES)
+            ->first(['id', 'created_at']);
 
-        if ($keepIds->isEmpty()) {
+        if ($cutoff === null) {
             return;
         }
 
         ActivityLog::query()
-            ->whereNotIn('id', $keepIds)
+            ->where(function ($query) use ($cutoff) {
+                $query->where('created_at', '<', $cutoff->created_at)
+                    ->orWhere(function ($sameTime) use ($cutoff) {
+                        $sameTime->where('created_at', $cutoff->created_at)
+                            ->where('id', '<=', $cutoff->id);
+                    });
+            })
             ->delete();
     }
 }

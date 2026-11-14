@@ -26,6 +26,7 @@ class ChatworkMemberController extends Controller
             ->get([
                 'id',
                 'member_name',
+                'employee_number',
                 'chatwork_account_id',
                 'note',
                 'sort_order',
@@ -60,20 +61,35 @@ class ChatworkMemberController extends Controller
         $validated = $request->validate([
             'id' => ['nullable', 'integer', 'exists:chatwork_members,id'],
             'member_name' => ['required', 'string', 'max:100'],
-            'chatwork_account_id' => ['required', 'string', 'regex:/^\d+$/', 'max:50'],
+            'employee_number' => ['required', 'string', 'max:20'],
+            'chatwork_account_id' => ['nullable', 'string', 'max:50'],
             'note' => ['nullable', 'string', 'max:255'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ], [
             'member_name.required' => '名前を入力してください',
-            'chatwork_account_id.required' => 'ChatworkアカウントIDを入力してください',
-            'chatwork_account_id.regex' => 'ChatworkアカウントIDは数字で入力してください',
+            'employee_number.required' => '社員番号を入力してください',
         ]);
 
         $memberName = trim($validated['member_name']);
-        $accountId = trim($validated['chatwork_account_id']);
+        $employeeNumber = trim($validated['employee_number']);
+        $accountId = trim((string) ($validated['chatwork_account_id'] ?? ''));
         $note = trim($validated['note'] ?? '');
         $sortOrder = (int) ($validated['sort_order'] ?? 0);
         $id = (int) ($validated['id'] ?? 0);
+
+        if ($accountId !== '' && ! preg_match('/^\d+$/', $accountId)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ChatworkアカウントIDは数字で入力してください',
+            ], 422);
+        }
+
+        if ($employeeNumber === '') {
+            return response()->json([
+                'success' => false,
+                'message' => '社員番号を入力してください',
+            ], 422);
+        }
 
         $duplicateQuery = ChatworkMember::query()->where('member_name', $memberName);
         if ($id > 0) {
@@ -87,10 +103,23 @@ class ChatworkMemberController extends Controller
             ], 400);
         }
 
+        $numberQuery = ChatworkMember::query()->where('employee_number', $employeeNumber);
+        if ($id > 0) {
+            $numberQuery->where('id', '!=', $id);
+        }
+
+        if ($numberQuery->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => '同じ社員番号が既に登録されています',
+            ], 400);
+        }
+
         if ($id > 0) {
             $member = ChatworkMember::query()->findOrFail($id);
             $member->update([
                 'member_name' => $memberName,
+                'employee_number' => $employeeNumber,
                 'chatwork_account_id' => $accountId,
                 'note' => $note !== '' ? $note : null,
                 'sort_order' => $sortOrder,
@@ -102,6 +131,7 @@ class ChatworkMemberController extends Controller
 
             $member = ChatworkMember::query()->create([
                 'member_name' => $memberName,
+                'employee_number' => $employeeNumber,
                 'chatwork_account_id' => $accountId,
                 'note' => $note !== '' ? $note : null,
                 'sort_order' => $sortOrder,

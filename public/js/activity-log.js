@@ -24,6 +24,14 @@
         comment_added: { icon: 'fa-comment', label: 'コメント' },
         comment_edited: { icon: 'fa-comment-dots', label: '編集' },
         comment_deleted: { icon: 'fa-comment-slash', label: '削除' },
+        ball_thrown: { icon: 'fa-paper-plane', label: 'ボール' },
+        ball_done: { icon: 'fa-check', label: 'できた' },
+        ball_reopened: { icon: 'fa-undo', label: '戻した' },
+        ball_due_changed: { icon: 'fa-calendar-alt', label: '期限' },
+        subject_created: { icon: 'fa-tag', label: '対象' },
+        subject_renamed: { icon: 'fa-tag', label: '対象' },
+        subject_changed: { icon: 'fa-tag', label: '対象' },
+        subject_deleted: { icon: 'fa-tag', label: '対象' },
     };
 
     function getLastAuthor() {
@@ -148,14 +156,17 @@
             if (log.project_id) {
                 item.classList.add('is-clickable');
                 item.addEventListener('click', () => {
-                    const target = document.querySelector(`.project-card[data-project-id="${log.project_id}"], .child-project[data-project-id="${log.project_id}"]`);
+                    const target = document.querySelector(`.topic-row[data-project-id="${log.project_id}"], .project-card[data-project-id="${log.project_id}"]`);
 
-                    if (target) {
+                    if (target && document.body.contains(target) && target.classList.contains('topic-row')) {
                         closePanel();
                         target.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         target.classList.add('activity-log-highlight');
                         setTimeout(() => target.classList.remove('activity-log-highlight'), 1600);
+                        return;
                     }
+
+                    window.location.href = appUrl(`/projects/${log.project_id}`);
                 });
             }
 

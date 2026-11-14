@@ -106,9 +106,16 @@ document.addEventListener('DOMContentLoaded', () => {
     authForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
+        const employeeInput = document.getElementById('employeeNumber');
         const passwordInput = document.getElementById('password');
         const authMessage = document.getElementById('authMessage');
-        const password = passwordInput.value.trim();
+        const employeeNumber = employeeInput ? employeeInput.value.trim() : '';
+        const password = passwordInput.value;
+
+        if (!employeeNumber) {
+            authMessage.textContent = '社員番号を入力してください';
+            return;
+        }
 
         if (!password) {
             authMessage.textContent = 'パスワードを入力してください';
@@ -116,6 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const formData = new FormData();
+        formData.append('employee_number', employeeNumber);
         formData.append('password', password);
 
         try {
@@ -140,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            authMessage.textContent = data.message || 'パスワードが正しくありません';
+            authMessage.textContent = data.message || '社員番号かパスワードが違います';
         } catch (error) {
             authMessage.textContent = '認証中にエラーが発生しました';
         }

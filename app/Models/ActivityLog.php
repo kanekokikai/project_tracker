@@ -34,6 +34,22 @@ class ActivityLog extends Model
 
     public const TYPE_COMMENT_DELETED = 'comment_deleted';
 
+    public const TYPE_BALL_THROWN = 'ball_thrown';
+
+    public const TYPE_BALL_DONE = 'ball_done';
+
+    public const TYPE_BALL_REOPENED = 'ball_reopened';
+
+    public const TYPE_BALL_DUE_CHANGED = 'ball_due_changed';
+
+    public const TYPE_SUBJECT_CREATED = 'subject_created';
+
+    public const TYPE_SUBJECT_RENAMED = 'subject_renamed';
+
+    public const TYPE_SUBJECT_DELETED = 'subject_deleted';
+
+    public const TYPE_SUBJECT_CHANGED = 'subject_changed';
+
     protected $fillable = [
         'event_type',
         'author',

@@ -10,8 +10,12 @@ class EnsureAppAuthenticated
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->session()->get('app_authenticated') === true) {
+        if ($request->session()->get('app_authenticated') === true && $request->session()->get('auth_member_id')) {
             return $next($request);
+        }
+
+        if ($request->session()->get('app_authenticated') === true) {
+            $request->session()->forget(['app_authenticated', 'auth_time']);
         }
 
         if ($request->expectsJson()) {

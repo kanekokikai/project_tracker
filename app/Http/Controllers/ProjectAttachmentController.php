@@ -6,16 +6,16 @@ use App\Models\ActivityLog;
 use App\Models\Project;
 use App\Models\ProjectAttachment;
 use App\Services\ActivityLogger;
+use App\Support\CurrentMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectAttachmentController extends Controller
 {
-    private const MAX_FILE_SIZE = 10 * 1024 * 1024;
-
     public function __construct(private ActivityLogger $activityLogger) {}
 
     public function index(Project $project): JsonResponse
@@ -35,14 +35,13 @@ class ProjectAttachmentController extends Controller
     {
         $request->validate([
             'file' => ['required', 'file', 'max:10240'],
-            'author' => ['nullable', 'string', 'max:100'],
         ], [
             'file.required' => 'ファイルを選択してください',
             'file.max' => 'ファイルサイズは10MB以下である必要があります',
         ]);
 
         $file = $request->file('file');
-        $author = $request->input('author', '不明');
+        $author = CurrentMember::name();
 
         if (! $file || ! $file->isValid()) {
             return response()->json([
@@ -93,10 +92,11 @@ class ProjectAttachmentController extends Controller
             });
         } catch (\Throwable $exception) {
             File::delete($storedPath);
+            Log::error('Attachment save failed', ['message' => $exception->getMessage()]);
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'データベースエラー: '.$exception->getMessage(),
+                'message' => 'ファイルの保存に失敗しました',
             ], 500);
         }
 
@@ -104,6 +104,9 @@ class ProjectAttachmentController extends Controller
             'status' => 'success',
             'message' => 'ファイルがアップロードされました',
             'data' => $this->formatAttachment($attachment),
+            'html' => view('projects.partials.log-attachment', [
+                'attachment' => $attachment,
+            ])->render(),
         ]);
     }
 
@@ -122,24 +125,21 @@ class ProjectAttachmentController extends Controller
 
         return response()->file($filePath, [
             'Content-Type' => $attachment->file_type ?: 'application/octet-stream',
-            'Content-Disposition' => $disposition.'; filename="'.addslashes($attachment->original_file_name).'"',
-        ]);
+            'Cache-Control' => 'private, max-age=86400',
+        ])->setContentDisposition($disposition, (string) $attachment->original_file_name);
     }
 
-    public function destroy(Request $request, ProjectAttachment $attachment): JsonResponse
+    public function destroy(ProjectAttachment $attachment): JsonResponse
     {
-        $validated = $request->validate([
-            'author' => ['nullable', 'string', 'max:100'],
-        ]);
-
         $filePath = $this->filePath($attachment);
         $originalName = $attachment->original_file_name;
         $project = $attachment->project;
+        $author = CurrentMember::name();
 
-        DB::transaction(function () use ($attachment, $filePath, $validated, $originalName, $project) {
+        DB::transaction(function () use ($attachment, $filePath, $originalName, $project, $author) {
             $this->activityLogger->record(
                 ActivityLog::TYPE_ATTACHMENT_REMOVED,
-                $validated['author'] ?? '不明',
+                $author,
                 "資料「{$originalName}」を削除",
                 $project,
             );

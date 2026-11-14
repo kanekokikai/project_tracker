@@ -34,22 +34,13 @@ function initSidebar() {
     function generateProjectList() {
         projectNav.innerHTML = '';
 
-        document.querySelectorAll('.parent-project').forEach((project) => {
-            if (project.style.display === 'none') {
-                return;
-            }
+        const sources = document.querySelectorAll('.sidebar-source li');
 
-            const projectTitle = project.querySelector(':scope > .project-header .project-name');
-            if (!projectTitle) {
-                return;
-            }
-
-            const nameNode = Array.from(projectTitle.childNodes).find(
-                (node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== ''
-            );
-            const projectName = (nameNode?.textContent || projectTitle.textContent || '').trim();
-            const projectId = project.dataset.projectId;
-            const projectStatus = project.dataset.status || '';
+        sources.forEach((source) => {
+            const projectName = (source.textContent || '').trim();
+            const projectId = source.dataset.projectId;
+            const projectStatus = source.dataset.status || '';
+            const href = source.dataset.href || '';
 
             if (!projectId || !projectName) {
                 return;
@@ -66,6 +57,11 @@ function initSidebar() {
             listItem.querySelector('.project-nav-name').textContent = projectName;
 
             listItem.addEventListener('click', () => {
+                if (href) {
+                    window.location.href = href;
+                    return;
+                }
+
                 const targetProject = document.querySelector(`.project-card[data-project-id="${projectId}"]`);
                 if (!targetProject) {
                     return;
@@ -79,16 +75,6 @@ function initSidebar() {
                 if (!sidebar.classList.contains('pinned')) {
                     closeSidebar();
                 }
-
-                document.querySelectorAll('.project-nav-item').forEach((item) => {
-                    item.classList.remove('active');
-                });
-                listItem.classList.add('active');
-
-                targetProject.classList.add('highlight-project');
-                setTimeout(() => {
-                    targetProject.classList.remove('highlight-project');
-                }, 2000);
             });
 
             projectNav.appendChild(listItem);
@@ -162,10 +148,6 @@ function navigateToProjectFromUrl() {
         const top = targetProject.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
 
         window.scrollTo({ top, behavior: 'smooth' });
-
-        if (typeof expandChildProjectHistory === 'function') {
-            expandChildProjectHistory(projectId);
-        }
 
         targetProject.classList.add('highlight-project');
         setTimeout(() => {

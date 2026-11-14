@@ -1,14 +1,13 @@
 @extends('layouts.app')
 
-@section('title', 'Chatwork TO設定')
-@section('header_title', 'Chatwork TO設定')
+@section('title', '社員管理')
 
 @section('content')
 <div class="admin-page">
     <div class="admin-header">
         <div>
-            <h1>TO対象メンバーの管理</h1>
-            <p>プロジェクトのチームメンバー名と、ChatworkのアカウントIDの対応を編集します。</p>
+            <h1>社員管理</h1>
+            <p>社員番号、名前、ChatworkアカウントID、メモを編集します。パスワードの初期値は社員番号です。社員番号はこの画面以外には出しません。</p>
         </div>
         <div class="admin-actions">
             <button type="button" class="btn" id="fetchRoomMembersBtn">
@@ -23,12 +22,16 @@
         <h2>メンバーを追加</h2>
         <form id="addMemberForm" class="member-form-grid">
             <div class="form-group">
-                <label for="newMemberName">システム上の名前</label>
+                <label for="newMemberName">名前</label>
                 <input type="text" id="newMemberName" class="form-control" placeholder="例: 堀内" required>
             </div>
             <div class="form-group">
+                <label for="newEmployeeNumber">社員番号</label>
+                <input type="text" id="newEmployeeNumber" class="form-control" placeholder="例: 2019" required>
+            </div>
+            <div class="form-group">
                 <label for="newAccountId">ChatworkアカウントID</label>
-                <input type="text" id="newAccountId" class="form-control" placeholder="例: 1406764" pattern="\d+" required>
+                <input type="text" id="newAccountId" class="form-control" placeholder="例: 1406764" pattern="\d*">
             </div>
             <div class="form-group">
                 <label for="newNote">メモ（任意）</label>
@@ -38,7 +41,7 @@
                 <button type="submit" class="btn btn-primary">追加</button>
             </div>
         </form>
-        <p class="help-text">チームメンバーに入力する名前と一致させる必要があります。通知時に <code>[To:アカウントID]</code> が付きます。</p>
+        <p class="help-text">名前はボールの宛先に使います。通知時に <code>[To:アカウントID]</code> が付きます。パスワードの初期値は、ここに出した社員番号です。</p>
     </div>
 
     <div class="admin-card" id="roomMembersCard" style="display:none;">
@@ -53,14 +56,15 @@
             <table class="members-table">
                 <thead>
                     <tr>
-                        <th style="width:24%">システム上の名前</th>
-                        <th style="width:24%">ChatworkアカウントID</th>
-                        <th class="hide-mobile" style="width:28%">メモ</th>
-                        <th style="width:24%">操作</th>
+                        <th style="width:18%">名前</th>
+                        <th style="width:16%">社員番号</th>
+                        <th style="width:22%">ChatworkアカウントID</th>
+                        <th class="hide-mobile" style="width:22%">メモ</th>
+                        <th style="width:22%">操作</th>
                     </tr>
                 </thead>
                 <tbody id="membersTableBody">
-                    <tr><td colspan="4" class="empty-state">読み込み中...</td></tr>
+                    <tr><td colspan="5" class="empty-state">読み込み中...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -122,14 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.getElementById('membersTableBody');
 
         if (!members.length) {
-            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">メンバーが登録されていません</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" class="empty-state">メンバーが登録されていません</td></tr>';
             return;
         }
 
         tbody.innerHTML = members.map((member) => `
             <tr data-id="${member.id}">
                 <td><input type="text" class="field-name" value="${escapeHtml(member.member_name)}"></td>
-                <td><input type="text" class="field-account" value="${escapeHtml(member.chatwork_account_id)}" pattern="\\d+"></td>
+                <td><input type="text" class="field-number" value="${escapeHtml(member.employee_number || '')}"></td>
+                <td><input type="text" class="field-account" value="${escapeHtml(member.chatwork_account_id)}" pattern="\\d*"></td>
                 <td class="hide-mobile"><input type="text" class="field-note" value="${escapeHtml(member.note || '')}"></td>
                 <td>
                     <div class="row-actions">
@@ -155,6 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 body: {
                     member_name: document.getElementById('newMemberName').value.trim(),
+                    employee_number: document.getElementById('newEmployeeNumber').value.trim(),
                     chatwork_account_id: document.getElementById('newAccountId').value.trim(),
                     note: document.getElementById('newNote').value.trim(),
                 },
@@ -183,6 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: {
                         id,
                         member_name: row.querySelector('.field-name').value.trim(),
+                        employee_number: row.querySelector('.field-number').value.trim(),
                         chatwork_account_id: row.querySelector('.field-account').value.trim(),
                         note: row.querySelector('.field-note')?.value.trim() || '',
                     },

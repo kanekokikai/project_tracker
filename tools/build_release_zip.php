@@ -86,6 +86,9 @@ foreach ($iterator as $file) {
     if (str_starts_with($rel, 'uploads/')) {
         continue;
     }
+    if (preg_match('#^storage/(logs|framework/sessions|framework/views|framework/cache/data)/#', $rel) && basename($rel) !== '.gitignore') {
+        continue;
+    }
     if (str_ends_with($rel, '.sql') || str_ends_with($rel, '.md')) {
         continue;
     }

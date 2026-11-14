@@ -24,4 +24,23 @@ class ProjectAttachment extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function isPreviewImage(): bool
+    {
+        $type = strtolower((string) $this->file_type);
+        $extension = strtolower(pathinfo((string) $this->original_file_name, PATHINFO_EXTENSION));
+
+        return in_array($type, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], true)
+            || in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+    }
+
+    public function opensInBrowser(): bool
+    {
+        $type = strtolower((string) $this->file_type);
+        $extension = strtolower(pathinfo((string) $this->original_file_name, PATHINFO_EXTENSION));
+
+        return $this->isPreviewImage()
+            || $type === 'application/pdf'
+            || $extension === 'pdf';
+    }
 }

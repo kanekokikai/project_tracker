@@ -9,6 +9,7 @@ class ChatworkMember extends Model
     protected $fillable = [
         'member_name',
         'chatwork_account_id',
+        'employee_number',
         'note',
         'sort_order',
     ];
@@ -29,6 +30,7 @@ class ChatworkMember extends Model
             }
 
             return $rows
+                ->filter(fn (self $row) => trim((string) $row->chatwork_account_id) !== '')
                 ->pluck('chatwork_account_id', 'member_name')
                 ->all();
         } catch (\Throwable $exception) {

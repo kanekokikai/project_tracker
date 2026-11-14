@@ -14,24 +14,32 @@
     <link rel="stylesheet" href="{{ asset('css/style.css') }}?v={{ filemtime(public_path('css/style.css')) }}">
     @stack('styles')
 </head>
-<body class="{{ $isAuthenticated ? 'is-authenticated' : 'is-guest' }} {{ !empty($hideSidebar) ? 'no-sidebar' : '' }}">
-    @unless (!empty($hideSidebar))
+@php
+    $showSidebar = request()->routeIs('projects.show');
+@endphp
+<body class="{{ $isAuthenticated ? 'is-authenticated' : 'is-guest' }} {{ $showSidebar ? '' : 'no-sidebar' }}">
+    @if ($showSidebar)
         <aside class="sidebar" aria-label="プロジェクト一覧">
             <div class="sidebar-header">
                 <div class="sidebar-header-title">
                     <i class="fas fa-folder-open" aria-hidden="true"></i>
-                    <h2>プロジェクト</h2>
+                    <h2>議題</h2>
                 </div>
                 <button type="button" class="sidebar-pin" title="サイドバーを固定" aria-label="サイドバーを固定">
                     <i class="fas fa-thumbtack" aria-hidden="true"></i>
                 </button>
             </div>
             <div class="sidebar-content">
+                <ul class="sidebar-source" hidden>
+                    @foreach ($sidebarTopics ?? [] as $topic)
+                        <li data-project-id="{{ $topic->id }}" data-status="{{ $topic->status }}" data-href="{{ route('projects.show', $topic) }}">{{ $topic->name }}</li>
+                    @endforeach
+                </ul>
                 <ul class="project-nav"></ul>
             </div>
         </aside>
         <div class="sidebar-overlay"></div>
-    @endunless
+    @endif
 
     @unless (!empty($hideSidebar))
         <aside class="activity-log-panel" id="activityLogPanel" aria-label="ログ" aria-hidden="true">
@@ -52,39 +60,55 @@
     @endunless
 
     <header class="header">
-        @unless (!empty($hideSidebar))
-            <button type="button" class="sidebar-toggle" aria-label="プロジェクト一覧を開く" title="プロジェクト一覧" aria-expanded="false">
+        @if ($showSidebar)
+            <button type="button" class="sidebar-toggle" aria-label="議題一覧を開く" title="議題一覧" aria-expanded="false">
                 <span class="sidebar-toggle-icon" aria-hidden="true">
                     <i class="fas fa-bars"></i>
                 </span>
             </button>
-        @endunless
+        @endif
 
         <div class="header-content">
-            <h1>
-                <img src="{{ asset('images/logo.png') }}" alt="ロゴ" class="app-logo">
-                <span class="app-brand">
-                    <span class="app-brand-name">@yield('header_title', 'プロジェクト管理')</span>
-                    <span class="app-brand-sub">@yield('header_subtitle', 'Project Tracker')</span>
-                </span>
-            </h1>
-            <nav class="header-actions" aria-label="アカウント">
+            <a href="{{ route('projects.index') }}" class="header-logo" aria-label="ホーム">
+                <img src="{{ asset('images/logo.png') }}" alt="" class="app-logo">
+            </a>
+
+            <nav class="header-nav" aria-label="メインメニュー">
+                <a href="{{ route('projects.index') }}" class="header-nav-link {{ request()->routeIs('projects.index', 'projects.show') ? 'is-current' : '' }}" @if(request()->routeIs('projects.index', 'projects.show')) aria-current="page" @endif>
+                    <i class="fas fa-home" aria-hidden="true"></i>
+                    <span>ホーム</span>
+                </a>
+                <a href="{{ route('subjects.index') }}" class="header-nav-link {{ request()->routeIs('subjects.*') ? 'is-current' : '' }}" @if(request()->routeIs('subjects.*')) aria-current="page" @endif>
+                    <i class="fas fa-layer-group" aria-hidden="true"></i>
+                    <span>対象</span>
+                </a>
+                <a href="{{ route('chatwork.index') }}" class="header-nav-link {{ request()->routeIs('chatwork.*') ? 'is-current' : '' }}" @if(request()->routeIs('chatwork.*')) aria-current="page" @endif>
+                    <i class="fas fa-user-friends" aria-hidden="true"></i>
+                    <span>社員管理</span>
+                </a>
+            </nav>
+
+            <div class="header-account">
+                @if (!empty($currentMemberName))
+                    <span class="header-member">
+                        <span class="header-member-mark" aria-hidden="true">{{ mb_substr($currentMemberName, 0, 1) }}</span>
+                        <span class="header-member-name">{{ $currentMemberName }}</span>
+                    </span>
+                @endif
                 @unless (!empty($hideSidebar))
                     <button type="button" class="activity-log-toggle" id="activityLogToggle" aria-label="ログを開く" title="ログ" aria-expanded="false" aria-controls="activityLogPanel">
                         <i class="fas fa-stream" aria-hidden="true"></i>
                         <span class="activity-log-toggle-label">ログ</span>
                     </button>
                 @endunless
-                @if (!empty($isChatworkAdmin))
-                    <a href="{{ route('projects.index') }}" class="header-nav-link">一覧へ戻る</a>
-                @else
-                    <a href="{{ route('chatwork.index') }}" class="header-nav-link" title="Chatwork TO設定">TO設定</a>
-                @endif
                 <form method="POST" action="{{ route('logout') }}" class="logout-form">
                     @csrf
-                    <button type="submit" class="logout-link">ログアウト</button>
+                    <button type="submit" class="logout-link">
+                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+                        <span>ログアウト</span>
+                    </button>
                 </form>
-            </nav>
+            </div>
         </div>
     </header>
 
@@ -101,11 +125,24 @@
     </button>
 
     <script src="{{ asset('js/auth.js') }}?v={{ filemtime(public_path('js/auth.js')) }}"></script>
-    @unless (!empty($hideSidebar))
+    @if ($showSidebar)
         <script src="{{ asset('js/sidebar.js') }}?v={{ filemtime(public_path('js/sidebar.js')) }}"></script>
+    @endif
+    @unless (!empty($hideSidebar))
         <script src="{{ asset('js/activity-log.js') }}?v={{ filemtime(public_path('js/activity-log.js')) }}"></script>
     @endunless
     <script src="{{ asset('js/back-to-top.js') }}?v={{ filemtime(public_path('js/back-to-top.js')) }}"></script>
+    <script>
+        window.currentMemberName = @json($currentMemberName ?? '');
+        if (window.currentMemberName) {
+            try {
+                localStorage.setItem('projectTrackerLastAuthor', window.currentMemberName);
+            } catch (error) {}
+            if (typeof window.setLastAuthor === 'function') {
+                window.setLastAuthor(window.currentMemberName);
+            }
+        }
+    </script>
     @stack('scripts')
 </body>
 </html>

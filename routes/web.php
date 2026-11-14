@@ -4,11 +4,15 @@ use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ChatworkMemberController;
 use App\Http\Controllers\ProjectAttachmentController;
+use App\Http\Controllers\ProjectBallController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectHistoryController;
+use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/comment-hits', [ProjectController::class, 'commentHits'])->name('projects.comment-hits');
+Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
 Route::get('/chatwork', [ChatworkMemberController::class, 'index'])->name('chatwork.index');
 
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -19,10 +23,16 @@ Route::middleware('app.auth')->group(function () {
 
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::post('/projects/sub', [ProjectController::class, 'storeSubProject'])->name('projects.store-sub');
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::post('/projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
+    Route::post('/projects/{project}/balls', [ProjectBallController::class, 'store'])->name('projects.balls.store');
+    Route::post('/balls/{ball}/done', [ProjectBallController::class, 'done'])->name('balls.done');
+    Route::post('/balls/{ball}/extend', [ProjectBallController::class, 'extend'])->name('balls.extend');
+
+    Route::post('/subjects', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::put('/subjects/{subject}', [SubjectController::class, 'update'])->name('subjects.update');
+    Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
 
     Route::get('/projects/{project}/attachments', [ProjectAttachmentController::class, 'index'])->name('projects.attachments.index');
     Route::post('/projects/{project}/attachments', [ProjectAttachmentController::class, 'store'])->name('projects.attachments.store');
@@ -32,6 +42,7 @@ Route::middleware('app.auth')->group(function () {
     Route::get('/histories/{history}', [ProjectHistoryController::class, 'show'])->name('histories.show');
     Route::post('/histories', [ProjectHistoryController::class, 'store'])->name('histories.store');
     Route::put('/histories/{history}', [ProjectHistoryController::class, 'update'])->name('histories.update');
+    Route::post('/histories/{history}/reopen-ball', [ProjectHistoryController::class, 'reopen'])->name('histories.reopen-ball');
     Route::delete('/histories/{history}', [ProjectHistoryController::class, 'destroy'])->name('histories.destroy');
 
     Route::get('/chatwork/members', [ChatworkMemberController::class, 'list'])->name('chatwork.members.list');

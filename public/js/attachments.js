@@ -23,18 +23,35 @@ document.addEventListener('DOMContentLoaded', () => {
         openAttachmentModal(actionTarget.dataset.projectId);
     });
 
-    function updateAttachmentIcon(projectId, hasAttachments) {
-        const iconSpan = document.querySelector(`.attachment-icon[data-project-id="${projectId}"]`);
+    function appendRoomAttachment(html) {
+        const chat = document.querySelector('.room-page .line-chat');
 
-        if (!iconSpan) {
+        if (!html || !chat || typeof ensureRoomLog !== 'function' || typeof syncRoomLatest !== 'function') {
             return;
         }
 
-        if (hasAttachments) {
-            iconSpan.classList.add('has-attachments');
-        } else {
-            iconSpan.classList.remove('has-attachments');
+        const log = ensureRoomLog(chat);
+        log.insertAdjacentHTML('beforeend', html);
+        syncRoomLatest(chat);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function removeRoomAttachment(attachmentId) {
+        const item = document.querySelector(`.room-page .history-item[data-attachment-id="${attachmentId}"]`);
+
+        if (!item || typeof syncRoomLatest !== 'function') {
+            return;
         }
+
+        const chat = item.closest('.line-chat');
+        item.remove();
+        syncRoomLatest(chat);
+    }
+
+    function updateAttachmentIcon(projectId, hasAttachments) {
+        document.querySelectorAll(`.attachment-icon[data-project-id="${projectId}"]`).forEach((iconSpan) => {
+            iconSpan.classList.toggle('has-attachments', hasAttachments);
+        });
     }
 
     function openAttachmentModal(projectId) {
@@ -230,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                     updateAttachmentIcon(projectId, attachmentsList.children.length > 0);
+                    removeRoomAttachment(attachmentId);
                 } else {
                     alert('削除に失敗しました: ' + (response.message || '不明なエラー'));
                 }
@@ -351,6 +369,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     delete attachmentsCache[projectId];
                     loadAttachments(projectId);
                     updateAttachmentIcon(projectId, true);
+                    appendRoomAttachment(response.html);
                 } else {
                     uploadMessage.innerHTML = `<span class="upload-error">エラー: ${escapeHtml(response.message || '不明なエラー')}</span>`;
                 }
