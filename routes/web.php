@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BallCalendarController;
 use App\Http\Controllers\ChatworkMemberController;
 use App\Http\Controllers\ProjectAttachmentController;
 use App\Http\Controllers\ProjectBallController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\SubjectController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/ball-calendar', [BallCalendarController::class, 'index'])->name('balls.calendar');
 Route::get('/comment-hits', [ProjectController::class, 'commentHits'])->name('projects.comment-hits');
 Route::get('/subjects', [SubjectController::class, 'index'])->name('subjects.index');
 Route::get('/chatwork', [ChatworkMemberController::class, 'index'])->name('chatwork.index');

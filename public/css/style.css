@@ -6016,3 +6016,556 @@ body:has(.home-page) {
   display: none;
 }
 
+#addProjectModal.topic-modal,
+#editProjectModal.topic-modal {
+  background-color: rgba(29, 29, 31, 0.38);
+}
+
+#addProjectModal .topic-dialog,
+#editProjectModal .topic-dialog {
+  width: 100% !important;
+  max-width: 440px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 1.05rem 1.15rem 1rem !important;
+  border: 1px solid rgba(210, 210, 215, 0.8);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
+}
+
+#addProjectModal.is-open .topic-dialog,
+#editProjectModal.is-open .topic-dialog {
+  animation: topic-dialog-in 0.18s ease;
+}
+
+@keyframes topic-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.topic-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.topic-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.topic-dialog-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
+.topic-dialog h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--apple-dark);
+}
+
+.topic-dialog-title p {
+  margin: 0.1rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--apple-secondary);
+  line-height: 1.35;
+}
+
+.topic-dialog-close {
+  width: 30px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #f5f5f7;
+  color: var(--apple-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.topic-dialog-close:hover {
+  background: #e8e8ed;
+  color: var(--apple-dark);
+}
+
+.topic-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.topic-dialog .form-group {
+  margin: 0;
+}
+
+.topic-dialog label {
+  margin: 0 0 0.32rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--apple-secondary);
+}
+
+#addProjectModal .topic-dialog input[type="text"].form-control,
+#editProjectModal .topic-dialog input[type="text"].form-control,
+#addProjectModal .topic-dialog select.form-control,
+#editProjectModal .topic-dialog select.form-control {
+  display: block;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: 40px;
+  margin: 0 !important;
+  padding: 0 0.85rem !important;
+  border: none;
+  border-radius: 10px;
+  background-color: #f5f5f7;
+  background-image: none;
+  box-shadow: none;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 40px;
+  color: var(--apple-dark);
+  text-align: left !important;
+  text-indent: 0 !important;
+  appearance: none;
+  outline: none;
+  transform: none;
+}
+
+#addProjectModal .topic-dialog select.form-control,
+#editProjectModal .topic-dialog select.form-control {
+  padding-right: 2rem !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2386868b' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+
+#addProjectModal .topic-dialog input[type="text"].form-control::placeholder,
+#editProjectModal .topic-dialog input[type="text"].form-control::placeholder {
+  color: #aeaeb2;
+  font-weight: 450;
+}
+
+#addProjectModal .topic-dialog input[type="text"].form-control:focus,
+#editProjectModal .topic-dialog input[type="text"].form-control:focus,
+#addProjectModal .topic-dialog select.form-control:focus,
+#editProjectModal .topic-dialog select.form-control:focus {
+  background-color: #fff;
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.28);
+}
+
+.topic-dialog .team-member-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  min-height: 0;
+  margin: 0 0 0.45rem;
+}
+
+.topic-dialog .team-member-tags:empty {
+  display: none;
+  margin: 0;
+}
+
+.topic-dialog .team-member-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  height: 28px;
+  margin: 0;
+  padding: 0 0.2rem 0 0.65rem;
+  border-radius: 8px;
+  background: rgba(0, 113, 227, 0.12);
+  color: var(--apple-primary);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.topic-dialog .team-member-tag::after {
+  content: none;
+}
+
+.topic-dialog .team-member-tag .delete-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--apple-primary);
+  font-family: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.topic-dialog .team-member-tag .delete-tag:hover {
+  background: rgba(0, 113, 227, 0.14);
+  color: var(--apple-primary);
+}
+
+.topic-dialog .member-add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.topic-dialog .member-add-row .form-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.topic-add,
+.topic-submit,
+.topic-cancel {
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.topic-add,
+.topic-submit {
+  border: none;
+  background: var(--apple-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.topic-add {
+  height: 40px;
+  padding: 0 0.9rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  flex-shrink: 0;
+}
+
+.topic-add:hover,
+.topic-submit:hover {
+  background: #005fc4;
+}
+
+.topic-dialog .subject-picker-menu {
+  top: calc(100% + 6px);
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.14);
+}
+
+.topic-dialog .subject-picker-option,
+.topic-dialog .subject-picker-create {
+  padding: 0.55rem 0.8rem;
+  font-size: 0.86rem;
+}
+
+.topic-dialog .subject-picker-create {
+  font-weight: 700;
+}
+
+.topic-dialog .subject-picker-status {
+  margin: 0.35rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.topic-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
+}
+
+.topic-cancel {
+  height: 36px;
+  padding: 0 0.85rem;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--apple-secondary);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.topic-cancel:hover {
+  background: #f5f5f7;
+  color: var(--apple-dark);
+}
+
+.topic-submit {
+  height: 36px;
+  padding: 0 1.05rem;
+  border-radius: 10px;
+  font-size: 0.84rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #addProjectModal.is-open .topic-dialog,
+  #editProjectModal.is-open .topic-dialog {
+    animation: none;
+  }
+}
+
+.main-content:has(.ball-calendar-page) {
+  max-width: none;
+  padding: 0.7rem 0.75rem 0.85rem;
+}
+
+.ball-cal-empty {
+  max-width: 40rem;
+  margin: 0.4rem auto;
+  padding: 1.2rem 1.1rem;
+  border: 1px solid rgba(210, 210, 215, 0.9);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--apple-secondary);
+}
+
+.ball-cal-empty p {
+  margin: 0;
+}
+
+.ball-cal-scroll {
+  overflow: auto;
+  max-height: calc(100vh - var(--header-height) - 1.55rem);
+  background: #fff;
+  border: 1px solid rgba(210, 210, 215, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ball-cal {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 0.78rem;
+}
+
+.cal-col-who {
+  width: 11.5rem;
+}
+
+.cal-col-topic {
+  width: 16rem;
+}
+
+.cal-col-day {
+  width: 3rem;
+}
+
+.ball-cal th,
+.ball-cal td {
+  box-sizing: border-box;
+  border-right: 1px solid #e6e6eb;
+  border-bottom: 1px solid #e6e6eb;
+  background: #fff;
+}
+
+.cal-who,
+.cal-topic {
+  position: sticky;
+  z-index: 2;
+  width: 11.5rem;
+  min-width: 11.5rem;
+  max-width: 11.5rem;
+  height: 42px;
+  padding: 0 0.75rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+.cal-topic {
+  left: 11.5rem;
+  width: 16rem;
+  min-width: 16rem;
+  max-width: 16rem;
+  font-weight: 500;
+  box-shadow: 1px 0 0 #d8d8de;
+}
+
+.cal-who {
+  left: 0;
+}
+
+thead .cal-who,
+thead .cal-topic {
+  top: 0;
+  z-index: 5;
+  height: 46px;
+  background: #f6f6f8;
+  color: var(--apple-medium);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.cal-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  width: 3rem;
+  min-width: 3rem;
+  height: 46px;
+  padding: 0.28rem 0 0.2rem;
+  background: #f6f6f8;
+  color: var(--apple-medium);
+  font-weight: 600;
+  text-align: center;
+  vertical-align: middle;
+  line-height: 1.15;
+}
+
+.cal-md,
+.cal-wd {
+  display: block;
+}
+
+.cal-md {
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.cal-wd {
+  margin-top: 1px;
+  color: var(--apple-secondary);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.cal-head.is-weekend,
+.cal-day.is-weekend {
+  background: #f3f3f5;
+}
+
+.cal-head.is-today,
+.cal-day.is-today {
+  background: #e7f2fc;
+}
+
+.cal-head.is-today .cal-md,
+.cal-head.is-today .cal-wd {
+  color: var(--apple-primary);
+}
+
+.cal-head.is-month,
+.cal-day.is-month {
+  box-shadow: inset 1px 0 0 #c8c8cf;
+}
+
+.cal-day {
+  width: 3rem;
+  min-width: 3rem;
+  height: 42px;
+  padding: 0;
+}
+
+.cal-row {
+  cursor: pointer;
+}
+
+.cal-row:hover .cal-who,
+.cal-row:hover .cal-topic,
+.cal-row:focus .cal-who,
+.cal-row:focus .cal-topic {
+  background: #f4f8fc;
+}
+
+.cal-row:hover .cal-day:not(.is-today):not(.is-weekend),
+.cal-row:focus .cal-day:not(.is-today):not(.is-weekend) {
+  background: #f8fbfe;
+}
+
+.cal-row:focus {
+  outline: none;
+}
+
+.cal-row:focus .cal-who {
+  box-shadow: inset 3px 0 0 var(--apple-primary);
+}
+
+.cal-topic a {
+  display: block;
+  overflow: hidden;
+  color: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.cal-row:hover .cal-topic a,
+.cal-row:focus .cal-topic a {
+  color: var(--apple-primary);
+}
+
+.cal-bar-cell {
+  position: relative;
+  height: 42px;
+  padding: 0;
+  background: #fff;
+}
+
+.cal-bar {
+  position: absolute;
+  top: 6px;
+  right: 3px;
+  bottom: 6px;
+  left: 3px;
+  padding: 0 0.45rem;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #2ad8f5;
+  color: #07343c;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 30px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+tbody .cal-who,
+tbody .cal-topic {
+  background: #fff;
+}
+

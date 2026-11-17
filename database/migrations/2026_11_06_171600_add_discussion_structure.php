@@ -240,8 +240,19 @@ return new class extends Migration
             return;
         }
 
-        Schema::table('projects', function (Blueprint $table) {
-            $table->dropForeign(['parent_id']);
+        $foreignKeys = DB::select(
+            "SELECT CONSTRAINT_NAME AS name
+             FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'projects'
+               AND COLUMN_NAME = 'parent_id'
+               AND REFERENCED_TABLE_NAME IS NOT NULL"
+        );
+
+        Schema::table('projects', function (Blueprint $table) use ($foreignKeys) {
+            foreach ($foreignKeys as $foreignKey) {
+                $table->dropForeign($foreignKey->name);
+            }
             $table->dropColumn('parent_id');
         });
     }

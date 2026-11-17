@@ -78,6 +78,10 @@
                     <i class="fas fa-home" aria-hidden="true"></i>
                     <span>ホーム</span>
                 </a>
+                <a href="{{ route('balls.calendar') }}" class="header-nav-link {{ request()->routeIs('balls.calendar') ? 'is-current' : '' }}" @if(request()->routeIs('balls.calendar')) aria-current="page" @endif>
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+                    <span>ボールカレンダー</span>
+                </a>
                 <a href="{{ route('subjects.index') }}" class="header-nav-link {{ request()->routeIs('subjects.*') ? 'is-current' : '' }}" @if(request()->routeIs('subjects.*')) aria-current="page" @endif>
                     <i class="fas fa-layer-group" aria-hidden="true"></i>
                     <span>対象</span>

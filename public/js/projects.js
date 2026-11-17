@@ -719,17 +719,23 @@ function renderTeamMemberTags(tagsId, hiddenInputId, members) {
     tagsContainer.innerHTML = '';
 
     members.forEach((member, index) => {
-        const tag = document.createElement('div');
+        const tag = document.createElement('span');
         tag.className = 'team-member-tag';
-        tag.innerHTML = `${member}<span class="delete-tag" data-index="${index}">×</span>`;
+        tag.append(document.createTextNode(member));
 
-        tag.querySelector('.delete-tag').addEventListener('click', () => {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'delete-tag';
+        remove.setAttribute('aria-label', `${member}を外す`);
+        remove.textContent = '×';
+        remove.addEventListener('click', () => {
             const currentMembers = parseTeamMembers(hiddenInput.value);
             currentMembers.splice(index, 1);
             hiddenInput.value = JSON.stringify(currentMembers);
             renderTeamMemberTags(tagsId, hiddenInputId, currentMembers);
         });
 
+        tag.append(remove);
         tagsContainer.appendChild(tag);
     });
 }
