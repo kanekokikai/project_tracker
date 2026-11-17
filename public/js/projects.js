@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const addProjectForm = document.getElementById('addProjectForm');
     const editProjectForm = document.getElementById('editProjectForm');
 
-    setupTeamMemberInput('teamMemberInput', 'teamMemberTags', 'teamMembers', 'teamMemberAddBtn');
-    setupTeamMemberInput('editTeamMemberInput', 'editTeamMemberTags', 'editTeamMembers', 'editTeamMemberAddBtn');
+    setupMemberPicker('teamMemberPicker', 'teamMembers');
+    setupMemberPicker('editTeamMemberPicker', 'editTeamMembers');
     setupSubjectPickers();
 
     if (departmentFilter) {
@@ -568,30 +568,20 @@ function closeModal(modalId) {
 
 function openAddProjectModal() {
     const form = document.getElementById('addProjectForm');
-    const teamMembers = document.getElementById('teamMembers');
-    const teamMemberTags = document.getElementById('teamMemberTags');
 
     if (form) {
         form.reset();
         form.querySelector('[data-subject-picker]')?.subjectPicker?.reset();
     }
 
-    if (teamMembers) {
-        teamMembers.value = '[]';
-    }
-
-    if (teamMemberTags) {
-        teamMemberTags.innerHTML = '';
-    }
-
+    setMemberPicker('teamMemberPicker', 'teamMembers', []);
     openModal('addProjectModal');
 }
 
 async function openEditProjectModal(projectId, projectName) {
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName || '';
-    document.getElementById('editTeamMemberTags').innerHTML = '';
-    document.getElementById('editTeamMembers').value = '[]';
+    setMemberPicker('editTeamMemberPicker', 'editTeamMembers', []);
     document.querySelector('#editProjectForm [data-subject-picker]')?.subjectPicker?.reset();
 
     openModal('editProjectModal');
@@ -615,8 +605,7 @@ async function openEditProjectModal(projectId, projectName) {
             ? response.project.team_members
             : [];
 
-        document.getElementById('editTeamMembers').value = JSON.stringify(members);
-        renderTeamMemberTags('editTeamMemberTags', 'editTeamMembers', members);
+        setMemberPicker('editTeamMemberPicker', 'editTeamMembers', members);
     } catch (error) {
         alert(error.message || '議題の情報を取得できませんでした');
     }
@@ -647,97 +636,68 @@ async function confirmDeleteProject(projectId) {
     }
 }
 
-function setupTeamMemberInput(inputId, tagsId, hiddenInputId, addButtonId) {
-    const input = document.getElementById(inputId);
-    const tagsContainer = document.getElementById(tagsId);
-    const hiddenInput = document.getElementById(hiddenInputId);
-    const addButton = addButtonId ? document.getElementById(addButtonId) : null;
+function setupMemberPicker(pickerId, hiddenInputId) {
+    const picker = document.getElementById(pickerId);
 
-    if (!input || !tagsContainer || !hiddenInput) {
+    if (!picker) {
         return;
     }
 
-    function addMemberFromInput() {
-        const value = input.value.trim();
-
-        if (!value) {
-            return;
-        }
-
-        const members = parseTeamMembers(hiddenInput.value);
-
-        if (!members.includes(value)) {
-            members.push(value);
-            hiddenInput.value = JSON.stringify(members);
-            renderTeamMemberTags(tagsId, hiddenInputId, members);
-        }
-
-        input.value = '';
-        input.focus();
-    }
-
-    if (addButton) {
-        addButton.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            addMemberFromInput();
-        });
-    }
-
-    input.addEventListener('keydown', (event) => {
-        if (event.key !== 'Enter') {
-            return;
-        }
-
-        event.preventDefault();
-        event.stopPropagation();
-        addMemberFromInput();
+    picker.addEventListener('change', () => {
+        syncMemberPicker(pickerId, hiddenInputId);
     });
 }
 
-function parseTeamMembers(value) {
-    if (!value || value === '[]') {
-        return [];
-    }
+function setMemberPicker(pickerId, hiddenInputId, members) {
+    const picker = document.getElementById(pickerId);
 
-    try {
-        const members = JSON.parse(value);
-        return Array.isArray(members) ? members : [];
-    } catch (error) {
-        return [];
-    }
-}
-
-function renderTeamMemberTags(tagsId, hiddenInputId, members) {
-    const tagsContainer = document.getElementById(tagsId);
-    const hiddenInput = document.getElementById(hiddenInputId);
-
-    if (!tagsContainer || !hiddenInput) {
+    if (!picker) {
         return;
     }
 
-    tagsContainer.innerHTML = '';
+    picker.querySelectorAll('.member-picker-extra').forEach((node) => node.remove());
 
-    members.forEach((member, index) => {
-        const tag = document.createElement('span');
-        tag.className = 'team-member-tag';
-        tag.append(document.createTextNode(member));
+    const selected = new Set(
+        (Array.isArray(members) ? members : [])
+            .filter((name) => typeof name === 'string')
+            .map((name) => name.trim())
+            .filter((name) => name !== ''),
+    );
 
-        const remove = document.createElement('button');
-        remove.type = 'button';
-        remove.className = 'delete-tag';
-        remove.setAttribute('aria-label', `${member}を外す`);
-        remove.textContent = '×';
-        remove.addEventListener('click', () => {
-            const currentMembers = parseTeamMembers(hiddenInput.value);
-            currentMembers.splice(index, 1);
-            hiddenInput.value = JSON.stringify(currentMembers);
-            renderTeamMemberTags(tagsId, hiddenInputId, currentMembers);
-        });
-
-        tag.append(remove);
-        tagsContainer.appendChild(tag);
+    picker.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+        input.checked = selected.has(input.value);
+        selected.delete(input.value);
     });
+
+    selected.forEach((name) => {
+        const label = document.createElement('label');
+        label.className = 'member-picker-option member-picker-extra';
+
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.value = name;
+        input.checked = true;
+
+        const text = document.createElement('span');
+        text.textContent = name;
+
+        label.append(input, text);
+        picker.append(label);
+    });
+
+    syncMemberPicker(pickerId, hiddenInputId);
+}
+
+function syncMemberPicker(pickerId, hiddenInputId) {
+    const picker = document.getElementById(pickerId);
+    const hidden = document.getElementById(hiddenInputId);
+
+    if (!picker || !hidden) {
+        return;
+    }
+
+    const names = [...picker.querySelectorAll('input[type="checkbox"]:checked')].map((input) => input.value);
+    hidden.value = JSON.stringify(names);
 }
 
 async function openEditHistoryModal(historyId) {

@@ -42,15 +42,10 @@
                     @endforeach
                 </select>
             </div>
-            <div class="form-group">
-                <label for="teamMemberInput">チームメンバー</label>
-                <div id="teamMemberTags" class="team-member-tags"></div>
-                <div class="member-add-row">
-                    <input type="text" id="teamMemberInput" class="form-control" placeholder="名前を入力">
-                    <button type="button" class="topic-add" id="teamMemberAddBtn">追加</button>
-                </div>
-                <input type="hidden" id="teamMembers" name="team_members" value="[]">
-            </div>
+            @include('projects.partials.member-picker', [
+                'pickerId' => 'teamMemberPicker',
+                'hiddenId' => 'teamMembers',
+            ])
             <div class="topic-dialog-actions">
                 <button type="button" class="topic-cancel" data-close-modal="addProjectModal">キャンセル</button>
                 <button type="submit" class="topic-submit">作成</button>
@@ -102,15 +97,10 @@
                     @endforeach
                 </select>
             </div>
-            <div class="form-group">
-                <label for="editTeamMemberInput">チームメンバー</label>
-                <div id="editTeamMemberTags" class="team-member-tags"></div>
-                <div class="member-add-row">
-                    <input type="text" id="editTeamMemberInput" class="form-control" placeholder="名前を入力">
-                    <button type="button" class="topic-add" id="editTeamMemberAddBtn">追加</button>
-                </div>
-                <input type="hidden" id="editTeamMembers" name="team_members" value="[]">
-            </div>
+            @include('projects.partials.member-picker', [
+                'pickerId' => 'editTeamMemberPicker',
+                'hiddenId' => 'editTeamMembers',
+            ])
             <div class="topic-dialog-actions">
                 <button type="button" class="topic-cancel" data-close-modal="editProjectModal">キャンセル</button>
                 <button type="submit" class="topic-submit">更新</button>

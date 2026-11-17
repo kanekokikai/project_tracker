@@ -10,6 +10,7 @@ use App\Models\Subject;
 use App\Services\ActivityLogger;
 use App\Support\BallDisplay;
 use App\Support\CurrentMember;
+use App\Support\MemberNames;
 use App\Support\TopicOrder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -316,7 +317,7 @@ class ProjectController extends Controller
         $updateData = [
             'name' => $validated['name'],
             'department' => $validated['department'] ?? '選択なし',
-            'team_members' => $this->parseTeamMembers($validated['team_members'] ?? '[]'),
+            'team_members' => $this->parseTeamMembers($validated['team_members'] ?? '[]', $previousMembers),
             'updated_at' => now(),
         ];
 
@@ -644,9 +645,10 @@ class ProjectController extends Controller
     }
 
     /**
+     * @param  list<string>  $alreadySaved
      * @return list<string>
      */
-    private function parseTeamMembers(?string $teamMembers): array
+    private function parseTeamMembers(?string $teamMembers, array $alreadySaved = []): array
     {
         if ($teamMembers === null || $teamMembers === '') {
             return [];
@@ -658,6 +660,6 @@ class ProjectController extends Controller
             return [];
         }
 
-        return array_values(array_filter($decoded, fn ($member) => is_string($member) && $member !== ''));
+        return MemberNames::pick($decoded, ChatworkMember::names()->all(), $alreadySaved);
     }
 }

@@ -6199,70 +6199,60 @@ body:has(.home-page) {
   box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.28);
 }
 
-.topic-dialog .team-member-tags {
+.topic-dialog .member-picker-label {
+  display: block;
+  margin: 0 0 0.32rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--apple-secondary);
+}
+
+.topic-dialog .member-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  min-height: 0;
-  margin: 0 0 0.45rem;
 }
 
-.topic-dialog .team-member-tags:empty {
-  display: none;
+.topic-dialog .member-picker-empty {
   margin: 0;
-}
-
-.topic-dialog .team-member-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  height: 28px;
-  margin: 0;
-  padding: 0 0.2rem 0 0.65rem;
-  border-radius: 8px;
-  background: rgba(0, 113, 227, 0.12);
-  color: var(--apple-primary);
+  color: var(--apple-secondary);
   font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1;
 }
 
-.topic-dialog .team-member-tag::after {
-  content: none;
-}
-
-.topic-dialog .team-member-tag .delete-tag {
+.topic-dialog .member-picker-option {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
+  height: 30px;
   margin: 0;
-  padding: 0;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--apple-primary);
-  font-family: inherit;
-  font-size: 0.9rem;
+  padding: 0 0.7rem;
+  border-radius: 8px;
+  background: #f5f5f7;
+  color: var(--apple-medium);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0;
   line-height: 1;
   cursor: pointer;
+  user-select: none;
 }
 
-.topic-dialog .team-member-tag .delete-tag:hover {
-  background: rgba(0, 113, 227, 0.14);
+.topic-dialog .member-picker-option input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.topic-dialog .member-picker-option:has(input:checked) {
+  background: rgba(0, 113, 227, 0.12);
   color: var(--apple-primary);
 }
 
-.topic-dialog .member-add-row {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.topic-dialog .member-add-row .form-control {
-  flex: 1 1 auto;
-  min-width: 0;
+.topic-dialog .member-picker-option:has(input:focus-visible) {
+  outline: 2px solid rgba(0, 113, 227, 0.45);
+  outline-offset: 1px;
 }
 
 .topic-add,

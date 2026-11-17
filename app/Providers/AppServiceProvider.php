@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\ChatworkMember;
 use App\Models\Project;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -44,6 +45,18 @@ class AppServiceProvider extends ServiceProvider
             $view->with('isAuthenticated', $authenticated);
             $view->with('currentMemberName', $authenticated ? (string) session('auth_member_name', '') : '');
             $view->with('sidebarTopics', $topics);
+        });
+
+        View::composer('projects.partials.modals', function ($view) {
+            $names = collect();
+
+            try {
+                $names = ChatworkMember::names();
+            } catch (\Throwable) {
+                $names = collect();
+            }
+
+            $view->with('employeeNames', $names);
         });
     }
 }

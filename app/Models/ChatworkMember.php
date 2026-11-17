@@ -15,6 +15,21 @@ class ChatworkMember extends Model
     ];
 
     /**
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public static function names(): \Illuminate\Support\Collection
+    {
+        return static::query()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->pluck('member_name')
+            ->map(fn ($name) => trim((string) $name))
+            ->filter(fn (string $name) => $name !== '')
+            ->unique()
+            ->values();
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function mapping(): array
