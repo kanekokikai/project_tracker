@@ -6,6 +6,7 @@ use App\Models\ActivityLog;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Services\ActivityLogger;
+use App\Services\ChatworkService;
 use App\Support\CurrentMember;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,7 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 class ProjectHistoryController extends Controller
 {
-    public function __construct(private ActivityLogger $activityLogger) {}
+    public function __construct(
+        private ActivityLogger $activityLogger,
+        private ChatworkService $chatworkService,
+    ) {}
 
     public function show(ProjectHistory $history): JsonResponse
     {
@@ -66,6 +70,12 @@ class ProjectHistoryController extends Controller
             'コメントを追加',
             $project,
         );
+
+        $chatwork = $this->chatworkService;
+
+        app()->terminating(function () use ($chatwork, $project, $author, $validated) {
+            $chatwork->notifyNewComment($project, $author, $validated['content']);
+        });
 
         return response()->json([
             'success' => true,

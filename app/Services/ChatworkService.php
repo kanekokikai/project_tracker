@@ -18,6 +18,35 @@ class ChatworkService
             && config('chatwork.room_id');
     }
 
+    public function notifyNewComment(Project $project, string $author, string $content): void
+    {
+        if (! $this->isEnabled()) {
+            return;
+        }
+
+        $project->loadMissing('subject');
+        $subjectName = trim((string) ($project->subject?->name ?? ''));
+        $fullProjectName = $subjectName !== ''
+            ? "{$subjectName} > {$project->name}"
+            : $project->name;
+        $teamMembers = array_values(array_filter(
+            is_array($project->team_members) ? $project->team_members : [],
+            fn ($member) => is_string($member) && $member !== ''
+        ));
+
+        $message = "【{$fullProjectName}】に新しいコメントが追加されました\n\n";
+        $message .= "投稿者: {$author}\n";
+        $message .= "コメント内容:\n{$content}";
+
+        $projectUrl = $this->projectUrl($project);
+
+        if ($projectUrl !== '') {
+            $message .= "\n\n▼プロジェクトを確認\n{$projectUrl}";
+        }
+
+        $this->send($teamMembers, $message);
+    }
+
     /**
      * @param  list<ProjectBall>  $balls
      */
@@ -125,6 +154,17 @@ class ChatworkService
         }
 
         return $toPrefix."\n".$message;
+    }
+
+    private function projectUrl(Project $project): string
+    {
+        $base = rtrim((string) config('chatwork.project_base_url', ''), '/');
+
+        if ($base !== '') {
+            return $base.'/projects/'.$project->id;
+        }
+
+        return route('projects.show', $project);
     }
 
     /**
