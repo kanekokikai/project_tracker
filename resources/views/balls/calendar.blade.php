@@ -10,7 +10,7 @@
         </div>
     @else
         <div class="ball-cal-scroll" data-ball-calendar>
-            <table class="ball-cal">
+            <table class="ball-cal" style="--cal-days: {{ max(count($calendar['dates']), 1) }}">
                 <colgroup>
                     <col class="cal-col-who">
                     <col class="cal-col-topic">
@@ -21,7 +21,7 @@
                 <thead>
                     <tr>
                         <th class="cal-who" scope="col">担当</th>
-                        <th class="cal-topic" scope="col">対象の議題</th>
+                        <th class="cal-topic" scope="col">会議室</th>
                         @foreach ($calendar['dates'] as $date)
                             <th @class([
                                 'cal-head',
@@ -39,8 +39,8 @@
                     @foreach ($calendar['rows'] as $row)
                         <tr class="cal-row" data-href="{{ route('projects.show', $row['project_id']) }}" tabindex="0" title="{{ $row['task'] }}">
                             <th class="cal-who" scope="row" title="{{ $row['who'] }}">{{ $row['who'] }}</th>
-                            <td class="cal-topic" title="{{ $row['project_name'] }}">
-                                <a href="{{ route('projects.show', $row['project_id']) }}">{{ $row['project_name'] }}</a>
+                            <td class="cal-topic" title="{{ $row['room'] }}">
+                                <a href="{{ route('projects.show', $row['project_id']) }}">{{ $row['room'] }}</a>
                             </td>
                             @foreach ($row['cells'] as $cell)
                                 @if ($cell['type'] === 'bar')

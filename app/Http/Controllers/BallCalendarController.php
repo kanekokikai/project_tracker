@@ -15,7 +15,7 @@ class BallCalendarController extends Controller
 
         $balls = ProjectBall::query()
             ->where('status', 'open')
-            ->with('project:id,name')
+            ->with(['project:id,name,subject_id', 'project.subject:id,name'])
             ->orderBy('id')
             ->get();
 
@@ -37,6 +37,7 @@ class BallCalendarController extends Controller
                     : $today,
                 'project_id' => $ball->project_id,
                 'project_name' => $ball->project->name,
+                'subject_name' => trim((string) ($ball->project->subject?->name ?? '')),
             ];
         }
 

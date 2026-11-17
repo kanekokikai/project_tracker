@@ -6384,23 +6384,27 @@ body:has(.home-page) {
 }
 
 .ball-cal {
+  --cal-who: 11.5rem;
+  --cal-room: 16rem;
+  --cal-day-min: 3rem;
+  --cal-days: 1;
   border-collapse: separate;
   border-spacing: 0;
-  width: max-content;
-  min-width: 100%;
+  table-layout: fixed;
+  width: max(100%, calc(var(--cal-who) + var(--cal-room) + var(--cal-days) * var(--cal-day-min)));
   font-size: 0.78rem;
 }
 
 .cal-col-who {
-  width: 11.5rem;
+  width: var(--cal-who);
 }
 
 .cal-col-topic {
-  width: 16rem;
+  width: var(--cal-room);
 }
 
 .cal-col-day {
-  width: 3rem;
+  width: calc((100% - var(--cal-who) - var(--cal-room)) / var(--cal-days));
 }
 
 .ball-cal th,
@@ -6415,9 +6419,9 @@ body:has(.home-page) {
 .cal-topic {
   position: sticky;
   z-index: 2;
-  width: 11.5rem;
-  min-width: 11.5rem;
-  max-width: 11.5rem;
+  width: var(--cal-who);
+  min-width: var(--cal-who);
+  max-width: var(--cal-who);
   height: 42px;
   padding: 0 0.75rem;
   overflow: hidden;
@@ -6429,10 +6433,10 @@ body:has(.home-page) {
 }
 
 .cal-topic {
-  left: 11.5rem;
-  width: 16rem;
-  min-width: 16rem;
-  max-width: 16rem;
+  left: var(--cal-who);
+  width: var(--cal-room);
+  min-width: var(--cal-room);
+  max-width: var(--cal-room);
   font-weight: 500;
   box-shadow: 1px 0 0 #d8d8de;
 }
@@ -6456,8 +6460,7 @@ thead .cal-topic {
   position: sticky;
   top: 0;
   z-index: 3;
-  width: 3rem;
-  min-width: 3rem;
+  min-width: var(--cal-day-min);
   height: 46px;
   padding: 0.28rem 0 0.2rem;
   background: #f6f6f8;
@@ -6506,8 +6509,7 @@ thead .cal-topic {
 }
 
 .cal-day {
-  width: 3rem;
-  min-width: 3rem;
+  min-width: var(--cal-day-min);
   height: 42px;
   padding: 0;
 }

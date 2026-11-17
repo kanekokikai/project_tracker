@@ -89,6 +89,19 @@ class BallCalendarTest extends TestCase
         );
     }
 
+    public function test_room_label_joins_the_subject_and_the_topic(): void
+    {
+        $this->assertSame('「新シリウス」の「テスト」', BallCalendar::roomLabel('新シリウス', 'テスト'));
+        $this->assertSame('「新シリウス」の「テスト」', BallCalendar::roomLabel(' 新シリウス ', ' テスト '));
+        $this->assertSame('テスト', BallCalendar::roomLabel('', 'テスト'));
+
+        $calendar = BallCalendar::build([
+            $this->ball(1, 1, '堀内', 'テストのボール', '2026-11-17', '2026-11-20', 9, 'テスト', '新シリウス'),
+        ], '2026-11-17');
+
+        $this->assertSame('「新シリウス」の「テスト」', $calendar['rows'][0]['room']);
+    }
+
     public function test_weekends_are_marked(): void
     {
         $calendar = BallCalendar::build([
@@ -132,7 +145,7 @@ class BallCalendarTest extends TestCase
     }
 
     /**
-     * @return array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string}
+     * @return array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name: string}
      */
     private function ball(
         int $id,
@@ -143,6 +156,7 @@ class BallCalendarTest extends TestCase
         ?string $due,
         int $projectId,
         string $projectName,
+        string $subjectName = '',
     ): array {
         return [
             'id' => $id,
@@ -153,6 +167,7 @@ class BallCalendarTest extends TestCase
             'start' => $start,
             'project_id' => $projectId,
             'project_name' => $projectName,
+            'subject_name' => $subjectName,
         ];
     }
 }

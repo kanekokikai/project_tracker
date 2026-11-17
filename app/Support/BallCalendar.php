@@ -11,7 +11,7 @@ class BallCalendar
     /**
      * 未完了ボールを、カレンダー1行ずつにまとめる。
      *
-     * @param  list<array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string}>  $balls
+     * @param  list<array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name?: string}>  $balls
      * @return array{today: string, dates: list<array<string, mixed>>, rows: list<array<string, mixed>>}
      */
     public static function build(array $balls, string $today): array
@@ -43,6 +43,7 @@ class BallCalendar
                 'task' => $group['task'],
                 'project_id' => $group['project_id'],
                 'project_name' => $group['project_name'],
+                'room' => self::roomLabel($group['subject_name'], $group['project_name']),
                 'cells' => self::cells($dates, $index, $group),
             ];
         }
@@ -55,8 +56,8 @@ class BallCalendar
     }
 
     /**
-     * @param  list<array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string}>  $balls
-     * @return list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string}>
+     * @param  list<array{id: int, group_id: int|null, assignee: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name?: string}>  $balls
+     * @return list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name: string}>
      */
     private static function groups(array $balls): array
     {
@@ -93,6 +94,7 @@ class BallCalendar
                 'start' => $start,
                 'project_id' => $first['project_id'],
                 'project_name' => $first['project_name'],
+                'subject_name' => trim((string) ($first['subject_name'] ?? '')),
             ];
         }
 
@@ -100,8 +102,8 @@ class BallCalendar
     }
 
     /**
-     * @param  list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string}>  $groups
-     * @return list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string}>
+     * @param  list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name: string}>  $groups
+     * @return list<array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name: string}>
      */
     private static function sort(array $groups, string $today): array
     {
@@ -113,7 +115,7 @@ class BallCalendar
     }
 
     /**
-     * @param  array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string}  $group
+     * @param  array{id: int, who: string, task: string, due: string|null, start: string, project_id: int, project_name: string, subject_name: string}  $group
      * @return array{0: int, 1: string, 2: string, 3: string, 4: int}
      */
     private static function sortKey(array $group, string $today): array
@@ -170,6 +172,18 @@ class BallCalendar
         }
 
         return [$left, $right];
+    }
+
+    public static function roomLabel(string $subject, string $project): string
+    {
+        $subject = trim($subject);
+        $project = trim($project);
+
+        if ($subject === '') {
+            return $project;
+        }
+
+        return '「'.$subject.'」の「'.$project.'」';
     }
 
     /**
