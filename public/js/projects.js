@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function topicPlateControl(target) {
-    return target.closest('.topic-subject-link, .topic-name-link, [data-action], button, input, select, textarea, label');
+    return target.closest('.topic-subject-link, .topic-name-link, .message-link, [data-action], button, input, select, textarea, label');
 }
 
 function topicRoomUrl(row) {

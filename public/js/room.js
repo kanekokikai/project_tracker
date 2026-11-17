@@ -119,8 +119,65 @@ function appendMultiline(node, content) {
             node.appendChild(document.createElement('br'));
         }
 
-        node.appendChild(document.createTextNode(line));
+        appendLinkedText(node, line);
     });
+}
+
+function appendLinkedText(node, line) {
+    const pattern = /https?:\/\/[A-Za-z0-9\-._~:/?#\[\]@!$&'()*+,;=%]+/g;
+    let last = 0;
+    let match;
+
+    while ((match = pattern.exec(line)) !== null) {
+        if (match.index > last) {
+            node.appendChild(document.createTextNode(line.slice(last, match.index)));
+        }
+
+        const split = splitTrailingUrl(match[0]);
+
+        if (/^https?:\/\/[A-Za-z0-9]/i.test(split.url)) {
+            const link = document.createElement('a');
+            link.href = split.url;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            link.className = 'message-link';
+            link.textContent = split.url;
+            node.appendChild(link);
+
+            if (split.trailing) {
+                node.appendChild(document.createTextNode(split.trailing));
+            }
+        } else {
+            node.appendChild(document.createTextNode(match[0]));
+        }
+
+        last = match.index + match[0].length;
+    }
+
+    if (last < line.length) {
+        node.appendChild(document.createTextNode(line.slice(last)));
+    }
+}
+
+function splitTrailingUrl(url) {
+    const trailingMarks = ".,!?;:'、。…";
+    let trailing = '';
+
+    while (url && trailingMarks.includes(url.slice(-1))) {
+        trailing = url.slice(-1) + trailing;
+        url = url.slice(0, -1);
+    }
+
+    let open = (url.match(/\(/g) || []).length;
+    let close = (url.match(/\)/g) || []).length;
+
+    while (url.endsWith(')') && close > open) {
+        trailing = `)${trailing}`;
+        url = url.slice(0, -1);
+        close -= 1;
+    }
+
+    return { url, trailing };
 }
 
 window.replaceRoomHistoryContent = function (historyId, content) {

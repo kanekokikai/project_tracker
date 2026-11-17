@@ -5591,6 +5591,18 @@ body:has(.home-page) {
   white-space: normal;
 }
 
+.bubble .content a.message-link {
+  color: var(--apple-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  overflow-wrap: anywhere;
+  word-break: break-all;
+}
+
+.bubble .content a.message-link:hover {
+  color: #005bb5;
+}
+
 .room-page .status-bubble .content {
   color: #3a4a63;
   font-size: 0.82rem;

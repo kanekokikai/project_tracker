@@ -60,14 +60,14 @@
             <div class="bubble ball-bubble">
                 <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
                     <span class="bubble-kind">ボール</span>
-                    {!! nl2br(e($history->content)) !!}
+                    {!! \App\Support\MessageText::html($history->content) !!}
                 </div>
             </div>
         @elseif ($historyKind === 'done')
             <div class="bubble done-bubble">
                 <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
                     <span class="bubble-kind">できた</span>
-                    {!! nl2br(e($history->content)) !!}
+                    {!! \App\Support\MessageText::html($history->content) !!}
                 </div>
             </div>
         @else
@@ -82,7 +82,7 @@
             @if (!empty($history->content))
                 <div class="bubble">
                     <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
-                        {!! nl2br(e($history->content)) !!}
+                        {!! \App\Support\MessageText::html($history->content) !!}
                     </div>
                 </div>
             @endif
