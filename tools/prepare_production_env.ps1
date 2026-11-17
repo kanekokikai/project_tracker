@@ -13,7 +13,7 @@ $setupToken = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 40 | Fo
 
 $authPassword = "kaneko0911"
 $dbPassword = "kaneko0911"
-$chatworkToken = "3db459267f47f409fb534a7880508870"
+$chatworkToken = "7e94b0be2917e0dcc11218c00414ee89"
 $chatworkRoom = "394762259"
 
 $localEnv = Join-Path $root ".env"
