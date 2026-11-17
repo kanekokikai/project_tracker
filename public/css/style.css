@@ -6583,3 +6583,21 @@ tbody .cal-topic {
   background: #fff;
 }
 
+@media (max-width: 640px) {
+  .main-content:has(.ball-calendar-page) {
+    padding-right: 0.4rem;
+    padding-left: 0.4rem;
+  }
+
+  .ball-cal {
+    --cal-who: 4.15rem;
+    --cal-room: 7.25rem;
+  }
+
+  .cal-who,
+  .cal-topic {
+    padding-right: 0.45rem;
+    padding-left: 0.45rem;
+  }
+}
+

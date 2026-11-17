@@ -60,7 +60,15 @@
 
         var todayBox = today.getBoundingClientRect();
         var topicBox = topic.getBoundingClientRect();
-        var peek = todayBox.width * 2;
+        var view = scroller.getBoundingClientRect();
+        var open = view.right - topicBox.right;
+        var day = todayBox.width || 1;
+        var peek = day * 2;
+
+        if (peek + day > open) {
+            peek = open > day ? open - day : 0;
+        }
+
         var next = scroller.scrollLeft + (todayBox.left - topicBox.right - peek);
         scroller.scrollLeft = next > 0 ? next : 0;
     };
