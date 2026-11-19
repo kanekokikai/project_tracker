@@ -1,24 +1,47 @@
-function scrollRoomLogToCenter(log) {
-    const headerHeight = document.querySelector('.header')?.getBoundingClientRect().height || 0;
-    const visibleHeight = window.innerHeight - headerHeight;
-    const rect = log.getBoundingClientRect();
-    const focusHeight = Math.min(rect.height, visibleHeight * 0.72);
-    const visibleCenter = headerHeight + visibleHeight / 2;
-    const target = Math.max(0, window.scrollY + rect.top + focusHeight / 2 - visibleCenter);
-    const page = document.querySelector('.room-page');
-    const needed = target + window.innerHeight + 24;
+function roomHeaderHeight() {
+    return document.querySelector('.header')?.getBoundingClientRect().height || 0;
+}
 
-    if (page && needed > document.documentElement.scrollHeight) {
-        const extra = needed - document.documentElement.scrollHeight;
-        const current = parseFloat(page.style.paddingBottom) || 0;
-        page.style.paddingBottom = `${current + extra}px`;
+function clearRoomScrollPadding() {
+    const page = document.querySelector('.room-page');
+
+    if (page) {
+        page.style.paddingBottom = '';
+    }
+
+    return page;
+}
+
+function scrollRoomTarget(target, placement) {
+    const page = clearRoomScrollPadding();
+    const headerHeight = roomHeaderHeight();
+    const rect = target.getBoundingClientRect();
+    let top;
+
+    if (placement === 'top') {
+        top = window.scrollY + rect.top - headerHeight;
+    } else {
+        const visibleHeight = window.innerHeight - headerHeight;
+        const focusHeight = Math.min(rect.height, visibleHeight * 0.72);
+        const visibleCenter = headerHeight + visibleHeight / 2;
+        top = window.scrollY + rect.top + focusHeight / 2 - visibleCenter;
+    }
+
+    top = Math.max(0, top);
+
+    if (page) {
+        const shortfall = top + window.innerHeight - document.documentElement.scrollHeight;
+
+        if (shortfall > 0) {
+            page.style.paddingBottom = `${shortfall}px`;
+        }
     }
 
     const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     window.scrollTo({
-        top: Math.min(target, maxScroll),
+        top: Math.min(top, maxScroll),
         behavior: reduceMotion ? 'auto' : 'smooth',
     });
 }
@@ -251,13 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (logJump && roomLog) {
         logJump.addEventListener('click', () => {
-            scrollRoomLogToCenter(roomLog);
+            scrollRoomTarget(roomLog, 'top');
         });
     }
 
     if (ballJump && ballForm) {
         ballJump.addEventListener('click', () => {
-            scrollRoomLogToCenter(ballForm);
+            scrollRoomTarget(ballForm, 'center');
         });
     }
 

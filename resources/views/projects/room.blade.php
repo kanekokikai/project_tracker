@@ -5,7 +5,7 @@
 @section('content')
 <div class="project-list room-page">
     <div class="room-jumps" id="roomJumps">
-        <button type="button" class="room-jump" id="roomLogJump" aria-controls="roomLog" aria-label="議事ログを画面中央へ" title="議事ログを画面中央へ">
+        <button type="button" class="room-jump" id="roomLogJump" aria-controls="roomLog" aria-label="議事ログを画面上部へ" title="議事ログを画面上部へ">
             <span>議事</span>
             <span>ログ</span>
         </button>
