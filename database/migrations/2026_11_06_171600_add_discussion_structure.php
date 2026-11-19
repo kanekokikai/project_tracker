@@ -93,6 +93,7 @@ return new class extends Migration
                         'employee_number' => $number,
                         'updated_at' => now(),
                     ]);
+
                 continue;
             }
 
@@ -240,20 +241,8 @@ return new class extends Migration
             return;
         }
 
-        $foreignKeys = DB::select(
-            "SELECT CONSTRAINT_NAME AS name
-             FROM information_schema.KEY_COLUMN_USAGE
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'projects'
-               AND COLUMN_NAME = 'parent_id'
-               AND REFERENCED_TABLE_NAME IS NOT NULL"
-        );
-
-        Schema::table('projects', function (Blueprint $table) use ($foreignKeys) {
-            foreach ($foreignKeys as $foreignKey) {
-                $table->dropForeign($foreignKey->name);
-            }
-            $table->dropColumn('parent_id');
+        Schema::table('projects', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('parent_id');
         });
     }
 

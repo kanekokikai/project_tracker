@@ -94,6 +94,69 @@ class ChatworkService
     }
 
     /**
+     * @param  list<ProjectBall>  $balls
+     */
+    public function remindApproaching(string $assignee, array $balls): bool
+    {
+        if (! $this->isEnabled() || $balls === [] || ! $this->hasMention($assignee)) {
+            return false;
+        }
+
+        $lines = ['このボールの期限迫ってます。やっていますか？'];
+        $grouped = [];
+
+        foreach ($balls as $ball) {
+            $grouped[$ball->project_id][] = $ball;
+        }
+
+        foreach ($grouped as $items) {
+            $project = $items[0]->project;
+            $lines[] = '';
+            $lines[] = '【'.$this->fullProjectName($project).'】';
+
+            foreach ($items as $ball) {
+                $due = BallDisplay::monthDay($ball->due_date?->toDateString());
+                $lines[] = $ball->task.'（期限 '.$due.'）';
+            }
+
+            $lines[] = '▼会議室を開く';
+            $lines[] = $this->projectUrl($project);
+        }
+
+        return $this->send([$assignee], implode("\n", $lines));
+    }
+
+    /**
+     * @param  list<ProjectBall>  $balls
+     * @param  list<string>  $members
+     */
+    public function remindOverdue(Project $project, array $balls, array $members): bool
+    {
+        $members = array_values(array_filter($members, fn (string $member) => $this->hasMention($member)));
+
+        if (! $this->isEnabled() || $balls === [] || $members === []) {
+            return false;
+        }
+
+        $lines = [
+            '期限が過ぎたボールがあるから対応してください',
+            '',
+            '【'.$this->fullProjectName($project).'】',
+        ];
+
+        foreach ($balls as $ball) {
+            $due = BallDisplay::monthDay($ball->due_date?->toDateString());
+            $lines[] = BallDisplay::personLabel($ball->assignee).': '.$ball->task.'（期限 '.$due.'）';
+        }
+
+        $lines[] = '';
+        $lines[] = '▼会議室を開く';
+        $lines[] = $this->projectUrl($project);
+
+        return $this->send($members, implode("\n", $lines));
+    }
+
+    /**
      * @param  list<string>  $teamMembers
      */
     public function send(array $teamMembers, string $message): bool
@@ -154,6 +217,23 @@ class ChatworkService
         }
 
         return $toPrefix."\n".$message;
+    }
+
+    private function fullProjectName(Project $project): string
+    {
+        $project->loadMissing('subject');
+        $subjectName = trim((string) ($project->subject?->name ?? ''));
+
+        return $subjectName !== ''
+            ? "{$subjectName} > {$project->name}"
+            : $project->name;
+    }
+
+    private function hasMention(string $member): bool
+    {
+        $account = ChatworkMember::mapping()[$member] ?? '';
+
+        return $account !== '' && ctype_digit((string) $account);
     }
 
     private function projectUrl(Project $project): string
