@@ -28,6 +28,7 @@
         ball_done: { icon: 'fa-check', label: 'できた' },
         ball_reopened: { icon: 'fa-undo', label: '戻した' },
         ball_due_changed: { icon: 'fa-calendar-alt', label: '期限' },
+        topic_due_changed: { icon: 'fa-calendar-alt', label: '会議' },
         subject_created: { icon: 'fa-tag', label: '対象' },
         subject_renamed: { icon: 'fa-tag', label: '対象' },
         subject_changed: { icon: 'fa-tag', label: '対象' },

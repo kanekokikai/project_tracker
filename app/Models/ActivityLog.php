@@ -42,6 +42,8 @@ class ActivityLog extends Model
 
     public const TYPE_BALL_DUE_CHANGED = 'ball_due_changed';
 
+    public const TYPE_TOPIC_DUE_CHANGED = 'topic_due_changed';
+
     public const TYPE_SUBJECT_CREATED = 'subject_created';
 
     public const TYPE_SUBJECT_RENAMED = 'subject_renamed';

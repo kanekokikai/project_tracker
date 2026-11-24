@@ -6,6 +6,7 @@ use App\Models\ChatworkMember;
 use App\Models\Project;
 use App\Models\ProjectBall;
 use App\Support\BallDisplay;
+use App\Support\TopicDue;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -152,6 +153,32 @@ class ChatworkService
         $lines[] = '';
         $lines[] = '▼会議室を開く';
         $lines[] = $this->projectUrl($project);
+
+        return $this->send($members, implode("\n", $lines));
+    }
+
+    /**
+     * @param  list<string>  $members
+     */
+    public function remindTopicMeeting(Project $project, array $members, string $headline): bool
+    {
+        $members = array_values(array_filter($members, fn (string $member) => $this->hasMention($member)));
+
+        if (! $this->isEnabled() || $headline === '' || $members === []) {
+            return false;
+        }
+
+        $project->loadMissing('subject');
+        $due = TopicDue::short($project->due_date?->toDateString());
+        $lines = [
+            $headline,
+            '',
+            '【'.$this->fullProjectName($project).'】',
+            '会議 '.$due,
+            '',
+            '▼会議室を開く',
+            $this->projectUrl($project),
+        ];
 
         return $this->send($members, implode("\n", $lines));
     }

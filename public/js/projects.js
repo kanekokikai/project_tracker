@@ -225,6 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    bindMeetingDate('projectDueDate', 'projectNoDue');
+    bindMeetingDate('editProjectDueDate', 'editProjectNoDue');
     applyTopicFilters();
     setupTopicPlates();
 });
@@ -575,6 +577,7 @@ function openAddProjectModal() {
     }
 
     setMemberPicker('teamMemberPicker', 'teamMembers', []);
+    setMeetingDate('projectDueDate', 'projectNoDue', null, true, false);
     openModal('addProjectModal');
 }
 
@@ -582,6 +585,7 @@ async function openEditProjectModal(projectId, projectName) {
     document.getElementById('editProjectId').value = projectId;
     document.getElementById('editProjectName').value = projectName || '';
     setMemberPicker('editTeamMemberPicker', 'editTeamMembers', []);
+    setMeetingDate('editProjectDueDate', 'editProjectNoDue', null, true, true);
     document.querySelector('#editProjectForm [data-subject-picker]')?.subjectPicker?.reset();
 
     openModal('editProjectModal');
@@ -606,6 +610,13 @@ async function openEditProjectModal(projectId, projectName) {
             : [];
 
         setMemberPicker('editTeamMemberPicker', 'editTeamMembers', members);
+        setMeetingDate(
+            'editProjectDueDate',
+            'editProjectNoDue',
+            response.project.due_date || null,
+            response.project.status === '進行中',
+            !response.project.due_date,
+        );
     } catch (error) {
         alert(error.message || '議題の情報を取得できませんでした');
     }
@@ -634,6 +645,43 @@ async function confirmDeleteProject(projectId) {
     } catch (error) {
         alert(error.message || '議題の削除に失敗しました');
     }
+}
+
+function bindMeetingDate(dateId, noDueId) {
+    const dateInput = document.getElementById(dateId);
+    const noDue = document.getElementById(noDueId);
+
+    if (!dateInput || !noDue || noDue.dataset.bound === '1') {
+        return;
+    }
+
+    noDue.dataset.bound = '1';
+    noDue.addEventListener('change', () => {
+        if (noDue.disabled) {
+            return;
+        }
+
+        dateInput.disabled = noDue.checked;
+
+        if (noDue.checked) {
+            dateInput.value = '';
+        }
+    });
+}
+
+function setMeetingDate(dateId, noDueId, dueDate, editable, preferNoDue) {
+    const dateInput = document.getElementById(dateId);
+    const noDue = document.getElementById(noDueId);
+
+    if (!dateInput || !noDue) {
+        return;
+    }
+
+    const hasDate = typeof dueDate === 'string' && dueDate !== '';
+    noDue.checked = hasDate ? false : Boolean(preferNoDue);
+    noDue.disabled = !editable || hasDate;
+    dateInput.value = hasDate ? dueDate : '';
+    dateInput.disabled = !editable || noDue.checked;
 }
 
 function setupMemberPicker(pickerId, hiddenInputId) {

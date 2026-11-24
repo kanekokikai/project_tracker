@@ -28,6 +28,7 @@ Route::middleware('app.auth')->group(function () {
     Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
     Route::post('/projects/{project}/status', [ProjectController::class, 'updateStatus'])->name('projects.update-status');
+    Route::post('/projects/{project}/due', [ProjectController::class, 'extendDue'])->name('projects.due');
     Route::post('/projects/{project}/balls', [ProjectBallController::class, 'store'])->name('projects.balls.store');
     Route::post('/balls/{ball}/done', [ProjectBallController::class, 'done'])->name('balls.done');
     Route::post('/balls/{ball}/extend', [ProjectBallController::class, 'extend'])->name('balls.extend');

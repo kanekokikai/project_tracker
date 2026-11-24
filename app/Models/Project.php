@@ -18,12 +18,14 @@ class Project extends Model
         'subject_id',
         'team_members',
         'department',
+        'due_date',
     ];
 
     protected function casts(): array
     {
         return [
             'team_members' => 'array',
+            'due_date' => 'date',
         ];
     }
 

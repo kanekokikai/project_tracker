@@ -72,6 +72,13 @@
                 @endif
             </div>
             <div class="room-meta">
+                @if ($project->due_date)
+                    @php $meetingDue = $project->due_date->toDateString(); @endphp
+                    <span @class(['room-due', 'is-overdue' => \App\Support\TopicDue::isOverdue($meetingDue)])>{{ \App\Support\TopicDue::label($meetingDue) }}</span>
+                @endif
+                @if ($project->status === '進行中')
+                    <button type="button" class="room-due-extend" data-action="toggle-topic-due">{{ $project->due_date ? '期限を延ばす' : '期限を付ける' }}</button>
+                @endif
                 <span class="status-badge status-{{ $project->status }} clickable-status"
                       data-action="show-status-dropdown"
                       data-project-id="{{ $project->id }}"
@@ -99,6 +106,14 @@
                    tabindex="0"></i>
             </div>
         </header>
+
+        @if ($project->status === '進行中')
+            <form id="topicDueForm" class="room-due-form" hidden>
+                <label class="room-sr" for="topicDueDate">会議の日</label>
+                <input type="date" id="topicDueDate" name="due_date" class="form-control" required value="{{ $project->due_date?->toDateString() }}">
+                <button type="submit" class="btn btn-primary btn-sm">{{ $project->due_date ? 'この日に延ばす' : 'この日にする' }}</button>
+            </form>
+        @endif
 
         @if ($siblings->isNotEmpty())
             <section class="room-block">

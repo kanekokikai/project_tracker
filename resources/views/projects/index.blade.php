@@ -120,6 +120,10 @@
                     @endif
                 </div>
                 <div class="topic-meta">
+                    @if ($topic->due_date)
+                        @php $meetingDue = $topic->due_date->toDateString(); @endphp
+                        <span @class(['topic-due', 'is-overdue' => \App\Support\TopicDue::isOverdue($meetingDue)]) title="{{ \App\Support\TopicDue::label($meetingDue) }}">{{ \App\Support\TopicDue::short($meetingDue) }}</span>
+                    @endif
                     <span class="status-badge status-{{ $topic->status }} clickable-status"
                           data-action="show-status-dropdown"
                           data-project-id="{{ $topic->id }}"

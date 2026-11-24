@@ -42,6 +42,14 @@
                     @endforeach
                 </select>
             </div>
+            <div class="form-group">
+                <label for="projectDueDate">会議の日</label>
+                <input type="date" id="projectDueDate" name="due_date" class="form-control">
+                <label class="no-due-option">
+                    <input type="checkbox" name="no_due" value="1" id="projectNoDue">
+                    期限なし
+                </label>
+            </div>
             @include('projects.partials.member-picker', [
                 'pickerId' => 'teamMemberPicker',
                 'hiddenId' => 'teamMembers',
@@ -96,6 +104,14 @@
                         <option value="{{ $department }}">{{ $department }}</option>
                     @endforeach
                 </select>
+            </div>
+            <div class="form-group">
+                <label for="editProjectDueDate">会議の日</label>
+                <input type="date" id="editProjectDueDate" name="due_date" class="form-control">
+                <label class="no-due-option">
+                    <input type="checkbox" name="no_due" value="1" id="editProjectNoDue">
+                    期限なし
+                </label>
             </div>
             @include('projects.partials.member-picker', [
                 'pickerId' => 'editTeamMemberPicker',

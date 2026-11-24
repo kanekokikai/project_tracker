@@ -419,6 +419,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        const toggleTopicDue = event.target.closest('[data-action="toggle-topic-due"]');
+        if (toggleTopicDue) {
+            const topicDueForm = document.getElementById('topicDueForm');
+            if (topicDueForm) {
+                topicDueForm.hidden = !topicDueForm.hidden;
+                if (!topicDueForm.hidden) {
+                    topicDueForm.querySelector('input[name="due_date"]')?.focus();
+                }
+            }
+        }
+
         const templateButton = event.target.closest('[data-action="use-template"]');
         if (templateButton) {
             const form = templateButton.closest('form');
@@ -449,6 +460,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    const topicDueForm = document.getElementById('topicDueForm');
+    if (topicDueForm && projectId) {
+        topicDueForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            try {
+                const response = await apiRequest(`/projects/${projectId}/due`, {
+                    method: 'POST',
+                    body: new FormData(topicDueForm),
+                });
+
+                if (response.success) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                alert(error.message || '期限を延ばせませんでした');
+            }
+        });
+    }
 
     document.querySelectorAll('.ball-extend-form').forEach((form) => {
         form.addEventListener('submit', async (event) => {

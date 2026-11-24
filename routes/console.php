@@ -19,3 +19,15 @@ Schedule::command('balls:remind')
     ->weekdays()
     ->dailyAt('13:00')
     ->withoutOverlapping(10);
+
+Schedule::command('topics:remind')
+    ->timezone('Asia/Tokyo')
+    ->weekdays()
+    ->dailyAt('08:30')
+    ->withoutOverlapping(10);
+
+Schedule::command('topics:remind')
+    ->timezone('Asia/Tokyo')
+    ->weekdays()
+    ->dailyAt('13:00')
+    ->withoutOverlapping(10);
