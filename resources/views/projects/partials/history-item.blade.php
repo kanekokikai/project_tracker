@@ -5,7 +5,9 @@
     $authorMarkLength = mb_strlen($authorMark);
     $historyKind = $history->kind ?? 'comment';
     $viewer = trim((string) ($viewerName ?? ''));
+    $closedBallsNote = trim((string) ($history->content ?? '')) === \App\Models\ProjectHistory::NOTE_CLOSED_BALLS;
     $isChatComment = trim((string) ($history->content ?? '')) !== ''
+        && ! $closedBallsNote
         && ! in_array($historyKind, ['ball', 'done'], true);
     $isMine = $isChatComment
         && $viewer !== ''
@@ -74,12 +76,12 @@
             @if (!empty($history->status))
                 <div class="bubble status-bubble">
                     <div class="content">
-                        ステータスを「{{ $history->status }}」に変更
+                        ステータスを「{{ $history->status }}」に変更@if ($closedBallsNote)し、{{ \App\Models\ProjectHistory::NOTE_CLOSED_BALLS }}@endif
                     </div>
                 </div>
             @endif
 
-            @if (!empty($history->content))
+            @if (!empty($history->content) && ! $closedBallsNote)
                 <div class="bubble">
                     <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
                         {!! \App\Support\MessageText::html($history->content) !!}

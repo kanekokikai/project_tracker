@@ -195,32 +195,53 @@ class ProjectController extends Controller
 
         $previousStatus = $project->status;
         $author = CurrentMember::name();
+        $nextStatus = $validated['status'];
+        $closedBalls = 0;
 
-        $project->update([
-            'status' => $validated['status'],
-            'updated_at' => now(),
-        ]);
+        DB::transaction(function () use ($project, $previousStatus, $nextStatus, $author, &$closedBalls) {
+            $project->update([
+                'status' => $nextStatus,
+                'updated_at' => now(),
+            ]);
 
-        if ($previousStatus !== $validated['status']) {
+            if ($previousStatus === $nextStatus) {
+                return;
+            }
+
+            if (in_array($nextStatus, ['完了', '中止'], true)) {
+                $closedBalls = $project->openBalls()->update([
+                    'status' => 'done',
+                    'done_at' => now(),
+                ]);
+            }
+
             ProjectHistory::query()->create([
                 'project_id' => $project->id,
                 'author' => $author,
-                'status' => $validated['status'],
-                'content' => null,
+                'status' => $nextStatus,
+                'content' => $closedBalls > 0 ? ProjectHistory::NOTE_CLOSED_BALLS : null,
                 'kind' => ProjectHistory::KIND_COMMENT,
             ]);
+
+            $message = "ステータスを「{$nextStatus}」に変更";
+
+            if ($closedBalls > 0) {
+                $message .= 'し、'.ProjectHistory::NOTE_CLOSED_BALLS;
+            }
 
             $this->activityLogger->record(
                 ActivityLog::TYPE_STATUS_CHANGED,
                 $author,
-                "ステータスを「{$validated['status']}」に変更",
+                $message,
                 $project,
             );
-        }
+        });
 
         return response()->json([
             'success' => true,
-            'message' => 'ステータスを更新しました',
+            'message' => $closedBalls > 0
+                ? 'ステータスを更新し、未完了のボールを閉じました'
+                : 'ステータスを更新しました',
             'status' => $project->status,
         ]);
     }

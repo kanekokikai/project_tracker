@@ -19,6 +19,8 @@ class ProjectHistory extends Model
 
     public const KIND_DONE = 'done';
 
+    public const NOTE_CLOSED_BALLS = '未完了のボールも閉じました';
+
     protected $table = 'project_history';
 
     protected $fillable = [
