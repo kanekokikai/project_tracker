@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\ProjectBall;
+use App\Models\ProjectHistory;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
@@ -11,6 +12,8 @@ class BallDisplay
     public const EXTERNAL = '外部（客先・業者）';
 
     public const TYPES = ['回答', '確認', '作業', '外部'];
+
+    public const DEFAULT_TYPE = '作業';
 
     public const DONE_TEMPLATES = [
         '確認しました',
@@ -229,5 +232,95 @@ class BallDisplay
         }
 
         return Carbon::parse($date)->format('n/j');
+    }
+
+    public static function shortDue(ProjectBall $ball): string
+    {
+        if ($ball->due_date === null) {
+            return '期限なし';
+        }
+
+        $due = $ball->due_date->toDateString();
+        $diff = self::dayDiff(self::today(), $due);
+
+        if ($diff < 0) {
+            return self::monthDay($due).' 超過';
+        }
+
+        if ($diff === 0) {
+            return '今日';
+        }
+
+        if ($diff === 1) {
+            return '明日';
+        }
+
+        return self::monthDay($due);
+    }
+
+    /**
+     * 議事ログに出すボールの見出しと本文。
+     *
+     * @param  Collection<int, ProjectBall>  $balls
+     * @return array{headline: string, body: string}|null
+     */
+    public static function historyPresentation(ProjectHistory $history, Collection $balls): ?array
+    {
+        if (! in_array($history->kind, [ProjectHistory::KIND_BALL, ProjectHistory::KIND_DONE], true)) {
+            return null;
+        }
+
+        $related = self::historyBalls($history, $balls);
+        $primary = $related->first();
+
+        if ($primary === null) {
+            return [
+                'headline' => $history->kind === ProjectHistory::KIND_DONE ? '返事' : 'ボール',
+                'body' => (string) $history->content,
+            ];
+        }
+
+        if ($history->kind === ProjectHistory::KIND_DONE) {
+            return [
+                'headline' => '返事 · '.$primary->task,
+                'body' => (string) $history->content,
+            ];
+        }
+
+        $due = $primary->due_date === null
+            ? '期限なし'
+            : self::monthDay($primary->due_date->toDateString()).'まで';
+        $returned = $related->every(fn (ProjectBall $ball) => ! $ball->isOpen());
+        $headline = self::joinNames($related->pluck('assignee')->unique()->values()).'へ · '.$due;
+
+        if ($returned) {
+            $headline = '返ってきた · '.$headline;
+        }
+
+        return [
+            'headline' => $headline,
+            'body' => (string) $primary->task,
+        ];
+    }
+
+    /**
+     * @param  Collection<int, ProjectBall>  $balls
+     * @return Collection<int, ProjectBall>
+     */
+    private static function historyBalls(ProjectHistory $history, Collection $balls): Collection
+    {
+        if ($history->ball_id === null) {
+            return collect();
+        }
+
+        $id = (int) $history->ball_id;
+        $direct = $balls->first(fn (ProjectBall $ball) => (int) $ball->id === $id);
+        $groupId = $direct?->group_id ? (int) $direct->group_id : $id;
+
+        return $balls->filter(function (ProjectBall $ball) use ($id, $groupId) {
+            return (int) $ball->id === $id
+                || (int) $ball->id === $groupId
+                || (int) ($ball->group_id ?? 0) === $groupId;
+        })->values();
     }
 }

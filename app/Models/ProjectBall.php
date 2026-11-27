@@ -59,10 +59,22 @@ class ProjectBall extends Model
     }
 
     /**
-     * 同じ投げで閉じているボール。一人に投げたボールは自分だけ。
+     * 同じ投げのボール。一人に投げたボールは自分だけ。
      *
      * @return Collection<int, ProjectBall>
      */
+    public function groupMates(): Collection
+    {
+        if ($this->group_id === null) {
+            return collect([$this]);
+        }
+
+        return static::query()
+            ->where('group_id', $this->group_id)
+            ->orderBy('id')
+            ->get();
+    }
+
     public function doneSiblings(): Collection
     {
         if ($this->group_id === null) {

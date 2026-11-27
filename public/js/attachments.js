@@ -15,12 +15,21 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (event) => {
         const actionTarget = event.target.closest('[data-action="open-attachments"]');
 
-        if (!actionTarget) {
+        if (actionTarget) {
+            event.stopPropagation();
+            openAttachmentModal(actionTarget.dataset.projectId);
             return;
         }
 
+        const deleteTarget = event.target.closest('[data-action="delete-attachment"]');
+
+        if (!deleteTarget) {
+            return;
+        }
+
+        event.preventDefault();
         event.stopPropagation();
-        openAttachmentModal(actionTarget.dataset.projectId);
+        openDeleteConfirmModal(deleteTarget.dataset.attachmentId, deleteTarget.dataset.fileName || '');
     });
 
     function appendRoomAttachment(html) {
@@ -246,8 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         noAttachmentsMsg.style.display = 'block';
                     }
 
-                    updateAttachmentIcon(projectId, attachmentsList.children.length > 0);
                     removeRoomAttachment(attachmentId);
+
+                    const roomProjectId = document.querySelector('.room-card')?.dataset.projectId || projectId;
+                    const roomLeft = document.querySelectorAll('.room-page [data-attachment-id]').length;
+                    updateAttachmentIcon(roomProjectId, roomLeft > 0 || attachmentsList.children.length > 0);
                 } else {
                     alert('削除に失敗しました: ' + (response.message || '不明なエラー'));
                 }

@@ -36,15 +36,15 @@ class ProjectBallController extends Controller
         $validated = $request->validate([
             'assignees' => ['required', 'array', 'min:1'],
             'assignees.*' => ['required', 'string', Rule::in($allowedAssignees)],
-            'ball_type' => ['required', Rule::in(BallDisplay::TYPES)],
+            'ball_type' => ['nullable', Rule::in(BallDisplay::TYPES)],
             'task' => ['required', 'string', 'max:255'],
             'due_date' => ['nullable', 'date'],
             'no_due' => ['nullable', 'boolean'],
         ], [
             'assignees.required' => '誰に投げるか選んでください',
             'assignees.min' => '誰に投げるか選んでください',
-            'ball_type.required' => '待ちの種類を選んでください',
             'task.required' => '何をしてほしいか書いてください',
+            'task.max' => '依頼は255文字までです',
         ]);
 
         $noDue = $request->boolean('no_due');
@@ -64,7 +64,9 @@ class ProjectBallController extends Controller
 
         DB::transaction(function () use ($project, $assignees, $validated, $dueDate, $author, $task, &$created) {
             foreach ($assignees as $assignee) {
-                $type = $assignee === BallDisplay::EXTERNAL ? '外部' : $validated['ball_type'];
+                $type = $assignee === BallDisplay::EXTERNAL
+                    ? '外部'
+                    : ($validated['ball_type'] ?? BallDisplay::DEFAULT_TYPE);
 
                 $created[] = ProjectBall::query()->create([
                     'project_id' => $project->id,
@@ -88,14 +90,14 @@ class ProjectBallController extends Controller
             }
 
             $dueLabel = $dueDate
-                ? '期限 '.BallDisplay::monthDay($dueDate)
+                ? BallDisplay::monthDay($dueDate).'まで'
                 : '期限なし';
             $who = BallDisplay::joinNames($assignees);
 
             ProjectHistory::query()->create([
                 'project_id' => $project->id,
                 'author' => $author,
-                'content' => "{$who}へ: {$task}（{$dueLabel}）",
+                'content' => "{$who}へ · {$dueLabel}\n{$task}",
                 'kind' => ProjectHistory::KIND_BALL,
                 'ball_id' => $groupId,
             ]);

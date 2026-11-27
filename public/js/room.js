@@ -98,7 +98,10 @@ function syncRoomLatest(chat) {
     if (!latest) {
         latest = document.createElement('p');
         latest.className = 'room-latest';
-        chat.insertBefore(latest, chat.firstChild);
+        const anchor = chat.querySelector('.project-history')
+            || chat.querySelector('.room-empty')
+            || document.getElementById('roomCommentForm');
+        chat.insertBefore(latest, anchor);
     }
 
     latest.replaceChildren();
@@ -264,8 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const jumps = document.getElementById('roomJumps');
     const logJump = document.getElementById('roomLogJump');
     const roomLog = document.getElementById('roomLog');
-    const ballJump = document.getElementById('roomBallJump');
-    const ballForm = document.getElementById('throwBallForm');
 
     if (jumps) {
         placeRoomJumps(jumps);
@@ -278,33 +279,198 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (ballJump && ballForm) {
-        ballJump.addEventListener('click', () => {
-            scrollRoomTarget(ballForm, 'center');
-        });
-    }
-
     const messageLog = document.querySelector('.room-page .project-history');
     if (messageLog) {
         messageLog.scrollTop = messageLog.scrollHeight;
     }
 
     const commentForm = document.getElementById('roomCommentForm');
-    const noDueToggle = document.getElementById('noDueToggle');
     const projectId = document.querySelector('.room-card')?.dataset.projectId;
+    const externalAssignee = commentForm?.dataset.external || '';
+    const aim = document.getElementById('roomAim');
+    const aimText = document.getElementById('roomAimText');
+    const aimClear = document.getElementById('roomAimClear');
+    const ballButton = document.getElementById('roomBallButton');
+    const sendButton = document.getElementById('roomSend');
+    const sendLabel = sendButton?.querySelector('.room-send-label');
+    const throwDialog = document.getElementById('throwBallDialog');
+    const throwPicker = document.getElementById('throwBallPicker');
+    const throwDueDate = document.getElementById('throwDueDate');
+    const throwNoDue = document.getElementById('throwNoDue');
+    const compose = {
+        mode: 'message',
+        ballId: null,
+        assignees: [],
+        due: '',
+        noDue: false,
+    };
 
-    if (noDueToggle) {
-        const dueInput = ballForm?.querySelector('input[name="due_date"]');
-        noDueToggle.addEventListener('change', () => {
-            if (!dueInput) {
-                return;
-            }
+    function personLabel(name) {
+        if (name === externalAssignee || name.endsWith('さん')) {
+            return name;
+        }
 
-            dueInput.disabled = noDueToggle.checked;
-            if (noDueToggle.checked) {
-                dueInput.value = '';
-            }
+        return `${name}さん`;
+    }
+
+    function duePhrase(due, noDue) {
+        if (noDue || due === '') {
+            return '期限なし';
+        }
+
+        const parts = due.split('-');
+
+        if (parts.length !== 3) {
+            return due;
+        }
+
+        return `${Number(parts[1])}/${Number(parts[2])}まで`;
+    }
+
+    function setSendLabel(label, words) {
+        if (!sendButton) {
+            return;
+        }
+
+        sendButton.setAttribute('aria-label', label);
+
+        if (sendLabel) {
+            sendLabel.textContent = label;
+            sendLabel.hidden = !words;
+        }
+
+        sendButton.classList.toggle('room-send--words', words);
+    }
+
+    function clearAimMarks() {
+        document.querySelectorAll('.room-open-ball.is-aimed').forEach((row) => {
+            row.classList.remove('is-aimed');
         });
+    }
+
+    function showAim(text) {
+        if (!aim || !aimText) {
+            return;
+        }
+
+        aimText.textContent = text;
+        aim.hidden = false;
+    }
+
+    function clearAim() {
+        compose.mode = 'message';
+        compose.ballId = null;
+        compose.assignees = [];
+        compose.due = '';
+        compose.noDue = false;
+
+        if (commentForm) {
+            commentForm.dataset.mode = 'message';
+        }
+
+        if (aim) {
+            aim.hidden = true;
+        }
+
+        if (commentField) {
+            commentField.maxLength = 2000;
+            commentField.placeholder = 'メッセージ';
+        }
+
+        setSendLabel('送信', false);
+        clearAimMarks();
+
+        if (ballButton) {
+            ballButton.classList.remove('is-on');
+            ballButton.setAttribute('aria-pressed', 'false');
+        }
+    }
+
+    function aimReturn(row) {
+        if (!row?.dataset.ballId) {
+            return;
+        }
+
+        compose.mode = 'return';
+        compose.ballId = row.dataset.ballId;
+        compose.assignees = [];
+        compose.due = '';
+        compose.noDue = false;
+
+        if (commentForm) {
+            commentForm.dataset.mode = 'return';
+        }
+
+        showAim(`返事 · ${row.dataset.task || ''}`);
+
+        if (commentField) {
+            commentField.maxLength = 2000;
+            commentField.placeholder = '返事を書く';
+            commentField.focus();
+        }
+
+        setSendLabel('このボールに返す', true);
+        clearAimMarks();
+        row.classList.add('is-aimed');
+
+        if (ballButton) {
+            ballButton.classList.remove('is-on');
+            ballButton.setAttribute('aria-pressed', 'false');
+        }
+    }
+
+    function aimThrow(assignees, due, noDue) {
+        compose.mode = 'throw';
+        compose.ballId = null;
+        compose.assignees = assignees;
+        compose.due = due;
+        compose.noDue = noDue;
+
+        if (commentForm) {
+            commentForm.dataset.mode = 'throw';
+        }
+
+        const names = assignees.map(personLabel).join('と');
+        showAim(`${names}へ · ${duePhrase(due, noDue)}`);
+
+        if (commentField) {
+            commentField.maxLength = 255;
+            commentField.placeholder = '依頼を書く';
+            commentField.focus();
+        }
+
+        setSendLabel('投げる', true);
+        clearAimMarks();
+
+        if (ballButton) {
+            ballButton.classList.add('is-on');
+            ballButton.setAttribute('aria-pressed', 'true');
+        }
+    }
+
+    function openThrowDialog() {
+        if (!throwDialog || typeof throwDialog.showModal !== 'function') {
+            return;
+        }
+
+        const selected = new Set(compose.mode === 'throw' ? compose.assignees : []);
+        throwDialog.querySelectorAll('input[name="assignees[]"]').forEach((input) => {
+            input.checked = selected.has(input.value);
+        });
+
+        if (throwDueDate) {
+            throwDueDate.value = compose.mode === 'throw' && !compose.noDue ? compose.due : '';
+            throwDueDate.disabled = compose.mode === 'throw' && compose.noDue;
+        }
+
+        if (throwNoDue) {
+            throwNoDue.checked = compose.mode === 'throw' && compose.noDue;
+        }
+
+        paintThrowDue();
+        closeThrowCalendar();
+
+        throwDialog.showModal();
     }
 
     const commentField = document.getElementById('roomComment');
@@ -322,6 +488,212 @@ document.addEventListener('DOMContentLoaded', () => {
         fitCommentField();
     }
 
+    if (aimClear) {
+        aimClear.addEventListener('click', () => {
+            clearAim();
+            commentField?.focus();
+        });
+    }
+
+    if (ballButton) {
+        ballButton.addEventListener('click', openThrowDialog);
+    }
+
+    const throwDueText = document.getElementById('throwDueText');
+    const throwDueFace = document.getElementById('throwDueFace');
+    const throwCalendar = document.getElementById('throwCalendar');
+    const throwCalTitle = document.getElementById('throwCalTitle');
+    const throwCalDays = document.getElementById('throwCalDays');
+    let calYear = 0;
+    let calMonth = 0;
+
+    function paintThrowDue() {
+        if (!throwDueText) {
+            return;
+        }
+
+        const value = throwDueDate && !throwDueDate.disabled ? throwDueDate.value : '';
+        const parts = value.split('-');
+
+        if (parts.length === 3 && parts[0] !== '') {
+            throwDueText.textContent = `${parts[0]}/${Number(parts[1])}/${Number(parts[2])}`;
+            throwDueText.classList.remove('is-empty');
+        } else {
+            throwDueText.textContent = '日付を選ぶ';
+            throwDueText.classList.add('is-empty');
+        }
+
+        throwDueFace?.classList.toggle('is-off', throwDueDate?.disabled === true);
+    }
+
+    throwDueDate?.addEventListener('change', paintThrowDue);
+    throwDueDate?.addEventListener('input', paintThrowDue);
+
+    function closeThrowCalendar() {
+        if (!throwCalendar) {
+            return;
+        }
+
+        throwCalendar.hidden = true;
+        throwDueFace?.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderThrowCalendar() {
+        if (!throwCalTitle || !throwCalDays) {
+            return;
+        }
+
+        throwCalTitle.textContent = `${calYear}年${calMonth + 1}月`;
+        throwCalDays.replaceChildren();
+
+        const start = new Date(calYear, calMonth, 1).getDay();
+        const days = new Date(calYear, calMonth + 1, 0).getDate();
+        const selected = throwDueDate?.value || '';
+        const now = new Date();
+        const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+        for (let blank = 0; blank < start; blank += 1) {
+            const pad = document.createElement('span');
+            pad.className = 'room-cal-blank';
+            throwCalDays.appendChild(pad);
+        }
+
+        for (let day = 1; day <= days; day += 1) {
+            const iso = `${calYear}-${String(calMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'room-cal-day';
+            button.textContent = String(day);
+
+            if (iso === selected) {
+                button.classList.add('is-selected');
+            }
+
+            if (iso === today) {
+                button.classList.add('is-today');
+            }
+
+            button.addEventListener('click', () => {
+                if (!throwDueDate) {
+                    return;
+                }
+
+                throwDueDate.disabled = false;
+                throwDueDate.value = iso;
+
+                if (throwNoDue) {
+                    throwNoDue.checked = false;
+                }
+
+                paintThrowDue();
+                closeThrowCalendar();
+            });
+            throwCalDays.appendChild(button);
+        }
+    }
+
+    function openThrowCalendar() {
+        if (!throwCalendar || throwDueDate?.disabled) {
+            return;
+        }
+
+        const selected = throwDueDate?.value;
+        const base = selected ? new Date(`${selected}T00:00:00`) : new Date();
+        calYear = base.getFullYear();
+        calMonth = base.getMonth();
+        renderThrowCalendar();
+        throwCalendar.hidden = false;
+        throwDueFace?.setAttribute('aria-expanded', 'true');
+    }
+
+    throwDueFace?.addEventListener('click', () => {
+        if (!throwCalendar || throwDueDate?.disabled) {
+            return;
+        }
+
+        if (throwCalendar.hidden) {
+            openThrowCalendar();
+        } else {
+            closeThrowCalendar();
+        }
+    });
+
+    throwCalendar?.querySelector('[data-cal="prev"]')?.addEventListener('click', () => {
+        calMonth -= 1;
+
+        if (calMonth < 0) {
+            calMonth = 11;
+            calYear -= 1;
+        }
+
+        renderThrowCalendar();
+    });
+
+    throwCalendar?.querySelector('[data-cal="next"]')?.addEventListener('click', () => {
+        calMonth += 1;
+
+        if (calMonth > 11) {
+            calMonth = 0;
+            calYear += 1;
+        }
+
+        renderThrowCalendar();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!throwCalendar || throwCalendar.hidden) {
+            return;
+        }
+
+        if (event.target.closest('#throwCalendar') || event.target.closest('#throwDueFace')) {
+            return;
+        }
+
+        closeThrowCalendar();
+    });
+
+    if (throwNoDue && throwDueDate) {
+        throwNoDue.addEventListener('change', () => {
+            throwDueDate.disabled = throwNoDue.checked;
+
+            if (throwNoDue.checked) {
+                throwDueDate.value = '';
+            }
+
+            paintThrowDue();
+            closeThrowCalendar();
+        });
+    }
+
+    document.getElementById('throwBallCancel')?.addEventListener('click', () => {
+        throwDialog?.close();
+    });
+
+    if (throwPicker) {
+        throwPicker.addEventListener('submit', (event) => {
+            event.preventDefault();
+
+            const assignees = [...throwPicker.querySelectorAll('input[name="assignees[]"]:checked')]
+                .map((input) => input.value);
+
+            if (assignees.length === 0) {
+                alert('誰に投げるか選んでください');
+                return;
+            }
+
+            const noDue = throwNoDue?.checked === true;
+            const due = throwDueDate?.value || '';
+
+            if (!noDue && due === '') {
+                alert('期限を選ぶか、期限なしにしてください');
+                return;
+            }
+
+            throwDialog?.close();
+            aimThrow(assignees, due, noDue);
+        });
+    }
+
     if (commentForm) {
         commentForm.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -330,7 +702,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const sendButton = commentForm.querySelector('.room-send');
+            const text = commentField?.value.trim() ?? '';
+
+            if (compose.mode === 'throw' && Array.from(text).length > 255) {
+                alert('依頼は255文字までです');
+                return;
+            }
+
             commentForm.dataset.sending = '1';
 
             if (sendButton) {
@@ -338,6 +716,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             try {
+                if (compose.mode === 'throw') {
+                    const formData = new FormData();
+                    compose.assignees.forEach((name) => formData.append('assignees[]', name));
+                    formData.set('task', text);
+
+                    if (compose.noDue) {
+                        formData.set('no_due', '1');
+                    } else {
+                        formData.set('due_date', compose.due);
+                    }
+
+                    const response = await apiRequest(`/projects/${projectId}/balls`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.success) {
+                        window.location.reload();
+                    }
+
+                    return;
+                }
+
+                if (compose.mode === 'return') {
+                    const formData = new FormData();
+                    formData.set('content', text);
+
+                    const response = await apiRequest(`/balls/${compose.ballId}/done`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (response.success) {
+                        window.location.reload();
+                    }
+
+                    return;
+                }
+
                 const response = await apiRequest('/histories', {
                     method: 'POST',
                     body: new FormData(commentForm),
@@ -365,7 +782,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     commentField.focus();
                 }
             } catch (error) {
-                alert(error.message || 'コメントを送れませんでした');
+                const fallback = compose.mode === 'throw'
+                    ? 'ボールを投げられませんでした'
+                    : (compose.mode === 'return' ? 'ボールを返せませんでした' : 'コメントを送れませんでした');
+                alert(error.message || fallback);
             } finally {
                 delete commentForm.dataset.sending;
 
@@ -376,38 +796,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    if (ballForm && projectId) {
-        ballForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-
-            const formData = new FormData(ballForm);
-
-            if (noDueToggle?.checked) {
-                formData.set('no_due', '1');
-                formData.delete('due_date');
-            }
-
-            try {
-                const response = await apiRequest(`/projects/${projectId}/balls`, {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (response.success) {
-                    window.location.reload();
-                }
-            } catch (error) {
-                alert(error.message || 'ボールを投げられませんでした');
-            }
-        });
-    }
-
     document.addEventListener('click', (event) => {
-        const toggleDone = event.target.closest('[data-action="toggle-done"]');
-        if (toggleDone) {
-            const panel = document.getElementById(`done-panel-${toggleDone.dataset.ballId}`);
-            if (panel) {
-                panel.hidden = !panel.hidden;
+        const aimReturnButton = event.target.closest('[data-action="aim-return"]');
+        if (aimReturnButton) {
+            const row = aimReturnButton.closest('.room-open-ball');
+            if (row) {
+                aimReturn(row);
+            }
+        }
+
+        const toggleSiblings = event.target.closest('[data-action="toggle-siblings"]');
+        if (toggleSiblings) {
+            const siblings = document.getElementById('roomSiblings');
+            if (siblings) {
+                siblings.hidden = !siblings.hidden;
+                toggleSiblings.setAttribute('aria-expanded', siblings.hidden ? 'false' : 'true');
+            }
+        }
+
+        const toggleMore = event.target.closest('[data-action="toggle-more-balls"]');
+        if (toggleMore) {
+            const more = document.getElementById('roomOpenMore');
+            if (more) {
+                more.hidden = !more.hidden;
+                toggleMore.setAttribute('aria-expanded', more.hidden ? 'false' : 'true');
             }
         }
 
@@ -429,37 +841,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-
-        const templateButton = event.target.closest('[data-action="use-template"]');
-        if (templateButton) {
-            const form = templateButton.closest('form');
-            const textarea = form?.querySelector('textarea[name="content"]');
-            if (textarea) {
-                textarea.value = templateButton.textContent.trim();
-                form.requestSubmit();
-            }
-        }
     });
 
-    document.querySelectorAll('.ball-done-form').forEach((form) => {
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const ballId = form.dataset.ballId;
-
-            try {
-                const response = await apiRequest(`/balls/${ballId}/done`, {
-                    method: 'POST',
-                    body: new FormData(form),
-                });
-
-                if (response.success) {
-                    window.location.reload();
-                }
-            } catch (error) {
-                alert(error.message || 'ボールを閉じられませんでした');
-            }
-        });
-    });
+    const autoReturn = document.querySelector('.room-open-ball[data-auto-return="1"]');
+    if (autoReturn) {
+        aimReturn(autoReturn);
+    }
 
     const topicDueForm = document.getElementById('topicDueForm');
     if (topicDueForm && projectId) {

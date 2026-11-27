@@ -18,6 +18,7 @@ class ProjectAttachment extends Model
         'file_size',
         'file_type',
         'uploaded_by',
+        'uploader_name',
     ];
 
     public function project(): BelongsTo

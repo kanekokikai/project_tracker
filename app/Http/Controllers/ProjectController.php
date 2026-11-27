@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\ChatworkMember;
 use App\Models\Project;
+use App\Models\ProjectBall;
 use App\Models\ProjectHistory;
 use App\Models\Subject;
 use App\Services\ActivityLogger;
@@ -160,6 +161,17 @@ class ProjectController extends Controller
             ->where('kind', ProjectHistory::KIND_QUESTION)
             ->count();
 
+        $logBalls = ProjectBall::query()
+            ->where('project_id', $project->id)
+            ->orderBy('id')
+            ->get();
+
+        $scoreNames = collect($project->team_members ?? [])
+            ->filter(fn ($name) => is_string($name) && trim($name) !== '')
+            ->map(fn ($name) => trim($name))
+            ->unique()
+            ->values();
+
         $logAttachments = $project->attachments()
             ->orderBy('uploaded_at')
             ->orderBy('id')
@@ -171,6 +183,8 @@ class ProjectController extends Controller
             'project' => $project,
             'logAttachments' => $logAttachments,
             'openBalls' => $openBalls,
+            'logBalls' => $logBalls,
+            'scoreNames' => $scoreNames,
             'siblings' => $siblings,
             'subjects' => Subject::query()->orderBy('name')->get(['id', 'name']),
             'members' => ChatworkMember::query()->orderBy('sort_order')->orderBy('id')->get(),
@@ -178,8 +192,6 @@ class ProjectController extends Controller
             'statuses' => Project::STATUSES,
             'viewerName' => $viewer,
             'unansweredQuestions' => $unansweredQuestions,
-            'ballTypes' => BallDisplay::TYPES,
-            'doneTemplates' => BallDisplay::DONE_TEMPLATES,
             'externalAssignee' => BallDisplay::EXTERNAL,
         ]);
     }

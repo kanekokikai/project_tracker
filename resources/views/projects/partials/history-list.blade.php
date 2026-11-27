@@ -31,13 +31,17 @@
 >
     @foreach ($logItems as $logItem)
         @if ($logItem->kind === 'attachment')
-            @include('projects.partials.log-attachment', ['attachment' => $logItem->attachment])
+            @include('projects.partials.log-attachment', [
+                'attachment' => $logItem->attachment,
+                'viewerName' => $viewerName ?? ($currentMemberName ?? ''),
+            ])
             @continue
         @endif
         @include('projects.partials.history-item', [
             'history' => $logItem->history,
             'contentPrefix' => $contentPrefix ?? 'content',
             'viewerName' => $viewerName ?? ($currentMemberName ?? ''),
+            'logBalls' => $logBalls ?? collect(),
         ])
     @endforeach
 </div>

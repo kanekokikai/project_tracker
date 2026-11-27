@@ -78,7 +78,8 @@ class ProjectAttachmentController extends Controller
                     'original_file_name' => $originalName,
                     'file_size' => $fileSize,
                     'file_type' => $mimeType,
-                    'uploaded_by' => 1,
+                    'uploaded_by' => CurrentMember::id(),
+                    'uploader_name' => $author,
                 ]);
 
                 $this->activityLogger->record(
@@ -106,6 +107,7 @@ class ProjectAttachmentController extends Controller
             'data' => $this->formatAttachment($attachment),
             'html' => view('projects.partials.log-attachment', [
                 'attachment' => $attachment,
+                'viewerName' => $author,
             ])->render(),
         ]);
     }
@@ -183,7 +185,7 @@ class ProjectAttachmentController extends Controller
             'uploaded_by' => $attachment->uploaded_by,
             'uploaded_at' => $attachment->uploaded_at,
             'upload_date' => $attachment->uploaded_at,
-            'uploader_name' => 'システム',
+            'uploader_name' => $attachment->uploader_name,
         ];
     }
 

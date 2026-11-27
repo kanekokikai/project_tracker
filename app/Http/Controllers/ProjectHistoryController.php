@@ -22,6 +22,11 @@ class ProjectHistoryController extends Controller
     public function show(ProjectHistory $history): JsonResponse
     {
         $history->loadMissing('ball');
+        $content = $history->content;
+
+        if ($history->kind === ProjectHistory::KIND_BALL && $history->ball !== null) {
+            $content = $history->ball->task;
+        }
 
         return response()->json([
             'success' => true,
@@ -30,7 +35,7 @@ class ProjectHistoryController extends Controller
                 'project_id' => $history->project_id,
                 'author' => $history->author,
                 'status' => $history->status,
-                'content' => $history->content,
+                'content' => $content,
                 'can_reopen' => $this->canReopen($history),
             ],
         ]);
@@ -94,8 +99,35 @@ class ProjectHistoryController extends Controller
             'content' => ['nullable', 'string'],
         ]);
 
+        $content = $validated['content'] ?? '';
+        $history->loadMissing('ball');
+
+        if ($history->kind === ProjectHistory::KIND_BALL && $history->ball !== null) {
+            $task = trim($content);
+
+            if ($task === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => '依頼を書いてください',
+                ], 422);
+            }
+
+            if (mb_strlen($task) > 255) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '依頼は255文字までです',
+                ], 422);
+            }
+
+            foreach ($history->ball->groupMates() as $mate) {
+                $mate->update(['task' => $task]);
+            }
+
+            $content = $task;
+        }
+
         $history->update([
-            'content' => $validated['content'] ?? '',
+            'content' => $content,
         ]);
 
         $project = $history->project;

@@ -14,6 +14,7 @@
         && $viewer !== '不明'
         && $authorName === $viewer;
     $displayName = $authorName !== '' ? $authorName : '不明';
+    $ballPresentation = \App\Support\BallDisplay::historyPresentation($history, $logBalls ?? collect());
 @endphp
 <div
     class="history-item{{ $isMine ? ' history-item--mine' : '' }}"
@@ -58,18 +59,18 @@
             </div>
         </div>
 
-        @if ($historyKind === 'ball')
+        @if ($ballPresentation && $historyKind === 'ball')
             <div class="bubble ball-bubble">
                 <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
-                    <span class="bubble-kind">ボール</span>
-                    {!! \App\Support\MessageText::html($history->content) !!}
+                    <span class="bubble-kind">{{ $ballPresentation['headline'] }}</span>
+                    {!! \App\Support\MessageText::html($ballPresentation['body']) !!}
                 </div>
             </div>
-        @elseif ($historyKind === 'done')
+        @elseif ($ballPresentation && $historyKind === 'done')
             <div class="bubble done-bubble">
                 <div class="content" id="{{ $contentPrefix }}-{{ $history->id }}">
-                    <span class="bubble-kind">できた</span>
-                    {!! \App\Support\MessageText::html($history->content) !!}
+                    <span class="bubble-kind">{{ $ballPresentation['headline'] }}</span>
+                    {!! \App\Support\MessageText::html($ballPresentation['body']) !!}
                 </div>
             </div>
         @else
